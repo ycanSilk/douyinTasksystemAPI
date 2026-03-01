@@ -1,0 +1,111 @@
+RewriteEngine On
+RewriteBase /
+
+# 允许访问真实存在的文件和目录
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# B端认证相关路由
+RewriteRule ^api/b/v1/auth/register$ api/b/v1/auth/register.php [L,QSA]
+RewriteRule ^api/b/v1/auth/login$ api/b/v1/auth/login.php [L,QSA]
+RewriteRule ^api/b/v1/auth/logout$ api/b/v1/auth/logout.php [L,QSA]
+RewriteRule ^api/b/v1/auth/refresh$ api/b/v1/auth/refresh.php [L,QSA]
+RewriteRule ^api/b/v1/auth/change-password$ api/b/v1/auth/change-password.php [L,QSA]
+
+# B端用户相关路由
+RewriteRule ^api/b/v1/me$ api/b/v1/me.php [L,QSA]
+
+# B端任务相关路由
+RewriteRule ^api/b/v1/task-templates$ api/b/v1/task-templates.php [L,QSA]
+RewriteRule ^api/b/v1/tasks$ api/b/v1/tasks.php [L,QSA]
+RewriteRule ^api/b/v1/tasks/list$ api/b/v1/tasks/list.php [L,QSA]
+RewriteRule ^api/b/v1/tasks/pending$ api/b/v1/tasks/pending.php [L,QSA]
+RewriteRule ^api/b/v1/tasks/review$ api/b/v1/tasks/review.php [L,QSA]
+
+# B端充值相关路由
+RewriteRule ^api/b/v1/recharge$ api/b/v1/recharge.php [L,QSA]
+
+# B端钱包相关路由
+RewriteRule ^api/b/v1/wallet$ api/b/v1/wallet.php [L,QSA]
+RewriteRule ^api/b/v1/wallet-password$ api/b/v1/wallet-password.php [L,QSA]
+RewriteRule ^api/b/v1/check-wallet-password$ api/b/v1/check-wallet-password.php [L,QSA]
+
+# B端通知相关路由
+RewriteRule ^api/b/v1/notifications/list$ api/b/v1/notifications/list.php [L,QSA]
+RewriteRule ^api/b/v1/notifications/details$ api/b/v1/notifications/details.php [L,QSA]
+RewriteRule ^api/b/v1/notifications/read$ api/b/v1/notifications/read.php [L,QSA]
+
+# 通用接口
+RewriteRule ^api/upload$ api/upload.php [L,QSA]
+
+# C端认证相关路由
+RewriteRule ^api/c/v1/auth/register$ api/c/v1/auth/register.php [L,QSA]
+RewriteRule ^api/c/v1/auth/login$ api/c/v1/auth/login.php [L,QSA]
+RewriteRule ^api/c/v1/auth/logout$ api/c/v1/auth/logout.php [L,QSA]
+RewriteRule ^api/c/v1/auth/refresh$ api/c/v1/auth/refresh.php [L,QSA]
+RewriteRule ^api/c/v1/auth/change-password$ api/c/v1/auth/change-password.php [L,QSA]
+
+# C端用户相关路由
+RewriteRule ^api/c/v1/me$ api/c/v1/me.php [L,QSA]
+
+# C端任务相关路由
+RewriteRule ^api/c/v1/tasks$ api/c/v1/tasks.php [L,QSA]
+RewriteRule ^api/c/v1/tasks/accept$ api/c/v1/tasks/accept.php [L,QSA]
+RewriteRule ^api/c/v1/tasks/submit$ api/c/v1/tasks/submit.php [L,QSA]
+RewriteRule ^api/c/v1/tasks/my-tasks$ api/c/v1/tasks/my-tasks.php [L,QSA]
+
+# C端钱包相关路由
+RewriteRule ^api/c/v1/wallet$ api/c/v1/wallet.php [L,QSA]
+RewriteRule ^api/c/v1/wallet-password$ api/c/v1/wallet-password.php [L,QSA]
+RewriteRule ^api/c/v1/check-wallet-password$ api/c/v1/check-wallet-password.php [L,QSA]
+RewriteRule ^api/c/v1/withdraw$ api/c/v1/withdraw.php [L,QSA]
+RewriteRule ^api/c/v1/withdraw-list$ api/c/v1/withdraw-list.php [L,QSA]
+
+# C端代理相关路由
+RewriteRule ^api/c/v1/agent/info$ api/c/v1/agent/info.php [L,QSA]
+RewriteRule ^api/c/v1/agent/stats$ api/c/v1/agent/stats.php [L,QSA]
+RewriteRule ^api/c/v1/agent/downlines$ api/c/v1/agent/downlines.php [L,QSA]
+RewriteRule ^api/c/v1/agent/apply$ api/c/v1/agent/apply.php [L,QSA]
+RewriteRule ^api/c/v1/agent/applications$ api/c/v1/agent/applications.php [L,QSA]
+
+# C端通知相关路由
+RewriteRule ^api/c/v1/notifications/list$ api/c/v1/notifications/list.php [L,QSA]
+RewriteRule ^api/c/v1/notifications/details$ api/c/v1/notifications/details.php [L,QSA]
+RewriteRule ^api/c/v1/notifications/read$ api/c/v1/notifications/read.php [L,QSA]
+
+# 租赁系统 - 出租信息相关路由（B/C端共用）
+RewriteRule ^api/rental/offers/create$ api/rental/offers/create.php [L,QSA]
+RewriteRule ^api/rental/offers/update$ api/rental/offers/update.php [L,QSA]
+RewriteRule ^api/rental/offers/toggle-status$ api/rental/offers/toggle-status.php [L,QSA]
+RewriteRule ^api/rental/offers/list$ api/rental/offers/list.php [L,QSA]
+RewriteRule ^api/rental/offers/detail$ api/rental/offers/detail.php [L,QSA]
+
+# 租赁系统 - 求租信息相关路由（B/C端共用）
+RewriteRule ^api/rental/demands/create$ api/rental/demands/create.php [L,QSA]
+RewriteRule ^api/rental/demands/update$ api/rental/demands/update.php [L,QSA]
+RewriteRule ^api/rental/demands/toggle-status$ api/rental/demands/toggle-status.php [L,QSA]
+RewriteRule ^api/rental/demands/list$ api/rental/demands/list.php [L,QSA]
+RewriteRule ^api/rental/demands/detail$ api/rental/demands/detail.php [L,QSA]
+
+# 租赁系统 - 应征相关路由（B/C端共用）
+RewriteRule ^api/rental/applications/apply$ api/rental/applications/apply.php [L,QSA]
+RewriteRule ^api/rental/applications/list$ api/rental/applications/list.php [L,QSA]
+RewriteRule ^api/rental/applications/review$ api/rental/applications/review.php [L,QSA]
+
+# 租赁系统 - 订单相关路由（B/C端共用）
+RewriteRule ^api/rental/orders/create-from-offer$ api/rental/orders/create-from-offer.php [L,QSA]
+RewriteRule ^api/rental/orders/create-from-demand$ api/rental/orders/create-from-demand.php [L,QSA]
+RewriteRule ^api/rental/orders/renew$ api/rental/orders/renew.php [L,QSA]
+RewriteRule ^api/rental/orders/my-seller$ api/rental/orders/my-seller.php [L,QSA]
+RewriteRule ^api/rental/orders/my-buyer$ api/rental/orders/my-buyer.php [L,QSA]
+
+# 租赁系统 - 工单相关路由（B/C端共用）
+RewriteRule ^api/rental/tickets/create$ api/rental/tickets/create.php [L,QSA]
+RewriteRule ^api/rental/tickets/detail$ api/rental/tickets/detail.php [L,QSA]
+RewriteRule ^api/rental/tickets/list$ api/rental/tickets/list.php [L,QSA]
+RewriteRule ^api/rental/tickets/close$ api/rental/tickets/close.php [L,QSA]
+RewriteRule ^api/rental/tickets/send-message$ api/rental/tickets/send-message.php [L,QSA]
+RewriteRule ^api/rental/tickets/messages$ api/rental/tickets/messages.php [L,QSA]
+
+# 其他路由规则后续添加
+

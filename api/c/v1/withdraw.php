@@ -1,0 +1,251 @@
+<?php
+/**
+ * C端提现申请接口
+ * 
+ * POST /api/c/v1/withdraw
+ * 
+ * 请求头：
+ * X-Token: <token> (C端)
+ * 
+ * 请求体：
+ * {
+ *   "amount": 100.00,
+ *   "withdraw_method": "alipay",
+ *   "withdraw_account": "13800138000",
+ *   "account_name": "张三",
+ *   "pswd": "e10adc3949ba59abbe56e057f20f883e"
+ * }
+ * 
+ * 收款方式：不限制，传什么保存什么（如：alipay、wechat、bank、usdt等）
+ * 金额限制：最低1元，无上限
+ * 收款账号：必须提供（支付宝账号、微信号、银行卡号、USDT地址等）
+ * 收款人姓名：必须提供，用于支付宝/银行卡转账时的姓名验证
+ * 支付密码：必须提供，用于安全验证
+ * 
+ * 注意：
+ * - 提现申请创建后不立即扣款
+ * - 需等待管理员审核通过后才实际扣除余额
+ * - 提现金额不能超过当前余额
+ */
+
+header('Content-Type: application/json; charset=utf-8');
+
+// 只允许 POST 请求
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode([
+        'code' => 1001,
+        'message' => '请求方法错误',
+        'data' => [],
+        'timestamp' => time()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+require_once __DIR__ . '/../../../core/Database.php';
+require_once __DIR__ . '/../../../core/AuthMiddleware.php';
+require_once __DIR__ . '/../../../core/Response.php';
+require_once __DIR__ . '/../../../core/AppConfig.php';
+
+$errorCodes = require __DIR__ . '/../../../config/error_codes.php';
+
+// 数据库连接
+$db = Database::connect();
+
+// Token 认证（必须是 C端用户）
+$auth = new AuthMiddleware($db);
+$currentUser = $auth->authenticateC();
+
+// 获取请求参数
+$input = json_decode(file_get_contents('php://input'), true);
+$amount = $input['amount'] ?? 0;
+$withdrawMethod = trim($input['withdraw_method'] ?? '');
+$withdrawAccount = trim($input['withdraw_account'] ?? '');
+$accountName = trim($input['account_name'] ?? ''); // 收款人姓名
+
+// 参数校验
+if (empty($amount) || !is_numeric($amount) || $amount <= 0) {
+    Response::error('提现金额必须大于0', $errorCodes['WITHDRAW_AMOUNT_INVALID']);
+}
+
+// 获取提现限制配置
+$minAmount = AppConfig::get('c_withdraw_min_amount', 100);
+$maxAmount = AppConfig::get('c_withdraw_max_amount', 500);
+$amountMultiple = AppConfig::get('c_withdraw_amount_multiple', 100);
+$dailyLimit = AppConfig::get('c_withdraw_daily_limit', 1000);
+$allowedWeekdays = AppConfig::get('c_withdraw_allowed_weekdays', ['4']);
+
+// 限制1：金额必须是整数倍
+if ($amount != floor($amount / $amountMultiple) * $amountMultiple) {
+    Response::error("提现金额必须是{$amountMultiple}元的整数倍", $errorCodes['WITHDRAW_AMOUNT_INVALID']);
+}
+
+// 限制2：最低/最高金额限制
+if ($amount < $minAmount) {
+    Response::error("提现金额最低{$minAmount}元", $errorCodes['WITHDRAW_AMOUNT_INVALID']);
+}
+
+if ($amount > $maxAmount) {
+    Response::error("单次提现金额不能超过{$maxAmount}元", $errorCodes['WITHDRAW_AMOUNT_INVALID']);
+}
+
+// 限制3：星期几限制
+$currentWeekday = date('w'); // 0=周日, 1-6=周一至周六
+if (!in_array($currentWeekday, $allowedWeekdays)) {
+    $weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    $allowedNames = array_map(function($day) use ($weekdayNames) {
+        return $weekdayNames[intval($day)];
+    }, $allowedWeekdays);
+    $allowedStr = implode('、', $allowedNames);
+    Response::error("只能在{$allowedStr}提现", $errorCodes['WITHDRAW_TIME_NOT_ALLOWED']);
+}
+
+if (empty($withdrawMethod)) {
+    Response::error('收款方式不能为空', $errorCodes['WITHDRAW_METHOD_INVALID']);
+}
+
+if (empty($withdrawAccount)) {
+    Response::error('收款账号不能为空', $errorCodes['WITHDRAW_ACCOUNT_EMPTY']);
+}
+
+if (empty($accountName)) {
+    Response::error('收款人姓名不能为空', $errorCodes['WITHDRAW_ACCOUNT_NAME_EMPTY']);
+}
+
+try {
+    // 查询C端用户信息
+    $stmt = $db->prepare("SELECT wallet_id, username FROM c_users WHERE id = ?");
+    $stmt->execute([$currentUser['user_id']]);
+    $cUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$cUser) {
+        Response::error('用户信息异常', $errorCodes['USER_NOT_FOUND']);
+    }
+    
+    // 查询钱包当前余额
+    $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+    $stmt->execute([$cUser['wallet_id']]);
+    $wallet = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$wallet) {
+        Response::error('钱包不存在', $errorCodes['WALLET_NOT_FOUND']);
+    }
+    
+    // 将金额转换为分
+    $amountInCents = (int)round($amount * 100);
+    $currentBalance = (int)$wallet['balance'];
+
+    // 计算提现手续费
+    $feeRate = (float)AppConfig::get('c_withdraw_fee_rate', 0.03);
+    $feeAmountInCents = (int)round($amountInCents * $feeRate);
+    $actualAmountInCents = $amountInCents - $feeAmountInCents;
+    
+    // 限制4：检查当天提现总额
+    $todayStart = date('Y-m-d 00:00:00');
+    $todayEnd = date('Y-m-d 23:59:59');
+    $stmt = $db->prepare("
+        SELECT COALESCE(SUM(amount), 0) as today_total
+        FROM withdraw_requests
+        WHERE user_id = ? AND user_type = 1 
+        AND status IN (0, 1)
+        AND created_at BETWEEN ? AND ?
+    ");
+    $stmt->execute([$currentUser['user_id'], $todayStart, $todayEnd]);
+    $todayTotal = $stmt->fetch(PDO::FETCH_ASSOC)['today_total'];
+    $todayTotalYuan = $todayTotal / 100;
+    
+    if (($todayTotalYuan + $amount) > $dailyLimit) {
+        $remaining = $dailyLimit - $todayTotalYuan;
+        Response::error("今日提现额度不足，今日已提现¥{$todayTotalYuan}，剩余额度¥{$remaining}，每日限额¥{$dailyLimit}", $errorCodes['WITHDRAW_DAILY_LIMIT_EXCEEDED']);
+    }
+    
+    // 校验余额是否足够
+    if ($currentBalance < $amountInCents) {
+        $needAmount = number_format($amountInCents / 100, 2);
+        $availableAmount = number_format($currentBalance / 100, 2);
+        Response::error("余额不足，当前可用余额：¥{$availableAmount}，提现金额：¥{$needAmount}", $errorCodes['WITHDRAW_INSUFFICIENT_BALANCE']);
+    }
+    
+    // 开启事务
+    $db->beginTransaction();
+    
+    // 1. 立即扣除钱包余额
+    $newBalance = $currentBalance - $amountInCents;
+    $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+    $stmt->execute([$newBalance, $cUser['wallet_id']]);
+    
+    // 2. 创建钱包流水记录（真实扣款）
+    $remark = "提现申请 ¥" . number_format($amount, 2) . "，手续费 ¥" . number_format($feeAmountInCents / 100, 2) . "，实到 ¥" . number_format($actualAmountInCents / 100, 2) . "，收款方式：{$withdrawMethod}，审核中";
+    $stmt = $db->prepare("
+        INSERT INTO wallets_log (
+            wallet_id, user_id, username, user_type, type, 
+            amount, before_balance, after_balance, 
+            related_type, related_id, remark
+        ) VALUES (?, ?, ?, 1, 2, ?, ?, ?, 'withdraw', 0, ?)
+    ");
+    
+    $stmt->execute([
+        $cUser['wallet_id'],
+        $currentUser['user_id'],
+        $cUser['username'],
+        $amountInCents,
+        $currentBalance,
+        $newBalance, // 扣款后的余额
+        $remark
+    ]);
+    $logId = $db->lastInsertId();
+    
+    // 3. 创建提现申请记录（保存流水ID和手续费信息）
+    $stmt = $db->prepare("
+        INSERT INTO withdraw_requests (
+            user_id, username, user_type, wallet_id,
+            amount, fee_rate, fee_amount, actual_amount,
+            withdraw_method, withdraw_account, account_name, log_id, status
+        ) VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    ");
+
+    $stmt->execute([
+        $currentUser['user_id'],
+        $cUser['username'],
+        $cUser['wallet_id'],
+        $amountInCents,
+        $feeRate,
+        $feeAmountInCents,
+        $actualAmountInCents,
+        $withdrawMethod,
+        $withdrawAccount,
+        $accountName,
+        $logId
+    ]);
+    
+    $withdrawId = $db->lastInsertId();
+    
+    // 4. 更新流水记录的 related_id 为提现申请ID
+    $stmt = $db->prepare("UPDATE wallets_log SET related_id = ? WHERE id = ?");
+    $stmt->execute([$withdrawId, $logId]);
+    
+    // 提交事务
+    $db->commit();
+    
+    // 返回成功响应
+    Response::success([
+        'withdraw_id' => (int)$withdrawId,
+        'amount' => number_format($amount, 2),
+        'fee_rate' => $feeRate,
+        'fee_amount' => number_format($feeAmountInCents / 100, 2),
+        'actual_amount' => number_format($actualAmountInCents / 100, 2),
+        'withdraw_method' => $withdrawMethod,
+        'withdraw_account' => $withdrawAccount,
+        'status' => 0,
+        'status_text' => '待审核',
+        'current_balance' => number_format($newBalance / 100, 2)
+    ], '提现申请提交成功，请等待审核');
+    
+} catch (PDOException $e) {
+    // 回滚事务
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    
+    Response::error('提现申请失败', $errorCodes['WITHDRAW_REQUEST_FAILED'], 500);
+}

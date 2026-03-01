@@ -1,0 +1,4 @@
+# Admin账号列表
+# 格式: username:md5_password
+# 默认账号: task / 123456 (MD5: e10adc3949ba59abbe56e057f20f883e)
+task:d7ec460ef7be466ab80efd4c289ab9f4
