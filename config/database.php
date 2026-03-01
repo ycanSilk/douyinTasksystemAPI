@@ -7,8 +7,8 @@ return [
     'host' => 'localhost',
     'port' => 3306,
     'database' => 'task_platform',
-    'username' => 'task_platform',
-    'password' => 'ePXpWcMBGP6s2xrD',
+    'username' => 'root',
+    'password' => '123456',
     'charset' => 'utf8mb4',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

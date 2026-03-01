@@ -664,7 +664,22 @@ CREATE TABLE `task_templates` (
 
 LOCK TABLES `task_templates` WRITE;
 /*!40000 ALTER TABLE `task_templates` DISABLE KEYS */;
-INSERT INTO `task_templates` VALUES (1,0,'上评评论',3.00,'发布上评评论','',NULL,NULL,NULL,NULL,NULL,NULL,100,50,50,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-02-15 14:51:45'),(2,0,'中评评论',2.00,'发布中评评论','',NULL,NULL,NULL,NULL,NULL,NULL,80,30,30,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-02-15 14:51:45'),(3,0,'放大镜搜索词',5.00,'抖音平台规则问题，本产品属于稀罕出版大礼，搜索词搜索次数就越多，出现概率越大','',NULL,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-02-15 14:51:45'),(4,1,'上中评评论',9.00,'组合评论：上评+中评(1+3)','','上评评论',3.00,'中评回复',2.00,1,3,0,0,0,100,50,50,80,30,30,1,'2026-02-15 14:51:45'),(5,1,'中下评评论',6.00,'组合评论：中评+下评(1+2)','真人评论，评论内容真实有效。下评完成后需要这个晒图评论为晒图套餐。','中评评论',3.00,'下评回复',3.00,1,1,0,0,0,130,45,43,130,45,45,1,'2026-02-15 14:51:45');
+-- 替换原有的task_templates插入语句
+INSERT INTO `task_templates` (
+  `id`, `type`, `title`, `price`, `description1`, `description2`,
+  `stage1_title`, `stage1_price`, `stage2_title`, `stage2_price`,
+  `default_stage1_count`, `default_stage2_count`,
+  `c_user_commission`, `agent_commission`, `senior_agent_commission`,
+  `stage1_c_user_commission`, `stage1_agent_commission`, `stage1_senior_agent_commission`,
+  `stage2_c_user_commission`, `stage2_agent_commission`, `stage2_senior_agent_commission`,
+  `status`, `created_at`
+) VALUES 
+(1,0,'上评评论',3.00,'发布上评评论','',NULL,NULL,NULL,NULL,1,3,100,50,50,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-02-15 14:51:45'),
+(2,0,'中评评论',2.00,'发布中评评论','',NULL,NULL,NULL,NULL,1,3,80,30,30,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-02-15 14:51:45'),
+(3,0,'放大镜搜索词',5.00,'抖音平台规则问题，本产品属于稀罕出版大礼，搜索词搜索次数就越多，出现概率越大','',NULL,NULL,NULL,NULL,1,3,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,1,'2026-02-15 14:51:45'),
+(4,1,'上中评评论',9.00,'组合评论：上评+中评(1+3)','','上评评论',3.00,'中评回复',2.00,1,3,0,0,0,100,50,50,80,30,30,1,'2026-02-15 14:51:45'),
+(5,1,'中下评评论',6.00,'组合评论：中评+下评(1+2)','真人评论，评论内容真实有效。下评完成后需要这个晒图评论为晒图套餐。','中评评论',3.00,'下评回复',3.00,1,1,0,0,0,130,45,43,130,45,45,1,'2026-02-15 14:51:45');
+
 /*!40000 ALTER TABLE `task_templates` ENABLE KEYS */;
 UNLOCK TABLES;
 

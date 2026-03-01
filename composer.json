@@ -1,0 +1,15 @@
+{
+    "name": "tasksystem/api",
+    "description": "TaskSystem API",
+    "type": "project",
+    "require": {
+        "alibabacloud/credentials": "^1.2",
+        "alibabacloud/tea-utils": "^0.2.21",
+        "alibabacloud/dypnsapi-20170525": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "TaskSystem\\": "core/"
+        }
+    }
+}
