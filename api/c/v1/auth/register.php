@@ -7,7 +7,7 @@
  * 请求体：
  * {
  *   "username": "string (必填)",
- *   "email": "string (必填)",
+ *   "email": "string (选填)",
  *   "phone": "string (选填)",
  *   "password": "string (必填)",
  *   "parent_invite_code": "string (选填，6位邀请码)"
@@ -47,11 +47,8 @@ if (empty($username)) {
     Response::error('用户名不能为空', $errorCodes['USER_USERNAME_EMPTY']);
 }
 
-if (empty($email)) {
-    Response::error('邮箱不能为空', $errorCodes['USER_EMAIL_EMPTY']);
-}
-
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+// 邮箱可选，只在不为空时校验格式
+if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     Response::error('邮箱格式不正确', $errorCodes['USER_EMAIL_INVALID']);
 }
 
@@ -82,11 +79,13 @@ try {
         Response::error('用户名已被占用', $errorCodes['USER_USERNAME_EXISTS']);
     }
     
-    // 检查邮箱是否已存在
-    $stmt = $db->prepare("SELECT id FROM c_users WHERE email = ?");
-    $stmt->execute([$email]);
-    if ($stmt->fetch()) {
-        Response::error('邮箱已被注册', $errorCodes['USER_EMAIL_EXISTS']);
+    // 检查邮箱是否已存在（如果提供了邮箱）
+    if (!empty($email)) {
+        $stmt = $db->prepare("SELECT id FROM c_users WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            Response::error('邮箱已被注册', $errorCodes['USER_EMAIL_EXISTS']);
+        }
     }
     
     // 检查手机号是否已存在（如果提供了手机号）

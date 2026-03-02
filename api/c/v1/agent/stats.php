@@ -122,6 +122,10 @@ try {
     $stmt->execute([$currentUser['user_id']]);
     $totalCommission = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total_commission'];
     
+    // 判断是否满足团长和高级团长条件
+    $upgradedAgent = $validInvites >= $agentRequiredUsers;
+    $upgradedSeniorAgent = $seniorValidInvites >= $seniorRequiredUsers;
+    
     // 返回成功响应
     Response::success([
         'total_invites' => $totalInvites,
@@ -138,7 +142,9 @@ try {
             'required_active_users' => $seniorRequiredUsers,
             'task_count' => $seniorTaskCount,
             'hours' => $seniorHours
-        ]
+        ],
+        'upgraded_agent' => $upgradedAgent,
+        'upgraded_senior_agent' => $upgradedSeniorAgent
     ]);
     
 } catch (PDOException $e) {

@@ -123,7 +123,12 @@ try {
             'recharge' => '充值',
             'withdraw' => '提现',
             'refund' => '退款',
-            'agent_commission' => '团长佣金'
+            'agent_commission' => '团长佣金',
+            'senior_agent_commission' => '高级团长佣金',
+            'commission' => '奖励佣金',
+            'rental_freeze' => '求租信息租金冻结',
+            'rental_unfreeze' => '求租信息租金解冻',
+            'second_agent_commission' => '二级团长佣金'
         ];
         $item['related_type_text'] = $relatedTypeMap[$item['related_type']] ?? $item['related_type'];
     }

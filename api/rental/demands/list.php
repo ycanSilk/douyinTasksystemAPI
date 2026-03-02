@@ -125,10 +125,16 @@ try {
             CASE 
                 WHEN rd.user_type = 1 THEN cu.username
                 WHEN rd.user_type = 2 THEN bu.username
-            END as publisher_username
+            END as publisher_username,
+            COALESCE(app_count.application_count, 0) as application_count
         FROM rental_demands rd
         LEFT JOIN c_users cu ON rd.user_type = 1 AND rd.user_id = cu.id
         LEFT JOIN b_users bu ON rd.user_type = 2 AND rd.user_id = bu.id
+        LEFT JOIN (
+            SELECT demand_id, COUNT(*) as application_count
+            FROM rental_applications
+            GROUP BY demand_id
+        ) as app_count ON rd.id = app_count.demand_id
         $whereSQL
         ORDER BY rd.created_at DESC
         LIMIT ? OFFSET ?
@@ -169,6 +175,7 @@ try {
             'status' => (int)$demand['status'],
             'status_text' => $statusTexts[$demand['status']] ?? '未知',
             'view_count' => (int)$demand['view_count'],
+            'application_count' => (int)$demand['application_count'],
             'created_at' => $demand['created_at'],
             'updated_at' => $demand['updated_at'],
             'is_my' => $isMy,

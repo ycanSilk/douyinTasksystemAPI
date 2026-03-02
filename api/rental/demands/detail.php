@@ -65,7 +65,8 @@ try {
             CASE 
                 WHEN rd.user_type = 1 THEN cu.email
                 WHEN rd.user_type = 2 THEN bu.email
-            END as publisher_email
+            END as publisher_email,
+            (SELECT COUNT(*) FROM rental_applications WHERE demand_id = rd.id) as application_count
         FROM rental_demands rd
         LEFT JOIN c_users cu ON rd.user_type = 1 AND rd.user_id = cu.id
         LEFT JOIN b_users bu ON rd.user_type = 2 AND rd.user_id = bu.id
@@ -152,6 +153,7 @@ try {
         'status' => (int)$demand['status'],
         'status_text' => $statusTexts[$demand['status']] ?? '未知',
         'view_count' => (int)$demand['view_count'],
+        'application_count' => (int)$demand['application_count'],
         'created_at' => $demand['created_at'],
         'updated_at' => $demand['updated_at'],
         'is_owner' => $isOwner
