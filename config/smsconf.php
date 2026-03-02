@@ -5,8 +5,8 @@
 
 return [
     // 阿里云 AccessKey
-    'accessKeyId' => 'LTAI5tAgw2FJRKhdqG8vdTBK',
-    'accessKeySecret' => '5k8lzCabexPeW9V6lZvsOVFYCFdev4',
+    'accessKeyId' => '你的keyid',
+    'accessKeySecret' => 'accessKeySecret',
     
     // 短信服务配置
     'sms' => [
