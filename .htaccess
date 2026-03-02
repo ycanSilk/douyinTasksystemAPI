@@ -11,6 +11,7 @@ RewriteRule ^api/b/v1/auth/login$ api/b/v1/auth/login.php [L,QSA]
 RewriteRule ^api/b/v1/auth/logout$ api/b/v1/auth/logout.php [L,QSA]
 RewriteRule ^api/b/v1/auth/refresh$ api/b/v1/auth/refresh.php [L,QSA]
 RewriteRule ^api/b/v1/auth/change-password$ api/b/v1/auth/change-password.php [L,QSA]
+RewriteRule ^api/b/v1/auth/reset-password$ api/b/v1/auth/reset-password.php [L,QSA]
 
 # B端用户相关路由
 RewriteRule ^api/b/v1/me$ api/b/v1/me.php [L,QSA]
@@ -44,6 +45,7 @@ RewriteRule ^api/c/v1/auth/login$ api/c/v1/auth/login.php [L,QSA]
 RewriteRule ^api/c/v1/auth/logout$ api/c/v1/auth/logout.php [L,QSA]
 RewriteRule ^api/c/v1/auth/refresh$ api/c/v1/auth/refresh.php [L,QSA]
 RewriteRule ^api/c/v1/auth/change-password$ api/c/v1/auth/change-password.php [L,QSA]
+RewriteRule ^api/c/v1/auth/reset-password$ api/c/v1/auth/reset-password.php [L,QSA]
 
 # C端用户相关路由
 RewriteRule ^api/c/v1/me$ api/c/v1/me.php [L,QSA]

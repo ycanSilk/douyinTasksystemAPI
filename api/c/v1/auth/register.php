@@ -8,7 +8,7 @@
  * {
  *   "username": "string (必填)",
  *   "email": "string (选填)",
- *   "phone": "string (选填)",
+ *   "phone": "string (必填)",
  *   "password": "string (必填)",
  *   "parent_invite_code": "string (选填，6位邀请码)"
  * }
@@ -52,6 +52,16 @@ if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     Response::error('邮箱格式不正确', $errorCodes['USER_EMAIL_INVALID']);
 }
 
+// 手机号必填且格式校验
+if (empty($phone)) {
+    Response::error('手机号不能为空', $errorCodes['USER_PHONE_EMPTY']);
+}
+
+// 简单的手机号格式校验（11位数字）
+if (!preg_match('/^1[3-9]\d{9}$/', $phone)) {
+    Response::error('手机号格式不正确', $errorCodes['USER_PHONE_INVALID']);
+}
+
 if (empty($password)) {
     Response::error('密码不能为空', $errorCodes['USER_PASSWORD_EMPTY']);
 }
@@ -88,13 +98,11 @@ try {
         }
     }
     
-    // 检查手机号是否已存在（如果提供了手机号）
-    if (!empty($phone)) {
-        $stmt = $db->prepare("SELECT id FROM c_users WHERE phone = ?");
-        $stmt->execute([$phone]);
-        if ($stmt->fetch()) {
-            Response::error('手机号已被注册', $errorCodes['USER_PHONE_EXISTS']);
-        }
+    // 检查手机号是否已存在
+    $stmt = $db->prepare("SELECT id FROM c_users WHERE phone = ?");
+    $stmt->execute([$phone]);
+    if ($stmt->fetch()) {
+        Response::error('手机号已被注册', $errorCodes['USER_PHONE_EXISTS']);
     }
     
     // 校验并查找上级用户（如果提供了邀请码）
@@ -135,7 +143,7 @@ try {
     $stmt->execute([
         $username,
         $email, 
-        $phone ?: null, 
+        $phone, 
         $passwordHash,
         $inviteCode,
         $parentId,
