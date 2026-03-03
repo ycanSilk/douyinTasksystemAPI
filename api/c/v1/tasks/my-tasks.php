@@ -180,6 +180,7 @@ try {
         $formattedRecords[] = [
             'record_id' => (int)$record['record_id'],
             'b_task_id' => (int)$record['b_task_id'],
+            'template_id' => (int)$record['template_id'],
             'template_title' => $record['template_title'],
             'video_url' => $record['video_url'],
             'recommend_mark' => $recommendMark,

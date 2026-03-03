@@ -66,6 +66,7 @@ try {
             t.total_price,
             t.status,
             t.created_at,
+            tm.id AS template_id,
             tm.title AS template_title,
             tm.type AS template_type,
             tm.stage1_title,
@@ -140,6 +141,7 @@ try {
         
         $taskList[] = [
             'id' => (int)$task['id'],
+            'template_id' => (int)$task['template_id'],
             'title' => $taskTitle,
             'is_combo' => $isCombo,
             'stage' => $stage,
