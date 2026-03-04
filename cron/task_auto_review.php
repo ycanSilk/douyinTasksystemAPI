@@ -25,7 +25,7 @@ try {
             c.id, c.c_user_id, c.b_user_id, c.b_task_id, 
             c.status, c.reward_amount, c.comment_url, c.submitted_at
         FROM c_task_records c
-        WHERE c.status = 2 // 待审核状态
+        WHERE c.status = 2 -- 待审核状态
           AND UNIX_TIMESTAMP(c.submitted_at) < ?
     ");
     $stmt->execute([$thresholdTime]);
