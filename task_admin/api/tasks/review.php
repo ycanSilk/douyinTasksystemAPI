@@ -1,64 +1,26 @@
 <?php
 /**
- * B端任务审核接口
- * 
- * POST /api/b/v1/tasks/review
- * 
- * 请求头：
- * X-Token: <token> (B端)
- * 
- * 请求体：
- * {
- *   "b_task_id": 123,
- *   "record_id": 456,
- *   "action": "approve",  // approve=通过, reject=驳回
- *   "reject_reason": "截图不清晰"  // action=reject时必填
- * }
- * 
- * 审核规则：
- * 
- * 通过(approve)：
- * - c_task_records.status = 3 (approved)
- * - b_tasks.task_reviewing -1, task_done +1
- * - c_user_daily_stats.approved_count +1
- * - 发放佣金给C端用户（单价 * 57%）
- * - 如果C端用户有团长上级，额外发放（单价 * 8%）给上级
- * - 更新钱包和钱包流水
- * 
- * 驳回(reject)：
- * - c_task_records.status = 4 (rejected)
- * - b_tasks.task_reviewing -1 （释放名额，任务重新可被接）
- * - c_user_daily_stats.rejected_count +1
- * - 不发放佣金
+ * 任务审核接口
+ * POST /task_admin/api/tasks/review.php
  */
 
 header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
 
-// 只允许 POST 请求
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode([
-        'code' => 1001,
-        'message' => '请求方法错误',
-        'data' => [],
-        'timestamp' => time()
-    ], JSON_UNESCAPED_UNICODE);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
     exit;
 }
 
-require_once __DIR__ . '/../../../../core/Database.php';
-require_once __DIR__ . '/../../../../core/AuthMiddleware.php';
-require_once __DIR__ . '/../../../../core/Response.php';
-require_once __DIR__ . '/../../../../core/AppConfig.php';
+require_once __DIR__ . '/../../auth/AuthMiddleware.php';
+require_once __DIR__ . '/../../../core/Database.php';
+require_once __DIR__ . '/../../../core/Response.php';
+require_once __DIR__ . '/../../../core/AppConfig.php';
 
-$errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
+$errorCodes = require __DIR__ . '/../../../config/error_codes.php';
 
-// 数据库连接
+AdminAuthMiddleware::authenticate();
 $db = Database::connect();
-
-// Token 认证（必须是 B端用户）
-$auth = new AuthMiddleware($db);
-$currentUser = $auth->authenticateB();
 
 // 获取请求参数
 $input = json_decode(file_get_contents('php://input'), true);
@@ -69,19 +31,23 @@ $rejectReason = trim($input['reject_reason'] ?? '');
 
 // 参数校验
 if (empty($bTaskId) || !is_numeric($bTaskId)) {
-    Response::error('任务ID不能为空', $errorCodes['INVALID_PARAMS']);
+    echo json_encode(['code' => 1001, 'message' => '任务ID不能为空', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 if (empty($recordId) || !is_numeric($recordId)) {
-    Response::error('任务记录ID不能为空', $errorCodes['INVALID_PARAMS']);
+    echo json_encode(['code' => 1001, 'message' => '任务记录ID不能为空', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 if (!in_array($action, ['approve', 'reject'])) {
-    Response::error('审核操作无效，必须是 approve 或 reject', $errorCodes['TASK_REVIEW_INVALID_ACTION']);
+    echo json_encode(['code' => 1002, 'message' => '审核操作无效，必须是 approve 或 reject', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 if ($action === 'reject' && empty($rejectReason)) {
-    Response::error('驳回时必须填写驳回原因', $errorCodes['TASK_REVIEW_REJECT_REASON_REQUIRED']);
+    echo json_encode(['code' => 1003, 'message' => '驳回时必须填写驳回原因', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 try {
@@ -97,19 +63,16 @@ try {
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$record) {
-        Response::error('任务记录不存在或参数不匹配', $errorCodes['TASK_REVIEW_NOT_FOUND']);
-    }
-    
-    // 2. 校验是否是当前B端用户发布的任务
-    if ((int)$record['b_user_id'] !== $currentUser['user_id']) {
-        Response::error('无权审核此任务', $errorCodes['TASK_REVIEW_NOT_FOUND']);
+        echo json_encode(['code' => 1004, 'message' => '任务记录不存在或参数不匹配', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+        exit;
     }
     
     // 3. 校验任务状态（只能审核待审核状态的任务）
     if ((int)$record['status'] !== 2) {
         $statusTexts = [1 => '进行中', 2 => '待审核', 3 => '已通过', 4 => '已驳回', 5 => '已超时'];
         $currentStatusText = $statusTexts[(int)$record['status']] ?? '未知';
-        Response::error("该任务当前状态为：{$currentStatusText}，无法审核", $errorCodes['TASK_REVIEW_INVALID_STATUS']);
+        echo json_encode(['code' => 1005, 'message' => "该任务当前状态为：{$currentStatusText}，无法审核", 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+        exit;
     }
     
     // 4. 查询C端用户信息
@@ -122,7 +85,8 @@ try {
     $cUser = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$cUser) {
-        Response::error('C端用户不存在', $errorCodes['USER_NOT_FOUND']);
+        echo json_encode(['code' => 1006, 'message' => 'C端用户不存在', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+        exit;
     }
     
     // 5. 查询或创建当日统计记录
@@ -243,7 +207,8 @@ try {
 
         if (!$bTaskInfo) {
             $db->rollBack();
-            Response::error('任务信息不存在', $errorCodes['TASK_NOT_FOUND']);
+            echo json_encode(['code' => 1007, 'message' => '任务信息不存在', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+            exit;
         }
 
         // 查询模板佣金配置
@@ -253,7 +218,8 @@ try {
 
         if (!$template) {
             $db->rollBack();
-            Response::error('任务模板不存在', $errorCodes['TASK_NOT_FOUND']);
+            echo json_encode(['code' => 1008, 'message' => '任务模板不存在', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+            exit;
         }
 
         // 根据stage选择对应的佣金字段
@@ -262,25 +228,41 @@ try {
             $cUserCommission = (int)($template['stage1_c_user_commission'] ?? 0);
             $agentCommissionAmount = (int)($template['stage1_agent_commission'] ?? 0);
             $seniorAgentCommissionAmount = (int)($template['stage1_senior_agent_commission'] ?? 0);
+            // 二级代理佣金复用一级代理佣金字段
+            $secondAgentCommissionAmount = $agentCommissionAmount;
+            $secondSeniorAgentCommissionAmount = $seniorAgentCommissionAmount;
         } elseif ($stage === 2) {
             $cUserCommission = (int)($template['stage2_c_user_commission'] ?? 0);
             $agentCommissionAmount = (int)($template['stage2_agent_commission'] ?? 0);
             $seniorAgentCommissionAmount = (int)($template['stage2_senior_agent_commission'] ?? 0);
+            // 二级代理佣金复用一级代理佣金字段
+            $secondAgentCommissionAmount = $agentCommissionAmount;
+            $secondSeniorAgentCommissionAmount = $seniorAgentCommissionAmount;
         } else {
             // 单任务 stage=0
             $cUserCommission = (int)($template['c_user_commission'] ?? 0);
             $agentCommissionAmount = (int)($template['agent_commission'] ?? 0);
             $seniorAgentCommissionAmount = (int)($template['senior_agent_commission'] ?? 0);
+            // 二级代理佣金复用一级代理佣金字段
+            $secondAgentCommissionAmount = $agentCommissionAmount;
+            $secondSeniorAgentCommissionAmount = $seniorAgentCommissionAmount;
         }
         
         // 11. 查询C端用户钱包
+        if (empty($cUser['wallet_id'])) {
+            $db->rollBack();
+            echo json_encode(['code' => 1009, 'message' => 'C端用户钱包不存在', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        
         $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
         $stmt->execute([$cUser['wallet_id']]);
         $cWallet = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$cWallet) {
             $db->rollBack();
-            Response::error('C端用户钱包不存在', $errorCodes['WALLET_NOT_FOUND']);
+            echo json_encode(['code' => 1009, 'message' => 'C端用户钱包不存在', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+            exit;
         }
         
         $cBeforeBalance = (int)$cWallet['balance'];
@@ -314,11 +296,14 @@ try {
         $agentCommission = 0;
         $agentUserId = null;
         $agentUsername = null;
+        $secondAgentCommission = 0;
+        $secondAgentUserId = null;
+        $secondAgentUsername = null;
 
         if (!empty($cUser['parent_id'])) {
-            // 查询上级用户
+            // 查询一级上级用户
             $stmt = $db->prepare("
-                SELECT id, username, wallet_id, is_agent
+                SELECT id, username, wallet_id, is_agent, parent_id
                 FROM c_users
                 WHERE id = ?
             ");
@@ -338,37 +323,99 @@ try {
                 $agentUsername = $parentUser['username'];
                 
                 // 查询团长钱包
-                $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
-                $stmt->execute([$parentUser['wallet_id']]);
-                $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                if (!empty($parentUser['wallet_id'])) {
+                    $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                    $stmt->execute([$parentUser['wallet_id']]);
+                    $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($agentWallet) {
+                        $agentBeforeBalance = (int)$agentWallet['balance'];
+                        $agentAfterBalance = $agentBeforeBalance + $agentCommission;
+                        
+                        // 更新团长钱包
+                        $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+                        $stmt->execute([$agentAfterBalance, $parentUser['wallet_id']]);
+                        
+                        // 记录团长钱包流水
+                        $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得一级团长佣金，任务ID：{$bTaskId}";
+                        $stmt = $db->prepare("
+                            INSERT INTO wallets_log (
+                                wallet_id, user_id, username, user_type, type, 
+                                amount, before_balance, after_balance, 
+                                related_type, related_id, remark
+                            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?)
+                        ");
+                        $stmt->execute([
+                            $parentUser['wallet_id'],
+                            $parentUser['id'],
+                            $parentUser['username'],
+                            $agentCommission,
+                            $agentBeforeBalance,
+                            $agentAfterBalance,
+                            $bTaskId,
+                            $agentRemark
+                        ]);
+                    }
+                }
                 
-                if ($agentWallet) {
-                    $agentBeforeBalance = (int)$agentWallet['balance'];
-                    $agentAfterBalance = $agentBeforeBalance + $agentCommission;
-                    
-                    // 更新团长钱包
-                    $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
-                    $stmt->execute([$agentAfterBalance, $parentUser['wallet_id']]);
-                    
-                    // 记录团长钱包流水
-                    $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得团长佣金，任务ID：{$bTaskId}";
+                // 新增：查询二级上级用户
+                if (!empty($parentUser['parent_id'])) {
                     $stmt = $db->prepare("
-                        INSERT INTO wallets_log (
-                            wallet_id, user_id, username, user_type, type, 
-                            amount, before_balance, after_balance, 
-                            related_type, related_id, remark
-                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?)
+                        SELECT id, username, wallet_id, is_agent
+                        FROM c_users
+                        WHERE id = ?
                     ");
-                    $stmt->execute([
-                        $parentUser['wallet_id'],
-                        $parentUser['id'],
-                        $parentUser['username'],
-                        $agentCommission,
-                        $agentBeforeBalance,
-                        $agentAfterBalance,
-                        $bTaskId,
-                        $agentRemark
-                    ]);
+                    $stmt->execute([$parentUser['parent_id']]);
+                    $secondParentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    $secondParentAgentLevel = $secondParentUser ? (int)$secondParentUser['is_agent'] : 0;
+
+                    if ($secondParentUser && $secondParentAgentLevel >= 1) {
+                        // 高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
+                        if ($secondParentAgentLevel === 2) {
+                            $secondAgentCommission = $secondSeniorAgentCommissionAmount;
+                        } else {
+                            $secondAgentCommission = $secondAgentCommissionAmount;
+                        }
+                        $secondAgentUserId = $secondParentUser['id'];
+                        $secondAgentUsername = $secondParentUser['username'];
+                        
+                        // 查询二级团长钱包
+                        if (!empty($secondParentUser['wallet_id'])) {
+                            $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                            $stmt->execute([$secondParentUser['wallet_id']]);
+                            $secondAgentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                            
+                            if ($secondAgentWallet) {
+                                $secondAgentBeforeBalance = (int)$secondAgentWallet['balance'];
+                                $secondAgentAfterBalance = $secondAgentBeforeBalance + $secondAgentCommission;
+                                
+                                // 更新二级团长钱包
+                                $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+                                $stmt->execute([$secondAgentAfterBalance, $secondParentUser['wallet_id']]);
+                                
+                                // 记录二级团长钱包流水
+                                $secondAgentRemark = "下级用户 {$parentUser['username']} 的团队成员完成任务，获得二级团长佣金，任务ID：{$bTaskId}";
+                                $stmt = $db->prepare(
+                                    "INSERT INTO wallets_log (
+                                        wallet_id, user_id, username, user_type, type, 
+                                        amount, before_balance, after_balance, 
+                                        related_type, related_id, remark
+                                    ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'second_agent_commission', ?, ?)
+                                ");
+                                $stmt->execute([
+                                    $secondParentUser['wallet_id'],
+                                    $secondParentUser['id'],
+                                    $secondParentUser['username'],
+                                    $secondAgentCommission,
+                                    $secondAgentBeforeBalance,
+                                    $secondAgentAfterBalance,
+                                    $bTaskId,
+                                    $secondAgentRemark
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -377,16 +424,25 @@ try {
         $db->commit();
         
         // 16. 返回成功响应
-        Response::success([
-            'record_id' => (int)$recordId,
-            'b_task_id' => (int)$bTaskId,
-            'action' => 'approved',
-            'c_user_commission' => number_format($cUserCommission / 100, 2),
-            'agent_commission' => $agentCommission > 0 ? number_format($agentCommission / 100, 2) : '0.00',
-            'agent_user_id' => $agentUserId,
-            'agent_username' => $agentUsername,
-            'reviewed_at' => $reviewedAt
-        ], '审核通过，佣金已发放');
+        echo json_encode([
+            'code' => 0,
+            'message' => '审核通过，佣金已发放',
+            'data' => [
+                'record_id' => (int)$recordId,
+                'b_task_id' => (int)$bTaskId,
+                'action' => 'approved',
+                'c_user_commission' => number_format($cUserCommission / 100, 2),
+                'agent_commission' => $agentCommission > 0 ? number_format($agentCommission / 100, 2) : '0.00',
+                'agent_user_id' => $agentUserId,
+                'agent_username' => $agentUsername,
+                // 新增：二级代理佣金信息
+                'second_agent_commission' => $secondAgentCommission > 0 ? number_format($secondAgentCommission / 100, 2) : '0.00',
+                'second_agent_user_id' => $secondAgentUserId,
+                'second_agent_username' => $secondAgentUsername,
+                'reviewed_at' => $reviewedAt
+            ],
+            'timestamp' => time()
+        ], JSON_UNESCAPED_UNICODE);
         
     } else {
         // ========== 审核驳回 ==========
@@ -419,13 +475,18 @@ try {
         $db->commit();
         
         // 11. 返回成功响应
-        Response::success([
-            'record_id' => (int)$recordId,
-            'b_task_id' => (int)$bTaskId,
-            'action' => 'rejected',
-            'reject_reason' => $rejectReason,
-            'reviewed_at' => $reviewedAt
-        ], '已驳回任务');
+        echo json_encode([
+            'code' => 0,
+            'message' => '已驳回任务',
+            'data' => [
+                'record_id' => (int)$recordId,
+                'b_task_id' => (int)$bTaskId,
+                'action' => 'rejected',
+                'reject_reason' => $rejectReason,
+                'reviewed_at' => $reviewedAt
+            ],
+            'timestamp' => time()
+        ], JSON_UNESCAPED_UNICODE);
     }
     
 } catch (PDOException $e) {
@@ -434,5 +495,6 @@ try {
         $db->rollBack();
     }
     
-    Response::error('审核失败', $errorCodes['TASK_REVIEW_FAILED'], 500);
+    http_response_code(500);
+    echo json_encode(['code' => 5000, 'message' => '审核失败', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
 }

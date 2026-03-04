@@ -59,6 +59,7 @@
                         <li class="nav-item"><a href="#" class="nav-link" data-page="rental-orders"><i class="ri-home-smile-2-line"></i> 租赁处理</a></li>
                         <li class="nav-item"><a href="#" class="nav-link" data-page="rental-tickets"><i class="ri-customer-service-2-line"></i> 工单管理</a></li>
                         <li class="nav-item"><a href="#" class="nav-link" data-page="system-config"><i class="ri-settings-4-line"></i> 网站配置</a></li>
+                        <li class="nav-item"><a href="#" class="nav-link" data-page="task-review"><i class="ri-check-double-line"></i> 任务审核</a></li>
                         <li class="nav-item"><a href="#" class="nav-link" data-page="notifications"><i class="ri-notification-3-line"></i> 系统通知</a></li>
                     </ul>
                     
@@ -351,6 +352,22 @@
                                     </select>
                                 </div>
                                 <div id="configTable" class="table-wrapper"></div>
+                            </div>
+                        </section>
+
+                        <!-- 任务审核 -->
+                        <section id="task-reviewSection" class="content-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">B端待审核任务管理</div>
+                                    <button class="btn-primary" onclick="loadTaskReviewList()"><i class="ri-refresh-line"></i> 刷新</button>
+                                </div>
+                                <div class="toolbar">
+                                    <input type="text" id="taskReviewBTaskId" placeholder="任务ID" class="search-input" style="max-width: 120px;">
+                                    <input type="text" id="taskReviewCUserId" placeholder="C端用户ID" class="search-input" style="max-width: 120px;">
+                                    <button class="btn-primary" onclick="loadTaskReviewList()"><i class="ri-search-line"></i> 搜索</button>
+                                </div>
+                                <div id="taskReviewTable" class="table-wrapper"></div>
                             </div>
                         </section>
 
