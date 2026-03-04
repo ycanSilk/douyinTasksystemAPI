@@ -2676,6 +2676,9 @@ function renderTaskReviewTable(list, pagination) {
                     <th>记录ID</th>
                     <th>任务ID</th>
                     <th>C端用户</th>
+                    <th>C端用户ID</th>
+                    <th>B端用户</th>
+                    <th>B端用户ID</th>
                     <th>模板标题</th>
                     <th>视频链接</th>
                     <th>评论链接</th>
@@ -2689,7 +2692,7 @@ function renderTaskReviewTable(list, pagination) {
     `;
     
     if (list.length === 0) {
-        html += '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #86868b;">暂无待审核任务</td></tr>';
+        html += '<tr><td colspan="13" style="text-align: center; padding: 40px; color: #86868b;">暂无待审核任务</td></tr>';
     } else {
         list.forEach(item => {
             const screenshots = item.screenshots && item.screenshots.length > 0 ? 
@@ -2700,6 +2703,9 @@ function renderTaskReviewTable(list, pagination) {
                     <td>${item.record_id}</td>
                     <td>${item.b_task_id}</td>
                     <td><strong>${item.c_username}</strong></td>
+                    <td>${item.c_user_id || '-'}</td>
+                    <td>${item.b_username || '-'}</td>
+                    <td>${item.b_user_id || '-'}</td>
                     <td>${item.template_title}</td>
                     <td>${item.video_url ? `<a href="${item.video_url}" target="_blank" class="text-primary"><i class="ri-play-circle-line"></i> 查看</a>` : '-'}</td>
                     <td>${item.comment_url ? `<a href="${item.comment_url}" target="_blank" class="text-primary"><i class="ri-link"></i> 查看</a>` : '-'}</td>
@@ -2736,7 +2742,7 @@ function showScreenshots(screenshots) {
     const modalBody = document.getElementById('modalBody');
     let html = '<h3><i class="ri-image-line"></i> 任务截图</h3>';
     
-    if (screenshots.length === 0) {
+    if (!screenshots || !Array.isArray(screenshots) || screenshots.length === 0) {
         html += '<p style="text-align: center; padding: 40px; color: #86868b;">暂无截图</p>';
     } else {
         html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';

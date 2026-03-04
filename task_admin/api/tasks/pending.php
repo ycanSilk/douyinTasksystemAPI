@@ -23,6 +23,7 @@ $pageSize = min(100, max(1, (int)($_GET['page_size'] ?? 20)));
 $offset = ($page - 1) * $pageSize;
 $bTaskId = !empty($_GET['b_task_id']) ? (int)$_GET['b_task_id'] : null;
 $cUserId = !empty($_GET['c_user_id']) ? (int)$_GET['c_user_id'] : null;
+$bUserId = !empty($_GET['b_user_id']) ? (int)$_GET['b_user_id'] : null;
 
 try {
     // 构建查询条件
@@ -37,6 +38,11 @@ try {
     if ($cUserId !== null) {
         $whereConditions[] = "c.c_user_id = ?";
         $params[] = $cUserId;
+    }
+    
+    if ($bUserId !== null) {
+        $whereConditions[] = "c.b_user_id = ?";
+        $params[] = $bUserId;
     }
     
     $whereClause = implode(' AND ', $whereConditions);
@@ -57,6 +63,7 @@ try {
             c.b_task_id,
             c.c_user_id,
             c.template_id,
+            c.b_user_id,
             c.video_url,
             c.recommend_mark,
             c.comment_url,
@@ -65,9 +72,11 @@ try {
             c.submitted_at,
             cu.username as c_username,
             cu.email as c_email,
+            bu.username as b_username,
             tm.title as template_title
         FROM c_task_records c
         LEFT JOIN c_users cu ON c.c_user_id = cu.id
+        LEFT JOIN b_users bu ON c.b_user_id = bu.id
         LEFT JOIN task_templates tm ON c.template_id = tm.id
         WHERE {$whereClause}
         ORDER BY c.submitted_at ASC, c.id ASC
@@ -98,7 +107,9 @@ try {
             'record_id' => (int)$record['record_id'],
             'b_task_id' => (int)$record['b_task_id'],
             'c_user_id' => (int)$record['c_user_id'],
+            'b_user_id' => (int)$record['b_user_id'],
             'c_username' => $record['c_username'],
+            'b_username' => $record['b_username'],
             'c_email' => $record['c_email'],
             'template_title' => $record['template_title'],
             'video_url' => $record['video_url'],
