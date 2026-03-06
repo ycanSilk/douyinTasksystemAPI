@@ -1,5 +1,5 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: text/csv; charset=utf-8');
 
 // 引入必要的文件
 require_once '../../../core/Database.php';
@@ -17,8 +17,6 @@ $response = new Response();
 AdminAuthMiddleware::authenticate();
 
 // 处理查询参数
-$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-$pageSize = isset($_GET['pageSize']) ? intval($_GET['pageSize']) : 10;
 $status = isset($_GET['status']) ? intval($_GET['status']) : null;
 $startDate = isset($_GET['startDate']) ? $_GET['startDate'] : null;
 $endDate = isset($_GET['endDate']) ? $_GET['endDate'] : null;
@@ -50,15 +48,6 @@ if ($userType !== null) {
 
 $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-// 计算总数
-$countSql = "SELECT COUNT(*) FROM recharge_requests r $whereClause";
-$stmt = $pdo->prepare($countSql);
-$stmt->execute($params);
-$total = $stmt->fetchColumn();
-
-// 计算分页
-$offset = ($page - 1) * $pageSize;
-
 // 查询数据
 $sql = "SELECT r.*, 
                CASE 
@@ -70,11 +59,7 @@ $sql = "SELECT r.*,
         LEFT JOIN b_users b ON r.user_id = b.id AND r.user_type = 0
         LEFT JOIN c_users c ON r.user_id = c.id AND r.user_type = 1
         $whereClause
-        ORDER BY r.created_at DESC
-        LIMIT ? OFFSET ?";
-
-$params[] = $pageSize;
-$params[] = $offset;
+        ORDER BY r.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -92,17 +77,43 @@ $userTypeMap = [
     1 => 'C端用户'
 ];
 
-foreach ($recharges as &$recharge) {
-    $recharge['status_text'] = $statusMap[$recharge['status']] ?? '未知';
-    $recharge['user_type_text'] = $userTypeMap[$recharge['user_type']] ?? '未知';
-    $recharge['created_at'] = date('Y-m-d H:i:s', strtotime($recharge['created_at']));
+// 准备CSV文件
+$filename = 'recharge_records_' . date('YmdHis') . '.csv';
+header("Content-Disposition: attachment; filename=$filename");
+
+// 创建CSV文件
+$output = fopen('php://output', 'w');
+
+// 写入BOM，解决中文乱码
+fwrite($output, "\xEF\xBB\xBF");
+
+// 写入表头
+fputcsv($output, [
+    '序号',
+    '用户类型',
+    '用户名',
+    '充值金额',
+    '支付方式',
+    '支付凭证',
+    '状态',
+    '备注',
+    '创建时间'
+]);
+
+// 写入数据
+foreach ($recharges as $index => $recharge) {
+    fputcsv($output, [
+        $index + 1,
+        $userTypeMap[$recharge['user_type']] ?? '未知',
+        $recharge['username'] ?? '未知',
+        $recharge['amount'],
+        $recharge['payment_method'] ?? '未知',
+        $recharge['payment_voucher'] ?? '',
+        $statusMap[$recharge['status']] ?? '未知',
+        $recharge['remark'] ?? '',
+        date('Y-m-d H:i:s', strtotime($recharge['created_at']))
+    ]);
 }
 
-// 返回结果
-$response->success([
-    'list' => $recharges,
-    'total' => $total,
-    'page' => $page,
-    'pageSize' => $pageSize
-]);
+fclose($output);
 ?>

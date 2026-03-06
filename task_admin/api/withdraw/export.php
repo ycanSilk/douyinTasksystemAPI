@@ -1,15 +1,14 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: text/csv; charset=utf-8');
 
 // 引入必要的文件
-require_once '../../../core/DB.php';
+require_once '../../../core/Database.php';
 require_once '../../../core/Response.php';
 require_once '../../../core/Auth.php';
 require_once '../../auth/AuthMiddleware.php';
 
 // 初始化数据库连接
-$db = new DB();
-$pdo = $db->getConnection();
+$pdo = Database::connect();
 
 // 初始化响应
 $response = new Response();
@@ -18,8 +17,6 @@ $response = new Response();
 AdminAuthMiddleware::authenticate();
 
 // 处理查询参数
-$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-$pageSize = isset($_GET['pageSize']) ? intval($_GET['pageSize']) : 10;
 $status = isset($_GET['status']) ? intval($_GET['status']) : null;
 $startDate = isset($_GET['startDate']) ? $_GET['startDate'] : null;
 $endDate = isset($_GET['endDate']) ? $_GET['endDate'] : null;
@@ -51,15 +48,6 @@ if ($userType !== null) {
 
 $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-// 计算总数
-$countSql = "SELECT COUNT(*) FROM withdraw_requests w $whereClause";
-$stmt = $pdo->prepare($countSql);
-$stmt->execute($params);
-$total = $stmt->fetchColumn();
-
-// 计算分页
-$offset = ($page - 1) * $pageSize;
-
 // 查询数据
 $sql = "SELECT w.*, 
                CASE 
@@ -71,11 +59,7 @@ $sql = "SELECT w.*,
         LEFT JOIN b_users b ON w.user_id = b.id AND w.user_type = 0
         LEFT JOIN c_users c ON w.user_id = c.id AND w.user_type = 1
         $whereClause
-        ORDER BY w.created_at DESC
-        LIMIT ? OFFSET ?";
-
-$params[] = $pageSize;
-$params[] = $offset;
+        ORDER BY w.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -93,17 +77,51 @@ $userTypeMap = [
     1 => 'C端用户'
 ];
 
-foreach ($withdraws as &$withdraw) {
-    $withdraw['status_text'] = $statusMap[$withdraw['status']] ?? '未知';
-    $withdraw['user_type_text'] = $userTypeMap[$withdraw['user_type']] ?? '未知';
-    $withdraw['created_at'] = date('Y-m-d H:i:s', strtotime($withdraw['created_at']));
+// 准备CSV文件
+$filename = 'withdraw_records_' . date('YmdHis') . '.csv';
+header("Content-Disposition: attachment; filename=$filename");
+
+// 创建CSV文件
+$output = fopen('php://output', 'w');
+
+// 写入BOM，解决中文乱码
+fwrite($output, "\xEF\xBB\xBF");
+
+// 写入表头
+fputcsv($output, [
+    '序号',
+    '用户类型',
+    '用户名',
+    '提现金额',
+    '手续费率',
+    '手续费',
+    '实际金额',
+    '提现方式',
+    '提现账号',
+    '账号姓名',
+    '状态',
+    '备注',
+    '创建时间'
+]);
+
+// 写入数据
+foreach ($withdraws as $index => $withdraw) {
+    fputcsv($output, [
+        $index + 1,
+        $userTypeMap[$withdraw['user_type']] ?? '未知',
+        $withdraw['username'] ?? '未知',
+        $withdraw['amount'],
+        $withdraw['fee_rate'] ?? '0',
+        $withdraw['fee_amount'] ?? '0',
+        $withdraw['actual_amount'] ?? $withdraw['amount'],
+        $withdraw['withdraw_method'] ?? '未知',
+        $withdraw['withdraw_account'] ?? '',
+        $withdraw['account_name'] ?? '',
+        $statusMap[$withdraw['status']] ?? '未知',
+        $withdraw['remark'] ?? '',
+        date('Y-m-d H:i:s', strtotime($withdraw['created_at']))
+    ]);
 }
 
-// 返回结果
-$response->success([
-    'list' => $withdraws,
-    'total' => $total,
-    'page' => $page,
-    'pageSize' => $pageSize
-]);
+fclose($output);
 ?>

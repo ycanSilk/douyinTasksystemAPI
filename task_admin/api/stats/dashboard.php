@@ -29,7 +29,31 @@ $config = require __DIR__ . '/../../../config/app.php';
 $commissionCUser = $config['commission_c_user']; // 57%
 $commissionAgent = $config['commission_agent']; // 8%
 
+// 处理时间范围参数
 $today = date('Y-m-d');
+$startDate = isset($_GET['startDate']) ? $_GET['startDate'] : date('Y-m-d', strtotime('-30 days'));
+$endDate = isset($_GET['endDate']) ? $_GET['endDate'] : $today;
+$timeRange = isset($_GET['timeRange']) ? $_GET['timeRange'] : '30d'; // 可选值：7d, 30d, 90d, custom
+
+// 计算默认时间范围
+switch ($timeRange) {
+    case '7d':
+        $startDate = date('Y-m-d', strtotime('-7 days'));
+        break;
+    case '30d':
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+        break;
+    case '90d':
+        $startDate = date('Y-m-d', strtotime('-90 days'));
+        break;
+    case 'custom':
+        // 使用传入的startDate和endDate
+        break;
+    default:
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+}
+
+// 计算7天和30天前的日期
 $date7DaysAgo = date('Y-m-d', strtotime('-7 days'));
 $date30DaysAgo = date('Y-m-d', strtotime('-30 days'));
 
@@ -248,13 +272,90 @@ try {
     $agentCommission7Days = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     // 17. 30日内团长佣金支出
-    $stmt = $db->prepare("
-        SELECT COALESCE(SUM(amount), 0) as total
-        FROM wallets_log
-        WHERE related_type = 'agent_commission' AND DATE(created_at) >= ?
-    ");
+    $stmt = $db->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM wallets_log WHERE related_type = 'agent_commission' AND DATE(created_at) >= ?");
     $stmt->execute([$date30DaysAgo]);
     $agentCommission30Days = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // 18. 自定义时间范围内的流水
+    $stmt = $db->prepare("SELECT COALESCE(SUM(b.unit_price), 0) as total FROM c_task_records c INNER JOIN b_tasks b ON c.b_task_id = b.id WHERE DATE(c.reviewed_at) BETWEEN ? AND ? AND c.status = 3");
+    $stmt->execute([$startDate, $endDate]);
+    $revenueCustomRange = (float)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // 19. 自定义时间范围内的利润
+    $stmt = $db->prepare("SELECT c.id, b.unit_price, cu.parent_id, pu.is_agent FROM c_task_records c INNER JOIN b_tasks b ON c.b_task_id = b.id INNER JOIN c_users cu ON c.c_user_id = cu.id LEFT JOIN c_users pu ON cu.parent_id = pu.id WHERE DATE(c.reviewed_at) BETWEEN ? AND ? AND c.status = 3");
+    $stmt->execute([$startDate, $endDate]);
+    $tasksForCustomProfit = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $profitCustomRange = 0;
+    foreach ($tasksForCustomProfit as $task) {
+        $price = (float)$task['unit_price'];
+        $cUserCommission = $price * ($commissionCUser / 100);
+        $agentCommission = 0;
+        
+        if ($task['parent_id'] && (int)$task['is_agent'] === 1) {
+            $agentCommission = $price * ($commissionAgent / 100);
+        }
+        
+        $profit = $price - $cUserCommission - $agentCommission;
+        $profitCustomRange += $profit;
+    }
+    
+    // 20. 自定义时间范围内的团长佣金支出
+    $stmt = $db->prepare("SELECT COALESCE(SUM(amount), 0) as total FROM wallets_log WHERE related_type = 'agent_commission' AND DATE(created_at) BETWEEN ? AND ?");
+    $stmt->execute([$startDate, $endDate]);
+    $agentCommissionCustomRange = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // ========== 趋势分析数据 ==========
+    
+    // 1. 每日任务完成数趋势
+    $stmt = $db->prepare("SELECT DATE(reviewed_at) as date, COUNT(*) as count FROM c_task_records WHERE status = 3 AND DATE(reviewed_at) BETWEEN ? AND ? GROUP BY DATE(reviewed_at) ORDER BY date");
+    $stmt->execute([$startDate, $endDate]);
+    $dailyTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 2. 每日流水趋势
+    $stmt = $db->prepare("SELECT DATE(c.reviewed_at) as date, COALESCE(SUM(b.unit_price), 0) as amount FROM c_task_records c INNER JOIN b_tasks b ON c.b_task_id = b.id WHERE c.status = 3 AND DATE(c.reviewed_at) BETWEEN ? AND ? GROUP BY DATE(c.reviewed_at) ORDER BY date");
+    $stmt->execute([$startDate, $endDate]);
+    $dailyRevenue = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 3. 每日利润趋势
+    $stmt = $db->prepare("SELECT DATE(c.reviewed_at) as date, c.id, b.unit_price, cu.parent_id, pu.is_agent FROM c_task_records c INNER JOIN b_tasks b ON c.b_task_id = b.id INNER JOIN c_users cu ON c.c_user_id = cu.id LEFT JOIN c_users pu ON cu.parent_id = pu.id WHERE c.status = 3 AND DATE(c.reviewed_at) BETWEEN ? AND ?");
+    $stmt->execute([$startDate, $endDate]);
+    $tasksForProfitTrend = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 按日期计算利润
+    $dailyProfit = [];
+    foreach ($tasksForProfitTrend as $task) {
+        $date = $task['date'];
+        $price = (float)$task['unit_price'];
+        $cUserCommission = $price * ($commissionCUser / 100);
+        $agentCommission = 0;
+        
+        if ($task['parent_id'] && (int)$task['is_agent'] === 1) {
+            $agentCommission = $price * ($commissionAgent / 100);
+        }
+        
+        $profit = $price - $cUserCommission - $agentCommission;
+        
+        if (!isset($dailyProfit[$date])) {
+            $dailyProfit[$date] = 0;
+        }
+        $dailyProfit[$date] += $profit;
+    }
+    
+    // 转换为数组格式
+    $dailyProfitArray = [];
+    foreach ($dailyProfit as $date => $amount) {
+        $dailyProfitArray[] = ['date' => $date, 'amount' => $amount];
+    }
+    
+    // 4. 充值提现趋势
+    $stmt = $db->prepare("SELECT DATE(created_at) as date, SUM(amount) as amount FROM recharge_requests WHERE status = 1 AND DATE(created_at) BETWEEN ? AND ? GROUP BY DATE(created_at) ORDER BY date");
+    $stmt->execute([$startDate, $endDate]);
+    $dailyRecharge = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $stmt = $db->prepare("SELECT DATE(created_at) as date, SUM(amount) as amount FROM withdraw_requests WHERE status = 1 AND DATE(created_at) BETWEEN ? AND ? GROUP BY DATE(created_at) ORDER BY date");
+    $stmt->execute([$startDate, $endDate]);
+    $dailyWithdraw = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // ========== 返回统计数据 ==========
     
@@ -262,6 +363,12 @@ try {
         'code' => 0,
         'message' => 'ok',
         'data' => [
+            // 时间范围
+            'time_range' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'range_type' => $timeRange
+            ],
             // 任务统计
             'tasks' => [
                 'total' => $totalTasks,
@@ -275,21 +382,26 @@ try {
             'revenue' => [
                 'total' => number_format($totalRevenue, 2),
                 'today' => number_format($todayRevenue, 2),
-                '7_days' => number_format($revenue7Days, 2),
-                '30_days' => number_format($revenue30Days, 2)
+                'custom_range' => number_format($revenueCustomRange, 2)
             ],
             // 利润统计
             'profit' => [
                 'total' => number_format($totalProfit, 2),
                 'today' => number_format($todayProfit, 2),
-                '7_days' => number_format($profit7Days, 2),
-                '30_days' => number_format($profit30Days, 2)
+                'custom_range' => number_format($profitCustomRange, 2)
             ],
             // 团长佣金统计
             'agent_commission' => [
                 'total' => number_format($totalAgentCommission / 100, 2),
-                '7_days' => number_format($agentCommission7Days / 100, 2),
-                '30_days' => number_format($agentCommission30Days / 100, 2)
+                'custom_range' => number_format($agentCommissionCustomRange / 100, 2)
+            ],
+            // 趋势分析
+            'trends' => [
+                'daily_tasks' => $dailyTasks,
+                'daily_revenue' => $dailyRevenue,
+                'daily_profit' => $dailyProfitArray,
+                'daily_recharge' => $dailyRecharge,
+                'daily_withdraw' => $dailyWithdraw
             ]
         ],
         'timestamp' => time()
