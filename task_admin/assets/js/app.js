@@ -4035,6 +4035,7 @@ function renderMagnifierTasksTable(list, pagination) {
                     <th>任务标题</th>
                     <th>单价</th>
                     <th>总数量</th>
+                    <th>总价</th>
                     <th>已完成</th>
                     <th>进行中</th>
                     <th>待审核</th>
@@ -4051,7 +4052,7 @@ function renderMagnifierTasksTable(list, pagination) {
     `;
     
     if (list.length === 0) {
-        html += '<tr><td colspan="14" style="text-align: center; padding: 40px; color: #86868b;">暂无数据</td></tr>';
+        html += '<tr><td colspan="15" style="text-align: center; padding: 40px; color: #86868b;">暂无数据</td></tr>';
     } else {
         list.forEach(task => {
             const statusBadge = task.status === 0 ? '<span class="badge badge-neutral">待发布</span>' :
@@ -4060,17 +4061,23 @@ function renderMagnifierTasksTable(list, pagination) {
                                task.status === 3 ? '<span class="badge badge-danger">已取消</span>' :
                                '<span class="badge">未知</span>';
             
-            // 解析 recommend_marks
+            // 处理 recommend_marks
             let recommendMarks = [];
-            try {
-                if (task.recommend_marks) {
-                    recommendMarks = JSON.parse(task.recommend_marks);
-                    if (!Array.isArray(recommendMarks)) {
-                        recommendMarks = [recommendMarks];
+            if (task.recommend_marks) {
+                if (typeof task.recommend_marks === 'string') {
+                    try {
+                        recommendMarks = JSON.parse(task.recommend_marks);
+                        if (!Array.isArray(recommendMarks)) {
+                            recommendMarks = [recommendMarks];
+                        }
+                    } catch (e) {
+                        console.error('解析 recommend_marks 失败:', e);
                     }
+                } else if (Array.isArray(task.recommend_marks)) {
+                    recommendMarks = task.recommend_marks;
+                } else if (typeof task.recommend_marks === 'object') {
+                    recommendMarks = [task.recommend_marks];
                 }
-            } catch (e) {
-                console.error('解析 recommend_marks 失败:', e);
             }
             
             // 获取第一个推荐标记
@@ -4089,12 +4096,16 @@ function renderMagnifierTasksTable(list, pagination) {
                 `<img src="${imageUrl}" style="max-width: 60px; max-height: 60px; border-radius: 4px;" alt="图片">` : 
                 '-';
             
+            // 计算总价
+            const totalPrice = task.total_price || (task.price * task.task_count);
+            
             html += `
                 <tr>
                     <td>${task.id}</td>
                     <td><strong>${task.title}</strong></td>
                     <td>¥${task.price}</td>
                     <td>${task.task_count}</td>
+                    <td>¥${totalPrice}</td>
                     <td>${task.task_done}</td>
                     <td>${task.task_doing}</td>
                     <td>${task.task_reviewing}</td>
@@ -4106,8 +4117,6 @@ function renderMagnifierTasksTable(list, pagination) {
                     <td>${task.created_at}</td>
                     <td>
                         <button class="btn-info btn-small" onclick="viewMagnifierTaskDetail(${task.id})"><i class="ri-eye-line"></i> 详情</button>
-                        <button class="btn-success btn-small" onclick="reviewMagnifierTask(${task.id}, 3)"><i class="ri-check-line"></i> 通过</button>
-                        <button class="btn-danger btn-small" onclick="reviewMagnifierTask(${task.id}, 4)"><i class="ri-close-line"></i> 驳回</button>
                     </td>
                 </tr>
             `;
@@ -4161,17 +4170,23 @@ function showMagnifierTaskDetailModal(data) {
     const task = data.task;
     const records = data.records || [];
     
-    // 解析 recommend_marks
+    // 处理 recommend_marks
     let recommendMarks = [];
-    try {
-        if (task.recommend_marks) {
-            recommendMarks = JSON.parse(task.recommend_marks);
-            if (!Array.isArray(recommendMarks)) {
-                recommendMarks = [recommendMarks];
+    if (task.recommend_marks) {
+        if (typeof task.recommend_marks === 'string') {
+            try {
+                recommendMarks = JSON.parse(task.recommend_marks);
+                if (!Array.isArray(recommendMarks)) {
+                    recommendMarks = [recommendMarks];
+                }
+            } catch (e) {
+                console.error('解析 recommend_marks 失败:', e);
             }
+        } else if (Array.isArray(task.recommend_marks)) {
+            recommendMarks = task.recommend_marks;
+        } else if (typeof task.recommend_marks === 'object') {
+            recommendMarks = [task.recommend_marks];
         }
-    } catch (e) {
-        console.error('解析 recommend_marks 失败:', e);
     }
     
     const modalBody = document.getElementById('modalBody');
@@ -4189,6 +4204,10 @@ function showMagnifierTaskDetailModal(data) {
                         <div class="stat-item">
                             <span class="stat-label">单价</span>
                             <span class="stat-value">¥${task.price}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">总价</span>
+                            <span class="stat-value">¥${task.total_price || (task.price * task.task_count)}</span>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -4333,45 +4352,4 @@ function showMagnifierTaskDetailModal(data) {
     document.getElementById('modal').classList.add('active', 'fullscreen');
 }
 
-// 审核放大镜任务
-function reviewMagnifierTask(taskId, status) {
-    const actionText = status === 3 ? '通过' : '驳回';
-    const confirmText = status === 3 ? '确认通过该任务吗？' : '确认驳回该任务吗？';
-    
-    if (status === 4) {
-        const remark = prompt('请输入驳回原因：');
-        if (!remark) return;
-        
-        doReview(taskId, status, remark);
-    } else {
-        showConfirm(confirmText, () => {
-            doReview(taskId, status, '');
-        });
-    }
-}
 
-// 执行审核操作
-async function doReview(taskId, status, remark) {
-    console.log('=== 审核放大镜任务 ===');
-    console.log('任务ID:', taskId);
-    console.log('状态:', status);
-    console.log('备注:', remark);
-    
-    try {
-        const data = await apiRequest(`${API_BASE}/api/magnifier/review.php`, {
-            method: 'POST',
-            body: JSON.stringify({ recordId: taskId, status, remark })
-        });
-        console.log('审核响应:', data);
-        
-        if (data.code === 0) {
-            showToast('审核成功', 'success');
-            loadMagnifierTasks();
-        } else {
-            showToast('审核失败: ' + data.message, 'error');
-        }
-    } catch (err) {
-        console.error('审核失败:', err);
-        showToast('审核失败', 'error');
-    }
-}
