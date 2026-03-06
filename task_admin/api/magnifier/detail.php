@@ -26,51 +26,65 @@ if (!$id) {
 }
 
 // 查询任务详情
-$sql = "SELECT b.*, t.title, t.price, t.description1, u.username as b_username FROM b_tasks b LEFT JOIN task_templates t ON b.template_id = t.id LEFT JOIN b_users u ON b.b_user_id = u.id WHERE b.id = ? AND b.template_id = 3";
+$sql = " 
+    SELECT m.*, u.username as b_username 
+    FROM magnifying_glass_tasks m 
+    LEFT JOIN b_users u ON m.b_user_id = u.id 
+    WHERE m.id = ?
+";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id]);
 $task = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$task) {
-    Response::error('任务不存在或不是放大镜任务', 404, 404);
+    Response::error('任务不存在', 404, 404);
     exit;
 }
 
-// 查询任务记录
-$recordSql = "SELECT c.*, u.username as c_username FROM c_task_records c LEFT JOIN c_users u ON c.c_user_id = u.id WHERE c.b_task_id = ? ORDER BY c.created_at DESC";
-$recordStmt = $pdo->prepare($recordSql);
-$recordStmt->execute([$id]);
-$records = $recordStmt->fetchAll(PDO::FETCH_ASSOC);
+// 处理JSON字段
+if (!empty($task['recommend_marks'])) {
+    $task['recommend_marks'] = json_decode($task['recommend_marks'], true);
+}
 
-// 格式化状态
-$taskStatusMap = [
-    0 => '待发布',
-    1 => '发布中',
+// 状态文本映射
+$statusMap = [
+    0 => '已发布',
+    1 => '进行中',
     2 => '已完成',
     3 => '已取消'
 ];
+$task['status_text'] = $statusMap[$task['status']] ?? '未知状态';
+$task['price'] = $task['unit_price']; // 保持与现有接口一致
 
-$recordStatusMap = [
-    0 => '待接取',
-    1 => '进行中',
-    2 => '待审核',
-    3 => '已通过',
-    4 => '已驳回'
+// 格式化任务数据
+$formattedTask = [
+    'id' => (int)$task['id'],
+    'b_user_id' => (int)$task['b_user_id'],
+    'b_username' => $task['b_username'],
+    'combo_task_id' => null, // 保持与现有接口一致
+    'parent_task_id' => $task['task_id'] ? (int)$task['task_id'] : null,
+    'template_id' => (int)$task['template_id'],
+    'video_url' => $task['video_url'],
+    'deadline' => (int)$task['deadline'],
+    'recommend_marks' => $task['recommend_marks'],
+    'task_count' => (int)$task['task_count'],
+    'task_done' => (int)$task['task_done'],
+    'task_doing' => (int)$task['task_doing'],
+    'task_reviewing' => (int)$task['task_reviewing'],
+    'unit_price' => (string)$task['unit_price'],
+    'total_price' => (string)$task['total_price'],
+    'status' => (int)$task['status'],
+    'created_at' => $task['created_at'],
+    'updated_at' => $task['updated_at'],
+    'completed_at' => $task['completed_at'],
+    'title' => $task['title'],
+    'price' => (string)$task['price'],
+    'status_text' => $task['status_text']
 ];
-
-$task['status_text'] = $taskStatusMap[$task['status']] ?? '未知';
-$task['created_at'] = date('Y-m-d H:i:s', strtotime($task['created_at']));
-$task['updated_at'] = date('Y-m-d H:i:s', strtotime($task['updated_at']));
-
-foreach ($records as &$record) {
-    $record['status_text'] = $recordStatusMap[$record['status']] ?? '未知';
-    $record['created_at'] = date('Y-m-d H:i:s', strtotime($record['created_at']));
-    $record['reviewed_at'] = $record['reviewed_at'] ? date('Y-m-d H:i:s', strtotime($record['reviewed_at'])) : null;
-}
 
 // 返回结果
 Response::success([
-    'task' => $task,
-    'records' => $records
+    'task' => $formattedTask,
+    'records' => [] // 新表暂时没有任务记录
 ]);
 ?>
