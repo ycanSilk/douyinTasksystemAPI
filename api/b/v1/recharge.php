@@ -11,13 +11,11 @@
  * {
  *   "amount": 100.00,
  *   "payment_method": "alipay",
- *   "payment_voucher": "http://example.com/img/xxx.jpg",
- *   "pswd": "e10adc3949ba59abbe56e057f20f883e"
+ *   "payment_voucher": "http://example.com/img/xxx.jpg"
  * }
  * 
  * 支付方式：不限制，传什么保存什么（如：alipay、wechat、usdt等）
  * 金额限制：最低1元，无上限
- * 支付密码：必须提供，用于安全验证
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -52,7 +50,6 @@ $input = json_decode(file_get_contents('php://input'), true);
 $amount = $input['amount'] ?? 0;
 $paymentMethod = trim($input['payment_method'] ?? '');
 $paymentVoucher = trim($input['payment_voucher'] ?? '');
-$pswd = trim($input['pswd'] ?? ''); // 支付密码
 
 // 参数校验
 if (empty($amount) || !is_numeric($amount) || $amount <= 0) {
@@ -94,10 +91,6 @@ try {
     // 将金额转换为分
     $amountInCents = (int)round($amount * 100);
     $currentBalance = (int)$wallet['balance'];
-    
-    // 验证支付密码
-    require_once __DIR__ . '/../../../core/WalletPassword.php';
-    WalletPassword::verify($db, $bUser['wallet_id'], $pswd, $errorCodes);
     
     // 开启事务
     $db->beginTransaction();

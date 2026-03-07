@@ -4,6 +4,171 @@ const API_BASE = '/task_admin';
 // 全局状态
 let currentUser = null;
 
+// 实时通知功能相关变量
+// 存储各审核面板的待审核状态
+let auditStatusRecord = {
+    recharge: false,
+    withdraw: false,
+    agent: false
+};
+
+// 存储放大镜任务数量
+let lastMagnifierTaskCount = 0;
+
+// 存储租赁订单待处理数量
+let lastRentalOrderCount = 0;
+
+// 轮询定时器ID
+let pollingTimer = null;
+
+// 倒计时定时器ID
+let countdownTimer = null;
+
+// 倒计时秒数
+let countdownSeconds = 60;
+
+// 倒计时日志输出计数器
+let countdownLogCounter = 0;
+
+// 是否需要播放提示音
+let needPlaySound = false;
+
+// 日志存储
+const LOG_STORAGE_KEY = 'task_admin_logs';
+const MAX_LOGS = 1000;
+
+// 日志目录
+const LOG_DIR = 'task_admin/logs';
+
+// 获取当前时间戳（精确到毫秒）
+function getTimestamp() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+
+// 格式化日志消息
+function formatLog(level, message, module = 'SYSTEM') {
+    const timestamp = getTimestamp();
+    const logMessage = `[${timestamp}] [${level}] [${module}] ${message}`;
+    return {
+        timestamp,
+        level,
+        module,
+        message,
+        formatted: logMessage,
+        timestampISO: new Date().toISOString()
+    };
+}
+
+// 保存日志到本地存储
+function saveLogToStorage(log) {
+    try {
+        const logs = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]');
+        logs.push(log);
+        if (logs.length > MAX_LOGS) {
+            logs.shift(); // 移除最旧的日志
+        }
+        localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logs));
+    } catch (error) {
+        console.error('保存日志到本地存储失败:', error);
+    }
+}
+
+// 输出日志
+function log(level, message, module = 'SYSTEM') {
+    const log = formatLog(level, message, module);
+    console.log(log.formatted);
+    saveLogToStorage(log);
+    return log;
+}
+
+// 持久化日志到文件
+async function persistLogToFile(log) {
+    try {
+        const logData = {
+            ...log,
+            timestamp: new Date().toISOString()
+        };
+        
+        await fetch(`${API_BASE}/api/logs/save.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(logData)
+        });
+    } catch (error) {
+        console.error('持久化日志到文件失败:', error);
+    }
+}
+
+// 初始化日志系统
+function initLogging() {
+    log('INFO', '日志系统初始化', 'LOGGING');
+    log('INFO', '加载历史日志', 'LOGGING');
+    
+    // 显示最近的日志
+    try {
+        const logs = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]');
+        if (logs.length > 0) {
+            log('INFO', `加载了 ${logs.length} 条历史日志`, 'LOGGING');
+            // 显示历史日志
+            logs.forEach(logItem => {
+                console.log(logItem.formatted);
+            });
+        }
+    } catch (error) {
+        log('ERROR', '加载历史日志失败: ' + error.message, 'LOGGING');
+    }
+}
+
+// 增强的showToast函数，带日志记录
+function showToast(message, type = 'info') {
+    // 记录系统提示信息到日志
+    log(type.toUpperCase(), message, 'UI');
+    
+    // 移除现有toast
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    let icon = 'ri-information-line';
+    if (type === 'success') icon = 'ri-checkbox-circle-line';
+    if (type === 'error') icon = 'ri-error-warning-line';
+    
+    toast.innerHTML = `<i class="${icon}"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+    }, 3000);
+}
+
+// 增强的播放提示音函数，带日志记录
+function playNotificationSound() {
+    const audio = document.getElementById('notificationSound');
+    if (audio) {
+        audio.currentTime = 0; // 重置音频播放位置
+        audio.play().catch(error => {
+            log('ERROR', '提示音播放失败: ' + error.message, 'AUDIO');
+            console.error('提示音播放失败:', error);
+        });
+        // 记录提示音事件
+        log('INFO', '播放提示音，触发场景: 系统通知', 'AUDIO');
+    }
+}
+
 // 带认证的API请求
 async function apiRequest(url, options = {}) {
     const token = sessionStorage.getItem('admin_token');
@@ -60,6 +225,9 @@ async function apiRequest(url, options = {}) {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 初始化日志系统
+    initLogging();
+    
     initLoginForm();
     initLogout();
     initNavigation();
@@ -67,6 +235,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 检查登录状态
     checkLoginStatus();
+    
+    // 页面卸载时停止轮询
+    window.addEventListener('beforeunload', stopPolling);
 });
 
 // 检查登录状态
@@ -92,11 +263,7 @@ function initLoginForm() {
         
         // MD5加密密码
         const hashedPassword = md5(password);
-        
-        console.log('=== 登录调试信息 ===');
-        console.log('用户名:', username);
-        console.log('原始密码:', password);
-        console.log('MD5加密后密码:', hashedPassword);
+      
         
         try {
             const res = await fetch(`${API_BASE}/auth/login.php`, {
@@ -124,6 +291,8 @@ function initLoginForm() {
                     showMainPage();
                     // 新登录时默认跳转到统计面板
                     switchToPage('dashboard');
+                    // 启动实时通知轮询
+                    startPolling();
                 } else {
                     console.log('登录失败，错误信息:', data.message);
                     errorDiv.innerHTML = `<i class="ri-error-warning-line"></i> ${data.message}`;
@@ -196,6 +365,9 @@ function initLogout() {
         try {
             await fetch(`${API_BASE}/auth/logout.php`, { method: 'POST' });
         } catch (err) {}
+        
+        // 停止轮询检测
+        stopPolling();
         
         sessionStorage.clear();
         localStorage.removeItem('admin_current_page'); // 清除页面记忆
@@ -1138,6 +1310,306 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 400);
     }, 3000);
+}
+
+// 播放提示音
+function playNotificationSound() {
+    const audio = document.getElementById('notificationSound');
+    if (audio) {
+        audio.currentTime = 0; // 重置音频播放位置
+        audio.play().catch(error => {
+            console.error('提示音播放失败:', error);
+        });
+    }
+}
+
+// 检测审核面板
+async function checkAuditPanels() {
+    try {
+        // 获取充值审核待审核数量
+        const rechargeRes = await apiRequest(`${API_BASE}/api/recharge/list.php?status=0&page=1&pageSize=1`);
+        const rechargeCount = rechargeRes.code === 0 ? rechargeRes.data.list.length : 0;
+        
+        // 获取提现审核待审核数量
+        const withdrawRes = await apiRequest(`${API_BASE}/api/withdraw/list.php?status=0&page=1&pageSize=1`);
+        const withdrawCount = withdrawRes.code === 0 ? withdrawRes.data.list.length : 0;
+        
+        // 获取团长审核待审核数量
+        const agentRes = await apiRequest(`${API_BASE}/api/agent/list.php?status=0&page=1&pageSize=1`);
+        const agentCount = agentRes.code === 0 ? agentRes.data.list.length : 0;
+        
+        console.log('=== 审核面板检测日志 ===');
+        console.log('充值审核待处理数量:', rechargeCount);
+        console.log('提现审核待处理数量:', withdrawCount);
+        console.log('团长审核待处理数量:', agentCount);
+        
+        // 检查是否有新的待审核记录
+        let needNotification = false;
+        
+        if (rechargeCount > 0) {
+            needNotification = true;
+            auditStatusRecord.recharge = true;
+        } else {
+            auditStatusRecord.recharge = false;
+        }
+        
+        if (withdrawCount > 0) {
+            needNotification = true;
+            auditStatusRecord.withdraw = true;
+        } else {
+            auditStatusRecord.withdraw = false;
+        }
+        
+        if (agentCount > 0) {
+            needNotification = true;
+            auditStatusRecord.agent = true;
+        } else {
+            auditStatusRecord.agent = false;
+        }
+        
+        // 更新红色角标
+        updateBadge('recharge', rechargeCount);
+        updateBadge('withdraw', withdrawCount);
+        updateBadge('agent', agentCount);
+        
+        if (needNotification) {
+            needPlaySound = true;
+        }
+        
+        return {
+            recharge: rechargeCount,
+            withdraw: withdrawCount,
+            agent: agentCount
+        };
+    } catch (error) {
+        console.error('审核面板检测失败:', error);
+        return {
+            recharge: 0,
+            withdraw: 0,
+            agent: 0
+        };
+    }
+}
+
+// 检测放大镜任务
+async function checkMagnifierTasks() {
+    try {
+        // 获取当前放大镜任务数量
+        const magnifierRes = await apiRequest(`${API_BASE}/api/magnifier/list.php?page=1&pageSize=10`);
+        const currentTaskCount = magnifierRes.code === 0 ? magnifierRes.data.total : 0;
+        
+        console.log('=== 放大镜任务检测日志 ===');
+        console.log('当前任务总数:', currentTaskCount);
+        console.log('上次任务总数:', lastMagnifierTaskCount);
+        
+        // 检测是否有新增任务
+        if (currentTaskCount > lastMagnifierTaskCount) {
+            needPlaySound = true;
+        }
+        
+        // 更新红色角标
+        updateBadge('magnifier', currentTaskCount);
+        
+        // 更新任务数量记录
+        lastMagnifierTaskCount = currentTaskCount;
+        
+        return currentTaskCount;
+    } catch (error) {
+        console.error('放大镜任务检测失败:', error);
+        return 0;
+    }
+}
+
+// 检测租赁订单
+async function checkRentalOrders() {
+    try {
+        // 获取状态为"已支付/待客服"的租赁订单数量
+        const rentalRes = await apiRequest(`${API_BASE}/api/rental_orders/list.php?status=1&page=1&pageSize=1`);
+        const currentOrderCount = rentalRes.code === 0 ? rentalRes.data.list.length : 0;
+        
+        console.log('=== 租赁订单检测日志 ===');
+        console.log('当前待客服处理订单数量:', currentOrderCount);
+        console.log('上次待客服处理订单数量:', lastRentalOrderCount);
+        
+        // 检测是否有待客服处理的订单
+        if (currentOrderCount > 0) {
+            needPlaySound = true;
+        }
+        
+        // 更新红色角标
+        updateBadge('rental-orders', currentOrderCount);
+        
+        // 更新订单数量记录
+        lastRentalOrderCount = currentOrderCount;
+        
+        return currentOrderCount;
+    } catch (error) {
+        console.error('租赁订单检测失败:', error);
+        return 0;
+    }
+}
+
+// 启动轮询检测
+function startPolling() {
+    console.log('=== 启动轮询检测 ===');
+    
+    // 先执行一次检测
+    performAllChecks();
+    
+    // 启动倒计时
+    startCountdown();
+}
+
+// 停止轮询检测
+function stopPolling() {
+    console.log('=== 停止轮询检测 ===');
+    
+    if (pollingTimer) {
+        clearInterval(pollingTimer);
+        pollingTimer = null;
+    }
+    
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+}
+
+// 启动倒计时
+function startCountdown() {
+    log('INFO', '启动倒计时', 'TIMER');
+    countdownSeconds = 60;
+    countdownLogCounter = 0;
+    
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+    }
+    
+    countdownTimer = setInterval(() => {
+        countdownSeconds--;
+        countdownLogCounter++;
+        
+        // 每5秒输出一次日志
+        if (countdownLogCounter % 5 === 0) {
+            log('INFO', `倒计时状态更新，剩余 ${countdownSeconds} 秒`, 'TIMER');
+        }
+        
+        if (countdownSeconds <= 0) {
+            log('INFO', '倒计时结束，执行检测', 'TIMER');
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            performAllChecks();
+        }
+    }, 1000);
+}
+
+// 执行所有检测
+async function performAllChecks() {
+    const startTime = getTimestamp();
+    log('INFO', `开始执行所有检测，开始时间: ${startTime}，检测类型: 全面板检测`, 'DETECTION');
+    
+    // 重置提示音标志
+    needPlaySound = false;
+    let detectionStatus = 'SUCCESS';
+    const detectionResults = {};
+    const detectionItems = [];
+    
+    try {
+        // 执行各面板检测
+        log('INFO', '开始检测审核面板', 'DETECTION');
+        const auditResult = await checkAuditPanels();
+        detectionResults.audit = auditResult;
+        detectionItems.push({
+            type: '审核面板',
+            status: 'SUCCESS',
+            data: auditResult
+        });
+        log('INFO', `审核面板检测结果: ${JSON.stringify(auditResult)}`, 'DETECTION');
+        
+        log('INFO', '开始检测放大镜任务', 'DETECTION');
+        const magnifierResult = await checkMagnifierTasks();
+        detectionResults.magnifier = magnifierResult;
+        detectionItems.push({
+            type: '放大镜任务',
+            status: 'SUCCESS',
+            data: { count: magnifierResult }
+        });
+        log('INFO', `放大镜任务检测结果: ${magnifierResult}`, 'DETECTION');
+        
+        log('INFO', '开始检测租赁订单', 'DETECTION');
+        const rentalResult = await checkRentalOrders();
+        detectionResults.rental = rentalResult;
+        detectionItems.push({
+            type: '租赁订单',
+            status: 'SUCCESS',
+            data: { count: rentalResult }
+        });
+        log('INFO', `租赁订单检测结果: ${rentalResult}`, 'DETECTION');
+        
+        // 所有检测完成后，检查是否需要播放提示音
+        if (needPlaySound) {
+            log('INFO', '检测完成，播放提示音', 'DETECTION');
+            playNotificationSound();
+        }
+        
+        const endTime = getTimestamp();
+        log('INFO', `所有检测执行完成，结束时间: ${endTime}`, 'DETECTION');
+        
+        // 持久化检测结果日志
+        const detectionLog = log('INFO', `检测结果: ${JSON.stringify(detectionResults)}, 状态: ${detectionStatus}, 检测项: ${detectionItems.length}`, 'DETECTION');
+        await persistLogToFile(detectionLog);
+    } catch (error) {
+        detectionStatus = 'ERROR';
+        log('ERROR', `检测过程中发生错误: ${error.message}`, 'DETECTION');
+        
+        // 持久化错误日志
+        const errorLog = log('ERROR', `检测错误: ${error.message}`, 'DETECTION');
+        await persistLogToFile(errorLog);
+    } finally {
+        // 重新启动倒计时
+        log('INFO', '重新启动倒计时', 'DETECTION');
+        startCountdown();
+    }
+}
+
+// 更新红色角标
+function updateBadge(panelType, count) {
+    // 映射面板类型到导航栏的data-page属性
+    const pageMap = {
+        'recharge': 'recharge',
+        'withdraw': 'withdraw',
+        'agent': 'agent',
+        'magnifier': 'magnifier',
+        'rental-orders': 'rental-orders'
+    };
+    
+    const pageCode = pageMap[panelType];
+    if (!pageCode) return;
+    
+    // 找到对应的导航链接
+    const navLink = document.querySelector(`.nav-link[data-page="${pageCode}"]`);
+    if (!navLink) return;
+    
+    // 查找现有的角标
+    let badge = navLink.querySelector('.badge-notification');
+    
+    // 如果数量为0，移除角标
+    if (count === 0) {
+        if (badge) {
+            badge.remove();
+        }
+        return;
+    }
+    
+    // 如果角标不存在，创建新的
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge-notification';
+        navLink.appendChild(badge);
+    }
+    
+    // 更新角标数量
+    badge.textContent = count;
 }
 
 // ========== 系统用户管理 ==========
