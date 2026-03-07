@@ -90,6 +90,10 @@ if (!$task) {
 // 处理JSON字段
 if (!empty($task['recommend_marks'])) {
     $task['recommend_marks'] = json_decode($task['recommend_marks'], true);
+    // 确保只返回一组评论
+    if (is_array($task['recommend_marks']) && count($task['recommend_marks']) > 1) {
+        $task['recommend_marks'] = array_slice($task['recommend_marks'], 0, 1);
+    }
 }
 
 // 状态文本映射

@@ -99,13 +99,14 @@ if (empty($title)) {
     Response::error('任务标题不能为空', $errorCodes['INVALID_PARAMS']);
 }
 
-// 校验 recommend_marks 数量
+// 校验 recommend_marks 格式
 if (!is_array($recommendMarks)) {
     Response::error('推荐标记格式错误', $errorCodes['INVALID_PARAMS']);
 }
 
-if (count($recommendMarks) !== (int)$taskCount) {
-    Response::error("推荐标记数量不匹配，应为 {$taskCount} 组", $errorCodes['INVALID_PARAMS']);
+// 限制评论推荐数量为仅包含一组评论
+if (count($recommendMarks) !== 1) {
+    Response::error('推荐标记数量必须为1组', $errorCodes['INVALID_PARAMS']);
 }
 
 // 校验每组数据格式
