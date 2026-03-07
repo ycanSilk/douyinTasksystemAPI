@@ -2488,23 +2488,25 @@ function editTaskTemplate(task) {
                 <label>描述信息2</label>
                 <textarea name="description2" placeholder="描述信息2">${task.description2 || ''}</textarea>
             </div>
-            ${isCombo ? `
-                <div class="form-group">
-                    <label>阶段1标题</label>
-                    <input type="text" name="stage1_title" value="${task.stage1_title || ''}" placeholder="阶段1标题">
-                </div>
-                <div class="form-group">
-                    <label>阶段1单价（元）</label>
-                    <input type="number" name="stage1_price" value="${task.stage1_price || ''}" placeholder="阶段1单价" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label>阶段2标题</label>
-                    <input type="text" name="stage2_title" value="${task.stage2_title || ''}" placeholder="阶段2标题">
-                </div>
-                <div class="form-group">
-                    <label>阶段2单价（元）</label>
-                    <input type="number" name="stage2_price" value="${task.stage2_price || ''}" placeholder="阶段2单价" step="0.01">
-                </div>
+            ${isCombo || (task.id === 1 || task.id === 2) ? `
+                ${isCombo ? `
+                    <div class="form-group">
+                        <label>阶段1标题</label>
+                        <input type="text" name="stage1_title" value="${task.stage1_title || ''}" placeholder="阶段1标题">
+                    </div>
+                    <div class="form-group">
+                        <label>阶段1单价（元）</label>
+                        <input type="number" name="stage1_price" value="${task.stage1_price || ''}" placeholder="阶段1单价" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>阶段2标题</label>
+                        <input type="text" name="stage2_title" value="${task.stage2_title || ''}" placeholder="阶段2标题">
+                    </div>
+                    <div class="form-group">
+                        <label>阶段2单价（元）</label>
+                        <input type="number" name="stage2_price" value="${task.stage2_price || ''}" placeholder="阶段2单价" step="0.01">
+                    </div>
+                ` : ''}
                 <div class="form-group">
                     <label>默认阶段1数量</label>
                     <input type="number" name="default_stage1_count" value="${task.default_stage1_count || 1}" placeholder="默认阶段1数量">

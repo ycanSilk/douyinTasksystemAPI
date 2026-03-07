@@ -88,6 +88,13 @@ try {
             ];
             $item['default_total_price'] = (float)$template['stage1_price'] * (int)$template['default_stage1_count'] 
                                          + (float)$template['stage2_price'] * (int)$template['default_stage2_count'];
+        } else if ((int)$template['id'] === 1 || (int)$template['id'] === 2) {
+            // 为模板ID为1和2的单任务添加stage1字段
+            $item['stage1'] = [
+                'title' => $template['title'],
+                'price' => (float)$template['price'],
+                'default_count' => (int)$template['default_stage1_count'] > 0 ? (int)$template['default_stage1_count'] : 1
+            ];
         }
         
         $result[] = $item;
