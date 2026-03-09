@@ -6,6 +6,7 @@
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Content-Type, X-Token, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -31,15 +32,15 @@ try {
         $params = ["%{$search}%", "%{$search}%", "%{$search}%"];
     }
     
+    // 构建SELECT语句，不使用可能不存在的字段
     $stmt = $db->prepare("SELECT COUNT(*) as total FROM c_users c $whereClause");
     $stmt->execute($params);
     $total = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     $stmt = $db->prepare("
         SELECT 
-            c.id, c.username, c.email, c.phone, c.invite_code, c.parent_id,
-            c.is_agent, c.wallet_id, c.status, c.reason, c.create_ip,
-            c.created_at, c.updated_at, w.balance, p.username as parent_username
+            c.*,
+            w.balance, p.username as parent_username
         FROM c_users c
         LEFT JOIN wallets w ON c.wallet_id = w.id
         LEFT JOIN c_users p ON c.parent_id = p.id
@@ -81,12 +82,50 @@ try {
         $stmt2->execute([$userId, $today]);
         $item['today_rejected'] = (int)$stmt2->fetch(PDO::FETCH_ASSOC)['total'];
         
+        // 检查是否是迁跃升级的团长用户
+        $item['is_jump_agent'] = 0;
+        $item['jump_level'] = 0;
+        $item['jump_agent_status'] = '不是';
+        
+        if ($item['is_agent'] > 0) {
+            // 从c_user_agent_upgrade_history表中查询该用户是否通过迁跃升级
+            $stmt2 = $db->prepare("SELECT * FROM c_user_agent_upgrade_history WHERE c_user_id = ? ORDER BY created_at DESC LIMIT 1");
+            $stmt2->execute([$userId]);
+            $jumpUpgrade = $stmt2->fetch(PDO::FETCH_ASSOC);
+            
+            if ($jumpUpgrade) {
+                $item['is_jump_agent'] = 1;
+                $item['jump_level'] = (int)$jumpUpgrade['to_level'] ?? 1;
+                $item['jump_agent_status'] = '是';
+            }
+        }
+        
         $item['id'] = $userId;
         $item['wallet_id'] = (int)$item['wallet_id'];
         $item['parent_id'] = $item['parent_id'] ? (int)$item['parent_id'] : null;
         $item['is_agent'] = (int)$item['is_agent'];
         $item['status'] = (int)$item['status'];
         $item['balance'] = number_format((int)$item['balance'] / 100, 2);
+        
+        // 处理blocked_*字段
+        if (isset($item['blocked_status'])) {
+            $item['blocked_status'] = (int)$item['blocked_status'];
+        } else {
+            $item['blocked_status'] = 0;
+            $item['blocked_start_time'] = null;
+            $item['blocked_duration'] = null;
+            $item['blocked_end_time'] = null;
+        }
+        
+        // 确保其他可能的字段类型正确
+        if (isset($item['blocked_duration'])) {
+            $item['blocked_duration'] = (int)$item['blocked_duration'];
+        }
+        
+        // 移除不需要的字段
+        unset($item['password_hash']);
+        unset($item['token']);
+        unset($item['token_expired_at']);
     }
     
     echo json_encode([

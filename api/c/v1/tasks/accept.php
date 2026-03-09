@@ -67,6 +67,35 @@ $db = Database::connect();
 $auth = new AuthMiddleware($db);
 $currentUser = $auth->authenticateC();
 
+// 查询用户封禁状态
+$stmt = $db->prepare(" 
+    SELECT blocked_status, blocked_start_time, blocked_duration, blocked_end_time 
+    FROM c_users 
+    WHERE id = ?
+");
+$stmt->execute([$currentUser['user_id']]);
+$userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 检查封禁状态
+if ($userInfo) {
+    if ($userInfo['blocked_status'] == 2) {
+        $endTime = $userInfo['blocked_end_time'] ?? null;
+        $message = '账号已被禁止登录';
+        if ($endTime) {
+            $message .= '，解禁时间：' . $endTime;
+        }
+        Response::error($message, $errorCodes['AUTH_ACCOUNT_BLOCKED']);
+    } 
+    if ($userInfo['blocked_status'] == 1) {
+        $endTime = $userInfo['blocked_end_time'] ?? null;
+        $message = '账号已被禁止接单';
+        if ($endTime) {
+            $message .= '，解禁时间：' . $endTime;
+        }
+        Response::error($message, $errorCodes['TASK_ACCEPT_BLOCKED']);
+    }
+}
+
 // 获取请求参数
 $input = json_decode(file_get_contents('php://input'), true);
 $bTaskId = $input['b_task_id'] ?? 0;

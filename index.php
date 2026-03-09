@@ -83,15 +83,23 @@ if (isset($routes[$path])) {
             if ($debug) {
                 error_log('Index.php - Returning 404 for: ' . $path);
             }
-            // 返回 404 错误
-            http_response_code(404);
-            echo json_encode([
-                'code' => 404,
-                'message' => '接口不存在',
-                'data' => [],
-                'timestamp' => time()
-            ], JSON_UNESCAPED_UNICODE);
-            exit;
+            
+            // 检查是否是task_admin路径
+            if (strpos($path, '/task_admin/') === 0) {
+                // 重定向到task_admin的404页面
+                header('Location: /task_admin/404.html');
+                exit;
+            } else {
+                // 返回 404 错误
+                http_response_code(404);
+                echo json_encode([
+                    'code' => 404,
+                    'message' => '接口不存在',
+                    'data' => [],
+                    'timestamp' => time()
+                ], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
         }
     }
 }

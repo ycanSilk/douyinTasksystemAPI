@@ -49,9 +49,10 @@ $db = Database::connect();
 
 try {
     // 查询 C端用户（支持用户名、邮箱或手机号登录）
-    $stmt = $db->prepare("
+    $stmt = $db->prepare(" 
         SELECT id, username, email, phone, password_hash, 
-               invite_code, parent_id, is_agent, wallet_id, status, reason 
+               invite_code, parent_id, is_agent, wallet_id, status, reason, 
+               blocked_status, blocked_start_time, blocked_duration, blocked_end_time 
         FROM c_users 
         WHERE username = ? OR email = ? OR phone = ?
     ");
@@ -67,6 +68,16 @@ try {
     if ($user['status'] != 1) {
         $reason = $user['reason'] ?: '违规操作';
         Response::error('账号已被禁用：' . $reason, $errorCodes['AUTH_ACCOUNT_DISABLED']);
+    }
+    
+    // 检查封禁状态
+    if (isset($user['blocked_status']) && $user['blocked_status'] == 2) {
+        $endTime = $user['blocked_end_time'] ?? null;
+        $message = '账号已被禁止登录';
+        if ($endTime) {
+            $message .= '，解禁时间：' . $endTime;
+        }
+        Response::error($message, $errorCodes['AUTH_ACCOUNT_BLOCKED']);
     }
     
     // 生成新 Token（覆盖旧 Token，实现踢下线）

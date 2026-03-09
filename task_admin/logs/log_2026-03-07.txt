@@ -1,5 +1,0 @@
-[2026-03-07T16:49:00.935Z] [INFO] [DETECTION] 检测结果: {"audit":{"recharge":0,"withdraw":0,"agent":0},"magnifier":2,"rental":0}, 状态: SUCCESS
-[2026-03-07T16:53:32.918Z] [INFO] [DETECTION] 检测结果: {"audit":{"recharge":0,"withdraw":0,"agent":0},"magnifier":2,"rental":0}, 状态: SUCCESS
-[2026-03-07T16:57:07.908Z] [INFO] [DETECTION] 检测结果: {"audit":{"recharge":0,"withdraw":0,"agent":0},"magnifier":2,"rental":0}, 状态: SUCCESS
-[2026-03-07T17:11:05.940Z] [INFO] [DETECTION] 检测结果: {"audit":{"recharge":0,"withdraw":0,"agent":0},"magnifier":2,"rental":0}, 状态: SUCCESS
-[2026-03-07T17:20:13.907Z] [INFO] [DETECTION] 检测结果: {"audit":{"recharge":0,"withdraw":0,"agent":0},"magnifier":2,"rental":0}, 状态: SUCCESS

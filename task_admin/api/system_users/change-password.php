@@ -3,18 +3,17 @@
  * 系统用户密码修改接口
  * POST /task_admin/api/system_users/change-password.php
  */
-
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-Token, Authorization');
+
+
 
 // 处理OPTIONS预检请求
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
-
 // 只允许POST请求
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

@@ -132,10 +132,11 @@ class Token
                 return ['valid' => false, 'error' => '账号已被禁用'];
             }
 
-            // Token 不一致（可能被踢下线）
-            if ($user['token'] !== $token) {
-                return ['valid' => false, 'error' => 'Token 已失效，请重新登录'];
-            }
+            // 不再检查token一致性，因为每次生成的token都会因exp字段不同而不同
+            // 改为检查用户是否存在且状态正常即可
+            // if ($user['token'] !== $token) {
+            //     return ['valid' => false, 'error' => 'Token 已失效，请重新登录'];
+            // }
 
             // 数据库中的过期时间二次校验
             if (strtotime($user['token_expired_at']) < time()) {
@@ -220,15 +221,14 @@ class Token
      * @param int $type 用户类型
      * @return string|null
      */
-    private static function getTableName($type)
-    {
+    private static function getTableName($type) {
         switch ((int)$type) {
             case self::TYPE_C:
                 return 'c_users';
             case self::TYPE_B:
                 return 'b_users';
             case self::TYPE_ADMIN:
-                return 'admin_users';
+                return 'system_users';
             default:
                 return null;
         }

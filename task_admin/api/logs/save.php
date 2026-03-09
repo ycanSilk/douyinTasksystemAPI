@@ -2,6 +2,12 @@
 // 日志保存API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Content-Type, X-Token, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // 日志目录
 $logDir = __DIR__ . '/../../logs';

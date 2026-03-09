@@ -1,16 +1,24 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Content-Type, X-Token, Authorization');
 
+
+
+// 处理OPTIONS预检请求
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 // 引入必要的文件
-require_once '../../../core/DB.php';
-require_once '../../../core/Response.php';
-require_once '../../../core/Auth.php';
-require_once '../../auth/AuthMiddleware.php';
+require_once __DIR__ . '/../../../../core/DB.php';
+require_once __DIR__ . '/../../../../core/Response.php';
+require_once __DIR__ . '/../../../../core/Auth.php';
+require_once __DIR__ . '/../../auth/AuthMiddleware.php';
 // 数据库连接
 
 // 初始化数据库连接
-$db = new DB();
-$pdo = $db->getConnection();
+$pdo = Database::connect();
 
 // 初始化响应
 $response = new Response();

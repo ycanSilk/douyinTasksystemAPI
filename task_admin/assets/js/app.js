@@ -33,6 +33,16 @@ let countdownLogCounter = 0;
 // 是否需要播放提示音
 let needPlaySound = false;
 
+// 通知中心相关变量
+let notificationPage = 1;
+let notificationTotalPages = 1;
+let currentNotificationType = '';
+let currentNotificationStatus = '';
+
+// 通知检测日志相关变量
+let logPage = 1;
+let logTotalPages = 1;
+
 // 日志存储
 const LOG_STORAGE_KEY = 'task_admin_logs';
 const MAX_LOGS = 1000;
@@ -84,7 +94,6 @@ function saveLogToStorage(log) {
 // 输出日志
 function log(level, message, module = 'SYSTEM') {
     const log = formatLog(level, message, module);
-    console.log(log.formatted);
     saveLogToStorage(log);
     return log;
 }
@@ -97,7 +106,7 @@ async function persistLogToFile(log) {
             timestamp: new Date().toISOString()
         };
         
-        await fetch(`${API_BASE}/api/logs/save.php`, {
+        await apiRequest(`${API_BASE}/api/logs/save.php`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -109,25 +118,7 @@ async function persistLogToFile(log) {
     }
 }
 
-// 初始化日志系统
-function initLogging() {
-    log('INFO', '日志系统初始化', 'LOGGING');
-    log('INFO', '加载历史日志', 'LOGGING');
-    
-    // 显示最近的日志
-    try {
-        const logs = JSON.parse(localStorage.getItem(LOG_STORAGE_KEY) || '[]');
-        if (logs.length > 0) {
-            log('INFO', `加载了 ${logs.length} 条历史日志`, 'LOGGING');
-            // 显示历史日志
-            logs.forEach(logItem => {
-                console.log(logItem.formatted);
-            });
-        }
-    } catch (error) {
-        log('ERROR', '加载历史日志失败: ' + error.message, 'LOGGING');
-    }
-}
+
 
 // 增强的showToast函数，带日志记录
 function showToast(message, type = 'info') {
@@ -169,9 +160,61 @@ function playNotificationSound() {
     }
 }
 
+// 预处理音频播放权限
+function preloadAudioPermission() {
+    const audio = document.getElementById('notificationSound');
+    if (audio) {
+        // 尝试静音播放一小段，以获得后续播放权限
+        audio.volume = 0;
+        audio.play().then(() => {
+            log('INFO', '音频权限已预处理', 'AUDIO');
+        }).catch(error => {
+            log('INFO', '音频权限预处理失败，等待用户交互', 'AUDIO');
+        }).finally(() => {
+            // 无论成功失败，都重置音量
+            audio.volume = 1;
+        });
+    }
+}
+
+// 监听用户交互事件，获取音频播放权限
+function setupAudioPermission() {
+    // 检测是否已经获得音频权限
+    let audioPermissionGranted = false;
+    
+    // 监听用户交互事件
+    const interactionEvents = ['click', 'touchstart', 'keydown', 'mousedown'];
+    
+    function handleInteraction() {
+        if (!audioPermissionGranted) {
+            preloadAudioPermission();
+            audioPermissionGranted = true;
+            
+            // 移除事件监听器，避免重复触发
+            interactionEvents.forEach(event => {
+                document.removeEventListener(event, handleInteraction);
+            });
+            
+            log('INFO', '用户交互后获得音频播放权限', 'AUDIO');
+        }
+    }
+    
+    // 添加事件监听器
+    interactionEvents.forEach(event => {
+        document.addEventListener(event, handleInteraction, { once: true });
+    });
+}
+
 // 带认证的API请求
 async function apiRequest(url, options = {}) {
     const token = sessionStorage.getItem('admin_token');
+    
+    // 添加时间戳参数以避免浏览器缓存
+    if (url.includes('?')) {
+        url += `&t=${Date.now()}`;
+    } else {
+        url += `?t=${Date.now()}`;
+    }
     
     // 设置默认选项
     const defaultOptions = {
@@ -200,19 +243,47 @@ async function apiRequest(url, options = {}) {
         
         // 处理未授权错误
         if (response.status === 401) {
+            // 停止轮询检测
+            stopPolling();
+            
             // 清除登录状态
             sessionStorage.clear();
-            localStorage.removeItem('admin_current_page');
-            // 跳转到登录页
-            document.getElementById('mainPage').classList.remove('active');
-            document.getElementById('loginPage').classList.add('active');
-            showToast('登录已过期，请重新登录', 'error');
+            localStorage.removeItem('admin_current_page'); // 清除页面记忆
+            
+            // 尝试调用logout接口（可选）
+            fetch(`${API_BASE}/auth/logout.php`, { method: 'POST' }).catch(err => {});
+            
+            // 重定向到登录页面
+            window.location.href = `${API_BASE}/login.html`;
+            
+            // 返回错误对象
             return { code: 401, message: '登录已过期' };
         }
         
         // 尝试解析JSON
         try {
-            return await response.json();
+            const data = await response.json();
+            
+            // 检查响应中的code字段
+            if (data.code === 401) {
+                // 停止轮询检测
+                stopPolling();
+                
+                // 清除登录状态
+                sessionStorage.clear();
+                localStorage.removeItem('admin_current_page'); // 清除页面记忆
+                
+                // 尝试调用logout接口（可选）
+                await apiRequest(`${API_BASE}/auth/logout.php`, { method: 'POST' }).catch(err => {});
+                
+                // 重定向到登录页面
+                window.location.href = `${API_BASE}/login.html`;
+                
+                // 返回错误对象
+                return { code: 401, message: '登录已过期' };
+            }
+            
+            return data;
         } catch (e) {
             return { code: response.status, message: '响应格式错误' };
         }
@@ -224,21 +295,10 @@ async function apiRequest(url, options = {}) {
 }
 
 // 初始化
-document.addEventListener('DOMContentLoaded', () => {
-    // 初始化日志系统
-    initLogging();
-    
-    initLoginForm();
-    initLogout();
-    initNavigation();
-    initModal();
-    
-    // 检查登录状态
-    checkLoginStatus();
-    
-    // 页面卸载时停止轮询
-    window.addEventListener('beforeunload', stopPolling);
-});
+document.addEventListener('DOMContentLoaded', init);
+
+// 页面加载时设置音频权限
+document.addEventListener('DOMContentLoaded', setupAudioPermission);
 
 // 检查登录状态
 function checkLoginStatus() {
@@ -248,74 +308,28 @@ function checkLoginStatus() {
         // 恢复上次选中的页面
         const lastPage = localStorage.getItem('admin_current_page') || 'dashboard';
         switchToPage(lastPage);
+    } else {
+        // 未登录，重定向到登录页面
+        window.location.href = `${API_BASE}/login.html`;
     }
 }
 
-// 登录表单
+// 登录表单 - 已迁移到login.html
 function initLoginForm() {
-    const form = document.getElementById('loginForm');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('loginError');
-        
-        // MD5加密密码
-        const hashedPassword = md5(password);
-      
-        
-        try {
-            const res = await fetch(`${API_BASE}/auth/login.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password: hashedPassword })
-            });
-            
-            console.log('响应状态码:', res.status);
-            console.log('响应头:', res.headers);
-            
-            const responseText = await res.text();
-            console.log('响应文本:', responseText);
-            
-            try {
-                const data = JSON.parse(responseText);
-                console.log('解析后的响应数据:', data);
-                
-                if (data.code === 0) {
-                    console.log('登录成功，用户信息:', data.data);
-                    sessionStorage.setItem('admin_logged_in', 'true');
-                    sessionStorage.setItem('admin_username', data.data.username);
-                    sessionStorage.setItem('admin_token', data.data.token);
-                    currentUser = data.data;
-                    showMainPage();
-                    // 新登录时默认跳转到统计面板
-                    switchToPage('dashboard');
-                    // 启动实时通知轮询
-                    startPolling();
-                } else {
-                    console.log('登录失败，错误信息:', data.message);
-                    errorDiv.innerHTML = `<i class="ri-error-warning-line"></i> ${data.message}`;
-                }
-            } catch (parseError) {
-                console.error('JSON解析错误:', parseError);
-                console.error('原始响应:', responseText);
-                errorDiv.innerHTML = `<i class="ri-error-warning-line"></i> 服务器响应格式错误`;
-            }
-        } catch (err) {
-            console.error('网络请求失败:', err);
-            errorDiv.innerHTML = `<i class="ri-wifi-off-line"></i> 登录失败，请检查网络连接`;
-        }
-    });
+    // 登录表单已迁移到login.html，此函数保留以保持兼容性
 }
 
 // 显示主页面
 function showMainPage() {
-    document.getElementById('loginPage').classList.remove('active');
     document.getElementById('mainPage').classList.add('active');
     document.querySelector('.username-display').textContent = sessionStorage.getItem('admin_username');
     // 加载导航栏
     loadNavigation();
+    // 加载通知列表
+    setTimeout(() => {
+        loadNotifications(1, '', 0); // 默认加载未读消息
+        loadNotificationLogs();
+    }, 500);
 }
 
 // 加载导航栏
@@ -325,6 +339,11 @@ async function loadNavigation() {
         
         if (data.code === 0) {
             renderNavigation(data.data);
+            // 导航栏加载完成后启动通知检测
+            log('INFO', '导航栏加载完成，启动通知检测', 'NAVIGATION');
+            startPolling();
+            // 初始化音频权限
+            setupAudioPermission();
         } else {
             console.error('加载导航栏失败:', data.message);
         }
@@ -363,7 +382,7 @@ function renderNavigation(templates) {
 function initLogout() {
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
-            await fetch(`${API_BASE}/auth/logout.php`, { method: 'POST' });
+            await apiRequest(`${API_BASE}/auth/logout.php`, { method: 'POST' });
         } catch (err) {}
         
         // 停止轮询检测
@@ -371,10 +390,9 @@ function initLogout() {
         
         sessionStorage.clear();
         localStorage.removeItem('admin_current_page'); // 清除页面记忆
-        document.getElementById('mainPage').classList.remove('active');
-        document.getElementById('loginPage').classList.add('active');
-        document.getElementById('loginError').textContent = '';
-        document.getElementById('loginForm').reset();
+        
+        // 重定向到登录页面
+        window.location.href = `${API_BASE}/login.html`;
     });
 }
 
@@ -430,6 +448,10 @@ function switchToPage(page) {
         case 'system-config': loadSystemConfig(); break;
         case 'task-review': loadTaskReviewList(); break;
         case 'notifications': loadNotificationList(); break;
+        case 'notification-logsSection': 
+            loadNotifications(1, '', '0'); // 默认加载未读消息
+            loadNotificationLogs();
+            break;
         case 'magnifier': loadMagnifierTasks(); break;
     }
 }
@@ -445,47 +467,6 @@ function initModal() {
     };
 }
 
-// 加载统计面板
-async function loadDashboard() {
-    try {
-        const data = await apiRequest(`${API_BASE}/api/stats/dashboard.php`);
-        
-        if (data.code === 0) {
-            const d = data.data;
-            
-            // 任务统计
-            document.getElementById('stat_total_tasks').textContent = String(d.tasks?.total ?? 0);
-            document.getElementById('stat_today_tasks').textContent = String(d.tasks?.today_total ?? 0);
-            document.getElementById('stat_today_reviewing').textContent = String(d.tasks?.today_reviewing ?? 0);
-            document.getElementById('stat_today_doing').textContent = String(d.tasks?.today_doing ?? 0);
-            document.getElementById('stat_today_completed').textContent = String(d.tasks?.today_completed ?? 0);
-            document.getElementById('stat_today_rejected').textContent = String(d.tasks?.today_rejected ?? 0);
-            
-            // 流水统计
-            document.getElementById('stat_total_revenue').textContent = '¥' + (d.revenue?.total ?? '0.00');
-            document.getElementById('stat_today_revenue').textContent = '¥' + (d.revenue?.today ?? '0.00');
-            document.getElementById('stat_7days_revenue').textContent = '¥' + (d.revenue?.['7_days'] ?? '0.00');
-            document.getElementById('stat_30days_revenue').textContent = '¥' + (d.revenue?.['30_days'] ?? '0.00');
-            
-            // 利润统计
-            document.getElementById('stat_total_profit').textContent = '¥' + (d.profit?.total ?? '0.00');
-            document.getElementById('stat_today_profit').textContent = '¥' + (d.profit?.today ?? '0.00');
-            document.getElementById('stat_7days_profit').textContent = '¥' + (d.profit?.['7_days'] ?? '0.00');
-            document.getElementById('stat_30days_profit').textContent = '¥' + (d.profit?.['30_days'] ?? '0.00');
-            
-            // 团长佣金
-            document.getElementById('stat_total_commission').textContent = '¥' + (d.agent_commission?.total ?? '0.00');
-            document.getElementById('stat_7days_commission').textContent = '¥' + (d.agent_commission?.['7_days'] ?? '0.00');
-            document.getElementById('stat_30days_commission').textContent = '¥' + (d.agent_commission?.['30_days'] ?? '0.00');
-        } else {
-            console.error('加载统计数据失败', data);
-            showToast('加载统计数据失败: ' + data.message, 'error');
-        }
-    } catch (err) {
-        console.error('加载统计数据失败', err);
-        showToast('加载统计数据失败', 'error');
-    }
-}
 
 // 加载B端用户列表
 async function loadBUsers(page = 1) {
@@ -626,12 +607,11 @@ function editBUser(user) {
         }
         
         try {
-            const res = await fetch(`${API_BASE}/api/b_users/update.php`, {
+            const result = await apiRequest(`${API_BASE}/api/b_users/update.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
             
             if (result.code === 0) {
                 showToast('更新成功', 'success');
@@ -651,183 +631,7 @@ function closeModal() {
     modal.classList.remove('active', 'fullscreen');
 }
 
-// 加载C端用户列表
-async function loadCUsers(page = 1) {
-    const search = document.getElementById('cUserSearch').value;
-    try {
-        const data = await apiRequest(`${API_BASE}/api/c_users/list.php?page=${page}&search=${encodeURIComponent(search)}`);
-        
-        if (data.code === 0) {
-            renderCUsersTable(data.data.list, data.data.pagination);
-        }
-    } catch (err) {
-        console.error('加载C端用户失败', err);
-    }
-}
 
-function renderCUsersTable(list, pagination) {
-    let html = `
-        <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>用户名</th>
-                    <th>邮箱</th>
-                    <th>手机号</th>
-                    <th>邀请码</th>
-                    <th>上级ID</th>
-                    <th>上级用户名</th>
-                    <th>团长</th>
-                    <th>钱包ID</th>
-                    <th>余额</th>
-                    <th>总完成</th>
-                    <th>总通过</th>
-                    <th>总驳回</th>
-                    <th>今日完成</th>
-                    <th>今日通过</th>
-                    <th>今日驳回</th>
-                    <th>状态</th>
-                    <th>禁用原因</th>
-                    <th>注册IP</th>
-                    <th>注册时间</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    
-    list.forEach(u => {
-        const statusBadge = u.status === 1 ? '<span class="badge badge-success">正常</span>' : '<span class="badge badge-danger">禁用</span>';
-        const agentBadge = u.is_agent === 2 ? '<span class="badge badge-warning"><i class="ri-vip-diamond-fill"></i> 高级团长</span>' : u.is_agent === 1 ? '<span class="badge badge-success"><i class="ri-vip-crown-fill"></i> 普通团长</span>' : '<span class="badge badge-neutral">普通用户</span>';
-        html += `
-            <tr>
-                <td>${u.id}</td>
-                <td><strong>${u.username}</strong></td>
-                <td>${u.email}</td>
-                <td>${u.phone || '-'}</td>
-                <td>${u.invite_code}</td>
-                <td>${u.parent_id || '-'}</td>
-                <td>${u.parent_username || '-'}</td>
-                <td>${agentBadge}</td>
-                <td>${u.wallet_id}</td>
-                <td>¥${u.balance}</td>
-                <td>${u.total_completed}</td>
-                <td>${u.total_approved}</td>
-                <td>${u.total_rejected}</td>
-                <td>${u.today_completed}</td>
-                <td>${u.today_approved}</td>
-                <td>${u.today_rejected}</td>
-                <td>${statusBadge}</td>
-                <td>${u.reason || '-'}</td>
-                <td>${u.create_ip || '-'}</td>
-                <td>${u.created_at}</td>
-                <td>
-                    <button class="btn-info btn-small" onclick='editCUser(${JSON.stringify(u)})'><i class="ri-edit-line"></i> 编辑</button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    html += '</tbody></table></div>';
-    document.getElementById('cUsersTable').innerHTML = html;
-}
-
-// 编辑C端用户
-function editCUser(user) {
-    const modalBody = document.getElementById('modalBody');
-    modalBody.innerHTML = `
-        <h3><i class="ri-edit-line"></i> 编辑C端用户 #${user.id}</h3>
-        <form id="editCUserForm">
-            <input type="hidden" name="id" value="${user.id}">
-            <div class="form-group">
-                <label>用户名（不可修改）</label>
-                <input type="text" value="${user.username}" disabled>
-            </div>
-            <div class="form-group">
-                <label>邀请码（不可修改）</label>
-                <input type="text" value="${user.invite_code}" disabled>
-            </div>
-            <div class="form-group">
-                <label>邮箱</label>
-                <input type="email" name="email" value="${user.email}" placeholder="邮箱">
-            </div>
-            <div class="form-group">
-                <label>手机号</label>
-                <input type="text" name="phone" value="${user.phone || ''}" placeholder="手机号（选填）">
-            </div>
-            <div class="form-group">
-                <label>上级ID（不可修改）</label>
-                <input type="text" value="${user.parent_id || '无'}" disabled>
-            </div>
-            <div class="form-group">
-                <label>上级用户名（不可修改）</label>
-                <input type="text" value="${user.parent_username || '无'}" disabled>
-            </div>
-            <div class="form-group">
-                <label>团长身份</label>
-                <select name="is_agent">
-                    <option value="0" ${user.is_agent === 0 ? 'selected' : ''}>普通用户</option>
-                    <option value="1" ${user.is_agent === 1 ? 'selected' : ''}>普通团长</option>
-                    <option value="2" ${user.is_agent === 2 ? 'selected' : ''}>高级团长</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>账号状态</label>
-                <select name="status">
-                    <option value="1" ${user.status === 1 ? 'selected' : ''}>正常</option>
-                    <option value="0" ${user.status === 0 ? 'selected' : ''}>禁用</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>禁用原因</label>
-                <input type="text" name="reason" value="${user.reason || ''}" placeholder="禁用原因（选填）">
-            </div>
-            <div class="form-group">
-                <label>重置密码（不填则不修改）</label>
-                <input type="password" name="password" placeholder="留空表示不修改密码">
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="closeModal()">取消</button>
-                <button type="submit" class="btn-primary">保存</button>
-            </div>
-        </form>
-    `;
-    
-    document.getElementById('modal').classList.add('active');
-    
-    document.getElementById('editCUserForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = {};
-        
-        // 只包含有值的字段
-        for (const [key, value] of formData.entries()) {
-            if (value !== '') {
-                data[key] = value;
-            }
-        }
-        
-        try {
-            const res = await fetch(`${API_BASE}/api/c_users/update.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            
-            if (result.code === 0) {
-                showToast('更新成功', 'success');
-                closeModal();
-                loadCUsers();
-            } else {
-                showToast(result.message, 'error');
-            }
-        } catch (err) {
-            showToast('更新失败', 'error');
-        }
-    });
-}
 
 // 加载充值列表
 async function loadRechargeList(page = 1) {
@@ -877,7 +681,7 @@ function renderRechargeTable(list) {
             <tr>
                 <td>${r.id}</td>
                 <td><strong>${r.username}</strong></td>
-                <td>¥${r.amount}</td>
+                <td>¥${(r.amount/100).toFixed(2)}</td>
                 <td>${r.payment_method}</td>
                 <td><a href="${r.payment_voucher}" target="_blank" class="text-primary"><i class="ri-image-line"></i> 查看</a></td>
                 <td>${statusBadge}</td>
@@ -896,12 +700,10 @@ function reviewRecharge(id, action) {
     if (action === 'approve') {
         showConfirm('确认通过该充值申请吗？', async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/recharge/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/recharge/review.php`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, action: 'approve' })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -916,12 +718,10 @@ function reviewRecharge(id, action) {
     } else {
         showRejectModal('充值', async (reason) => {
             try {
-                const res = await fetch(`${API_BASE}/api/recharge/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/recharge/review.php`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, action: 'reject', reject_reason: reason })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -1007,12 +807,10 @@ function reviewWithdraw(id, action) {
     } else {
         showRejectModal('提现', async (reason) => {
             try {
-                const res = await fetch(`${API_BASE}/api/withdraw/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/withdraw/review.php`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, action: 'reject', reject_reason: reason })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -1076,11 +874,10 @@ function showWithdrawApproveModal(id) {
             const formData = new FormData();
             formData.append('image', file);
             
-            const res = await fetch(`${API_BASE}/api/upload.php`, {
+            const result = await apiRequest(`${API_BASE}/api/upload.php`, {
                 method: 'POST',
                 body: formData
             });
-            const result = await res.json();
             
             if (result.code === 0) {
                 document.getElementById('uploadedImageUrl').value = result.data.url;
@@ -1110,12 +907,10 @@ function showWithdrawApproveModal(id) {
         
         showConfirm('确认通过该提现申请并打款吗？', async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/withdraw/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/withdraw/review.php`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, action: 'approve', img_url: imgUrl })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -1202,12 +997,10 @@ function reviewAgent(id, action) {
     if (action === 'approve') {
         showConfirm('确认通过该团长申请吗？用户将获得团长身份。', async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/agent/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/agent/review.php`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, action: 'approve' })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -1222,12 +1015,10 @@ function reviewAgent(id, action) {
     } else {
         showRejectModal('团长申请', async (reason) => {
             try {
-                const res = await fetch(`${API_BASE}/api/agent/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/agent/review.php`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, action: 'reject', reject_reason: reason })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -1317,8 +1108,42 @@ function playNotificationSound() {
     const audio = document.getElementById('notificationSound');
     if (audio) {
         audio.currentTime = 0; // 重置音频播放位置
-        audio.play().catch(error => {
+        
+        // 尝试静音播放，然后逐渐增加音量
+        audio.volume = 0;
+        audio.play().then(() => {
+            // 播放成功后，逐渐增加音量
+            let volume = 0;
+            const volumeIncreaseInterval = setInterval(() => {
+                volume += 0.1;
+                if (volume >= 1) {
+                    volume = 1;
+                    clearInterval(volumeIncreaseInterval);
+                }
+                audio.volume = volume;
+            }, 50);
+        }).catch(error => {
             console.error('提示音播放失败:', error);
+            // 尝试备用方案：创建新的音频元素
+            try {
+                const newAudio = new Audio('public/videos/preview.mp3');
+                newAudio.volume = 0;
+                newAudio.play().then(() => {
+                    let volume = 0;
+                    const volumeIncreaseInterval = setInterval(() => {
+                        volume += 0.1;
+                        if (volume >= 1) {
+                            volume = 1;
+                            clearInterval(volumeIncreaseInterval);
+                        }
+                        newAudio.volume = volume;
+                    }, 50);
+                }).catch(err => {
+                    console.error('备用方案播放失败:', err);
+                });
+            } catch (e) {
+                console.error('创建音频元素失败:', e);
+            }
         });
     }
 }
@@ -1338,10 +1163,6 @@ async function checkAuditPanels() {
         const agentRes = await apiRequest(`${API_BASE}/api/agent/list.php?status=0&page=1&pageSize=1`);
         const agentCount = agentRes.code === 0 ? agentRes.data.list.length : 0;
         
-        console.log('=== 审核面板检测日志 ===');
-        console.log('充值审核待处理数量:', rechargeCount);
-        console.log('提现审核待处理数量:', withdrawCount);
-        console.log('团长审核待处理数量:', agentCount);
         
         // 检查是否有新的待审核记录
         let needNotification = false;
@@ -1398,10 +1219,6 @@ async function checkMagnifierTasks() {
         const magnifierRes = await apiRequest(`${API_BASE}/api/magnifier/list.php?page=1&pageSize=10`);
         const currentTaskCount = magnifierRes.code === 0 ? magnifierRes.data.total : 0;
         
-        console.log('=== 放大镜任务检测日志 ===');
-        console.log('当前任务总数:', currentTaskCount);
-        console.log('上次任务总数:', lastMagnifierTaskCount);
-        
         // 检测是否有新增任务
         if (currentTaskCount > lastMagnifierTaskCount) {
             needPlaySound = true;
@@ -1427,10 +1244,6 @@ async function checkRentalOrders() {
         const rentalRes = await apiRequest(`${API_BASE}/api/rental_orders/list.php?status=1&page=1&pageSize=1`);
         const currentOrderCount = rentalRes.code === 0 ? rentalRes.data.list.length : 0;
         
-        console.log('=== 租赁订单检测日志 ===');
-        console.log('当前待客服处理订单数量:', currentOrderCount);
-        console.log('上次待客服处理订单数量:', lastRentalOrderCount);
-        
         // 检测是否有待客服处理的订单
         if (currentOrderCount > 0) {
             needPlaySound = true;
@@ -1451,19 +1264,15 @@ async function checkRentalOrders() {
 
 // 启动轮询检测
 function startPolling() {
-    console.log('=== 启动轮询检测 ===');
+    log('INFO', '=== 启动轮询检测 ===', 'POLLING');
     
-    // 先执行一次检测
-    performAllChecks();
-    
-    // 启动倒计时
+    // 直接启动倒计时，不立即执行检测
+    // 这样页面刷新时不会重置数据库计时器
     startCountdown();
 }
 
 // 停止轮询检测
 function stopPolling() {
-    console.log('=== 停止轮询检测 ===');
-    
     if (pollingTimer) {
         clearInterval(pollingTimer);
         pollingTimer = null;
@@ -1475,19 +1284,105 @@ function stopPolling() {
     }
 }
 
+// 获取通知配置
+async function getNotificationConfig() {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/config.php`);
+        if (data.code === 0) {
+            return data.data;
+        }
+    } catch (error) {
+        log('ERROR', '获取通知配置失败: ' + error.message, 'NOTIFICATION');
+    }
+    return [];
+}
+
+// 获取计时器状态
+async function getTimerStatus() {
+    try {
+        log('INFO', `调用get_timer.php接口: ${API_BASE}/api/admin_notifications/get_timer.php`, 'TIMER');
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/get_timer.php`);
+        log('INFO', `get_timer.php接口返回: ${JSON.stringify(data)}`, 'TIMER');
+        if (data.code === 0) {
+            // 确保返回的数据结构包含所需字段
+            return {
+                remaining_seconds: data.data.remaining_seconds || 60,
+                detection_interval: data.data.detection_interval || 60
+            };
+        } else {
+            log('ERROR', `get_timer.php接口返回错误: ${data.message}`, 'TIMER');
+        }
+    } catch (error) {
+        log('ERROR', '获取计时器状态失败: ' + error.message, 'TIMER');
+    }
+    return { remaining_seconds: 60, detection_interval: 60 };
+}
+
+// 更新计时器状态
+async function updateTimerStatus(lastDetectionTime, detectionInterval) {
+    try {
+        await apiRequest(`${API_BASE}/api/admin_notifications/update_timer.php`, {
+            method: 'POST',
+            body: JSON.stringify({ last_detection_time: lastDetectionTime, detection_interval: detectionInterval })
+        });
+    } catch (error) {
+        log('ERROR', '更新计时器状态失败: ' + error.message, 'TIMER');
+    }
+}
+
 // 启动倒计时
-function startCountdown() {
+async function startCountdown() {
+    // 获取通知配置，读取检测间隔时间
+    let detectionInterval = 60; // 默认60秒
+    try {
+        const configs = await getNotificationConfig();
+        // 从任何一个启用的配置中获取检测间隔，优先使用recharge配置
+        const anyConfig = configs.find(config => config.enabled === 1);
+        if (anyConfig && anyConfig.detection_interval) {
+            detectionInterval = anyConfig.detection_interval;
+            log('INFO', `从配置读取检测间隔: ${detectionInterval}秒`, 'TIMER');
+        }
+    } catch (error) {
+        log('ERROR', '读取检测间隔配置失败，使用默认值60秒: ' + error.message, 'TIMER');
+    }
+    
+    // 获取计时器状态，避免页面刷新重置
+    let remainingSeconds = detectionInterval;
+    try {
+        log('INFO', '开始获取计时器状态', 'TIMER');
+        const timerData = await getTimerStatus();
+        log('INFO', `获取计时器状态成功: ${JSON.stringify(timerData)}`, 'TIMER');
+        remainingSeconds = timerData.remaining_seconds || detectionInterval;
+        log('INFO', `从服务器获取剩余时间: ${remainingSeconds}秒`, 'TIMER');
+    } catch (error) {
+        log('ERROR', '获取计时器状态失败，使用默认值: ' + error.message, 'TIMER');
+    }
+    
     log('INFO', '启动倒计时', 'TIMER');
-    countdownSeconds = 60;
+    countdownSeconds = remainingSeconds;
     countdownLogCounter = 0;
     
     if (countdownTimer) {
         clearInterval(countdownTimer);
     }
     
+    // 更新倒计时显示
+    function updateCountdownDisplay() {
+        const countdownElement = document.getElementById('countdownSeconds');
+        if (countdownElement) {
+            countdownElement.textContent = countdownSeconds;
+        }
+    }
+    
+    // 初始更新
+    updateCountdownDisplay();
+    
     countdownTimer = setInterval(() => {
         countdownSeconds--;
         countdownLogCounter++;
+        
+        // 更新倒计时显示
+        updateCountdownDisplay();
         
         // 每5秒输出一次日志
         if (countdownLogCounter % 5 === 0) {
@@ -1503,114 +1398,7 @@ function startCountdown() {
     }, 1000);
 }
 
-// 执行所有检测
-async function performAllChecks() {
-    const startTime = getTimestamp();
-    log('INFO', `开始执行所有检测，开始时间: ${startTime}，检测类型: 全面板检测`, 'DETECTION');
-    
-    // 重置提示音标志
-    needPlaySound = false;
-    let detectionStatus = 'SUCCESS';
-    const detectionResults = {};
-    const detectionItems = [];
-    
-    try {
-        // 执行各面板检测
-        log('INFO', '开始检测审核面板', 'DETECTION');
-        const auditResult = await checkAuditPanels();
-        detectionResults.audit = auditResult;
-        detectionItems.push({
-            type: '审核面板',
-            status: 'SUCCESS',
-            data: auditResult
-        });
-        log('INFO', `审核面板检测结果: ${JSON.stringify(auditResult)}`, 'DETECTION');
-        
-        log('INFO', '开始检测放大镜任务', 'DETECTION');
-        const magnifierResult = await checkMagnifierTasks();
-        detectionResults.magnifier = magnifierResult;
-        detectionItems.push({
-            type: '放大镜任务',
-            status: 'SUCCESS',
-            data: { count: magnifierResult }
-        });
-        log('INFO', `放大镜任务检测结果: ${magnifierResult}`, 'DETECTION');
-        
-        log('INFO', '开始检测租赁订单', 'DETECTION');
-        const rentalResult = await checkRentalOrders();
-        detectionResults.rental = rentalResult;
-        detectionItems.push({
-            type: '租赁订单',
-            status: 'SUCCESS',
-            data: { count: rentalResult }
-        });
-        log('INFO', `租赁订单检测结果: ${rentalResult}`, 'DETECTION');
-        
-        // 所有检测完成后，检查是否需要播放提示音
-        if (needPlaySound) {
-            log('INFO', '检测完成，播放提示音', 'DETECTION');
-            playNotificationSound();
-        }
-        
-        const endTime = getTimestamp();
-        log('INFO', `所有检测执行完成，结束时间: ${endTime}`, 'DETECTION');
-        
-        // 持久化检测结果日志
-        const detectionLog = log('INFO', `检测结果: ${JSON.stringify(detectionResults)}, 状态: ${detectionStatus}, 检测项: ${detectionItems.length}`, 'DETECTION');
-        await persistLogToFile(detectionLog);
-    } catch (error) {
-        detectionStatus = 'ERROR';
-        log('ERROR', `检测过程中发生错误: ${error.message}`, 'DETECTION');
-        
-        // 持久化错误日志
-        const errorLog = log('ERROR', `检测错误: ${error.message}`, 'DETECTION');
-        await persistLogToFile(errorLog);
-    } finally {
-        // 重新启动倒计时
-        log('INFO', '重新启动倒计时', 'DETECTION');
-        startCountdown();
-    }
-}
 
-// 更新红色角标
-function updateBadge(panelType, count) {
-    // 映射面板类型到导航栏的data-page属性
-    const pageMap = {
-        'recharge': 'recharge',
-        'withdraw': 'withdraw',
-        'agent': 'agent',
-        'magnifier': 'magnifier',
-        'rental-orders': 'rental-orders'
-    };
-    
-    const pageCode = pageMap[panelType];
-    if (!pageCode) return;
-    
-    // 找到对应的导航链接
-    const navLink = document.querySelector(`.nav-link[data-page="${pageCode}"]`);
-    if (!navLink) return;
-    
-    // 查找现有的角标
-    let badge = navLink.querySelector('.badge-notification');
-    
-    // 如果数量为0，移除角标
-    if (count === 0) {
-        if (badge) {
-            badge.remove();
-        }
-        return;
-    }
-    
-    // 如果角标不存在，创建新的
-    if (!badge) {
-        badge = document.createElement('span');
-        badge.className = 'badge-notification';
-        navLink.appendChild(badge);
-    }
-    
-    // 更新角标数量
-    badge.textContent = count;
-}
 
 // ========== 系统用户管理 ==========
 
@@ -1861,16 +1649,9 @@ function editSystemUser(user) {
             }
         }
         
-        // 调试日志
-        console.log('=== 编辑系统用户调试信息 ===');
-        console.log('用户ID:', data.user_id);
-        console.log('表单数据:', data);
-        console.log('角色ID:', data.role_id);
-        console.log('状态:', data.status);
         
         // 表单校验
         if (!data.role_id || data.role_id === 0) {
-            console.log('错误: 角色ID为空');
             showToast('请选择角色', 'error');
             return;
         }
@@ -1889,26 +1670,19 @@ function editSystemUser(user) {
             }
         }
         
-        // 调试日志
-        console.log('请求URL:', `${API_BASE}/api/system_users/update.php`);
-        console.log('请求方法:', 'POST');
-        console.log('请求体:', JSON.stringify(data));
         
         try {
-            console.log('发送更新请求...');
             const result = await apiRequest(`${API_BASE}/api/system_users/update.php`, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
             
-            console.log('更新响应:', result);
             
             if (result.code === 0) {
                 showToast('更新成功', 'success');
                 closeModal();
                 loadSystemUsers();
             } else {
-                console.log('更新失败:', result.message);
                 showToast(result.message, 'error');
             }
         } catch (err) {
@@ -1996,11 +1770,6 @@ function changeSystemUserPassword(user_id, username) {
             showToast('两次输入的密码不一致', 'error');
             return;
         }
-        
-        console.log('请求URL:', `${API_BASE}/api/system_users/change-password.php`);
-        console.log('请求方法:', 'POST');
-        console.log('请求体:', JSON.stringify(data));
-        console.log('用户ID:', data.user_id);
         try {
             const result = await apiRequest(`${API_BASE}/api/system_users/change-password.php`, {
                 method: 'POST',
@@ -2022,14 +1791,11 @@ function changeSystemUserPassword(user_id, username) {
 // 加载角色列表用于下拉选择
 async function loadRolesForSelect(selectId, selectedRoleId = null) {
     try {
-        console.log('=== 加载角色列表 ===');
-        console.log('selectId:', selectId);
-        console.log('selectedRoleId:', selectedRoleId);
+     
         
         const data = await apiRequest(`${API_BASE}/api/system_roles/list.php`);
         
-        console.log('角色列表响应:', data);
-        
+ 
         if (data.code === 0) {
             const select = document.getElementById(selectId);
             select.innerHTML = '';
@@ -2041,12 +1807,10 @@ async function loadRolesForSelect(selectId, selectedRoleId = null) {
                 // 使用严格相等比较，并确保类型一致
                 if (selectedRoleId && String(role.id) === String(selectedRoleId)) {
                     option.selected = true;
-                    console.log('默认选中角色:', role.name, 'ID:', role.id);
                 }
                 select.appendChild(option);
             });
             
-            console.log('角色列表加载完成');
         }
     } catch (err) {
         console.error('加载角色列表失败', err);
@@ -2227,30 +1991,19 @@ function editSystemRole(role) {
             }
         }
         
-        // 调试日志
-        console.log('=== 编辑角色调试信息 ===');
-        console.log('角色ID:', data.role_id);
-        console.log('表单数据:', data);
         
         try {
-            console.log('发送更新请求...');
-            console.log('请求URL:', `${API_BASE}/api/system_roles/update.php`);
-            console.log('请求方法:', 'POST');
-            console.log('请求体:', JSON.stringify(data));
             
             const result = await apiRequest(`${API_BASE}/api/system_roles/update.php`, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
             
-            console.log('更新响应:', result);
-            
             if (result.code === 0) {
                 showToast('更新成功', 'success');
                 closeModal();
                 loadSystemRoles();
             } else {
-                console.log('更新失败:', result.message);
                 showToast(result.message, 'error');
             }
         } catch (err) {
@@ -2371,6 +2124,1106 @@ async function loadPermissionTemplatesForRole(roleId) {
 }
 
 // ========== 权限管理 ==========
+
+// 通知API调用函数
+
+// 检测通知
+async function detectNotifications() {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/detect.php`);
+        
+        if (data.code === 0) {
+            const notifications = data.data.notifications;
+            const unreadCount = data.data.unread_count;
+            const detectionResult = data.data.detection_result || data.data.detectionResult || {};
+            
+            // 更新通知角标
+            updateNotificationBadge(unreadCount);
+            
+            // 更新导航栏面板红色角标
+            updateNavigationBadges(detectionResult);
+            
+            // 检查是否有新通知或未读通知
+            let hasNonSystemNotifications = false;
+            
+            // 检查是否有非系统通知
+            for (const notification of notifications) {
+                if (notification.type !== 'system') {
+                    hasNonSystemNotifications = true;
+                    break;
+                }
+            }
+            
+            // 有非系统通知或未读通知时播放提示音
+            if (hasNonSystemNotifications || unreadCount > 0) {
+                // 有未读通知或新通知时播放提示音
+                needPlaySound = true;
+                // 有新通知时刷新通知列表，只加载未读通知
+                loadNotifications(1, '', '0');
+            }
+            
+            // 如果只有系统通知，也刷新通知列表，但不播放提示音
+            else if (notifications.length > 0) {
+                loadNotifications(1, '', '0');
+            }
+            
+            return { notifications, unreadCount, detectionResult };
+        }
+    } catch (error) {
+        log('ERROR', '检测通知失败: ' + error.message, 'NOTIFICATION');
+        return { notifications: [], unreadCount: 0, detectionResult: {} };
+    }
+}
+
+// 更新通知角标
+function updateNotificationBadge(count) {
+    // 查找"提示通知列表"导航栏按钮
+    const navLink = document.querySelector('.nav-link[data-page="notification-logs"]') || 
+                   document.querySelector('.nav-link[data-page="notifications"]');
+    if (navLink) {
+        let badge = navLink.querySelector('.badge-notification');
+        
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'badge-notification';
+                navLink.appendChild(badge);
+            }
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            if (badge) {
+                badge.remove();
+            }
+        }
+    }
+    
+    // 同时更新原有的通知角标元素（如果存在）
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// 更新导航栏面板红色角标
+function updateNavigationBadges(detectionResult) {
+    // 映射检测结果到导航栏面板
+    const badgeMap = {
+        'recharge': 'recharge',
+        'withdraw': 'withdraw',
+        'agent': 'agent',
+        'magnifier': 'magnifier',
+        'rental': 'rental-orders',
+        'ticket': 'rental-tickets'
+    };
+    
+    // 更新每个面板的角标
+    for (const [key, value] of Object.entries(detectionResult)) {
+        // 跳过 system 字段，不显示角标
+        if (key === 'system') {
+            continue;
+        }
+        
+        if (badgeMap[key]) {
+            updateBadge(badgeMap[key], value);
+        }
+    }
+}
+
+// 标记通知已读
+async function markNotificationAsRead(notificationId) {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/read.php`, {
+            method: 'POST',
+            body: JSON.stringify({ notification_id: notificationId })
+        });
+        
+        if (data.code === 0) {
+            showToast('标记已读成功', 'success');
+            loadNotifications();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        log('ERROR', '标记通知已读失败: ' + error.message, 'NOTIFICATION');
+        showToast('标记已读失败', 'error');
+    }
+}
+
+// 批量标记已读
+async function markAllNotificationsAsRead(type = '') {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/read-all.php`, {
+            method: 'POST',
+            body: JSON.stringify({ type })
+        });
+        
+        if (data.code === 0) {
+            showToast(`成功标记 ${data.data.count} 条通知为已读`, 'success');
+            loadNotifications();
+            loadNotificationLogs();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        log('ERROR', '批量标记已读失败: ' + error.message, 'NOTIFICATION');
+        showToast('批量标记已读失败', 'error');
+    }
+}
+
+// 标记所有通知为已读（用于提示通知列表）
+async function markAllNotificationsRead() {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/read-all.php`, {
+            method: 'POST',
+            body: JSON.stringify({ type: '' })
+        });
+        
+        if (data.code === 0) {
+            showToast(`成功标记 ${data.data.count} 条通知为已读`, 'success');
+            loadNotificationLogs();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        log('ERROR', '批量标记已读失败: ' + error.message, 'NOTIFICATION');
+        showToast('批量标记已读失败', 'error');
+    }
+}
+
+// 清除通知日志
+async function clearNotificationLogs() {
+    showConfirm('确定要清除所有通知日志吗？此操作不可恢复。', async () => {
+        try {
+            const data = await apiRequest(`${API_BASE}/api/admin_notifications/clean-log.php`, {
+                method: 'POST',
+                body: JSON.stringify({ days: 0 })
+            });
+            
+            if (data.code === 0) {
+                showToast(`成功清理 ${data.data.deleted_count} 条日志`, 'success');
+                loadNotificationLogs();
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            log('ERROR', '清理通知日志失败: ' + error.message, 'NOTIFICATION');
+            showToast('清理日志失败', 'error');
+        }
+    });
+}
+
+// 获取通知列表
+async function loadNotifications(page = 1, status = 0) {
+    try {
+        log('INFO', `开始加载通知列表，状态: ${status}`, 'NOTIFICATION');
+        const search = document.getElementById('notificationSearch')?.value || '';
+        const filterStatus = document.getElementById('notificationStatusFilter')?.value || status;
+        
+        // 移除分页参数，直接请求所有数据，不按类型过滤
+        const url = `${API_BASE}/api/admin_notifications/list.php?page=1&pageSize=100` +
+            (filterStatus ? `&status=${filterStatus}` : '') +
+            (search ? `&search=${encodeURIComponent(search)}` : '');
+        
+        const data = await apiRequest(url);
+      
+        if (data.code === 0) {
+          
+            renderNotificationList(data.data.list, 1, 100, data.data.total);
+          
+        } else {
+            log('ERROR', `API返回错误: ${data.message}`, 'NOTIFICATION');
+        }
+    } catch (error) {
+        console.error('加载通知列表失败:', error);
+    }
+}
+
+// 获取通知检测日志
+async function loadNotificationLogs(page = 1, hasNewNotification = -1) {
+    try {
+        const search = document.getElementById('notificationSearch')?.value || '';
+        const type = document.getElementById('notificationTypeFilter')?.value || '';
+        
+        const url = `${API_BASE}/api/admin_notifications/log.php?page=${page}&pageSize=20` +
+            (hasNewNotification !== -1 ? `&has_new_notification=${hasNewNotification}` : '') +
+            (search ? `&search=${encodeURIComponent(search)}` : '') +
+            (type ? `&type=${type}` : '');
+        
+        const data = await apiRequest(url);
+        
+        if (data.code === 0) {
+            renderNotificationLogList(data.data.list, data.data.page, data.data.pageSize, data.data.total);
+            logPage = data.data.page;
+            logTotalPages = Math.ceil(data.data.total / data.data.pageSize);
+            updateLogPagination();
+        }
+    } catch (error) {
+        log('ERROR', '加载通知检测日志失败: ' + error.message, 'NOTIFICATION');
+    }
+}
+
+// 获取通知配置
+async function loadNotificationConfigs() {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/config.php`);
+        
+        if (data.code === 0) {
+            renderNotificationConfigTable(data.data);
+        }
+    } catch (error) {
+        log('ERROR', '加载通知配置失败: ' + error.message, 'NOTIFICATION');
+    }
+}
+
+// 保存通知配置
+async function saveNotificationConfig(config) {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/config/update.php`, {
+            method: 'POST',
+            body: JSON.stringify(config)
+        });
+        
+        if (data.code === 0) {
+            showToast('保存配置成功', 'success');
+            loadNotificationConfigs();
+            // 重启计时器，使用新的配置
+            startCountdown();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        log('ERROR', '保存通知配置失败: ' + error.message, 'NOTIFICATION');
+        showToast('保存配置失败', 'error');
+    }
+}
+
+// 清理通知日志
+async function cleanNotificationLogs(days = 2) {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/clean-log.php`, {
+            method: 'POST',
+            body: JSON.stringify({ days })
+        });
+        
+        if (data.code === 0) {
+            showToast(`成功清理 ${data.data.deleted_count} 条日志`, 'success');
+            loadNotificationLogs();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        log('ERROR', '清理通知日志失败: ' + error.message, 'NOTIFICATION');
+        showToast('清理日志失败', 'error');
+    }
+}
+
+// 渲染通知列表
+function renderNotificationList(list, page, pageSize, total) {     
+    const notificationList = document.getElementById('notificationList');
+    
+    if (!notificationList) {
+        console.error('找不到notificationList元素');
+        return;
+    }
+    
+    // 检查元素样式
+    const computedStyle = window.getComputedStyle(notificationList);
+
+    
+    if (list.length === 0) {
+        notificationList.innerHTML = '<div class="empty-state" style="text-align: center; padding: 40px; color: #86868b;">暂无通知</div>';
+        return;
+    }
+    
+    
+    let html = `
+        <div class="table-container">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f9f9f9; border-bottom: 1px solid #e5e5e5;">
+                    <th style="padding: 10px; text-align: left; width: 40px;">
+                        <input type="checkbox" id="selectAllNotifications" onchange="selectAllNotifications(this.checked)">
+                    </th>
+                    <th style="padding: 10px; text-align: left;">标题</th>
+                    <th style="padding: 10px; text-align: left;">内容</th>
+                    <th style="padding: 10px; text-align: left;">类型</th>
+                    <th style="padding: 10px; text-align: left;">状态</th>
+                    <th style="padding: 10px; text-align: left;">时间</th>
+                    <th style="padding: 10px; text-align: left;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    list.forEach(notification => {
+        const statusClass = notification.status === 0 ? 'unread' : 'read';
+        const priorityClass = notification.priority === 1 ? 'priority-high' : '';
+        const typeClass = `type-${notification.type}`;
+        const statusBadge = notification.status === 0 ? 
+            '<span class="badge badge-warning">未读</span>' : 
+            '<span class="badge badge-success">已读</span>';
+        
+        html += `
+            <tr class="${statusClass} ${priorityClass} ${typeClass}" style="border-bottom: 1px solid #e5e5e5;">
+                <td style="padding: 10px;">
+                    <input type="checkbox" class="notification-checkbox" value="${notification.id}">
+                </td>
+                <td style="padding: 10px;"><strong>${notification.title}</strong></td>
+                <td style="padding: 10px; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${notification.content}</td>
+                <td style="padding: 10px;">${notification.type}</td>
+                <td style="padding: 10px;">${statusBadge}</td>
+                <td style="padding: 10px;">${notification.created_at}</td>
+                <td style="padding: 10px;">
+                    ${notification.status === 0 ? 
+                        `<button class="btn-secondary btn-small" onclick="markNotificationAsRead(${notification.id})"><i class="ri-check-line"></i> 标记已读</button>` : 
+                        `<button class="btn-secondary btn-small" onclick="markNotificationAsUnread(${notification.id})"><i class="ri-arrow-undo-line"></i> 标记未读</button>`}
+                    <button class="btn-info btn-small" onclick="viewNotificationDetails(${notification.id})"><i class="ri-eye-line"></i> 查看</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    
+    try {
+        notificationList.innerHTML = html;
+        // 再次检查元素样式
+        const afterStyle = window.getComputedStyle(notificationList);
+    } catch (error) {
+        console.error('渲染失败:', error);
+    }
+}
+
+// 全选通知
+function selectAllNotifications(checked) {
+    const checkboxes = document.querySelectorAll('.notification-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checked;
+    });
+}
+
+// 标记通知为未读
+async function markNotificationAsUnread(notificationId) {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/admin_notifications/unread.php`, {
+            method: 'POST',
+            body: JSON.stringify({ notification_id: notificationId })
+        });
+        
+        if (data.code === 0) {
+            showToast('标记未读成功', 'success');
+            loadNotifications();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        log('ERROR', '标记通知未读失败: ' + error.message, 'NOTIFICATION');
+        showToast('标记未读失败', 'error');
+    }
+}
+
+// 批量删除通知
+async function clearSelectedNotifications() {
+    const checkboxes = document.querySelectorAll('.notification-checkbox:checked');
+    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        showToast('请选择要删除的通知', 'error');
+        return;
+    }
+    
+    showConfirm(`确定要删除选中的 ${selectedIds.length} 条通知吗？`, async () => {
+        try {
+            const data = await apiRequest(`${API_BASE}/api/admin_notifications/delete.php`, {
+                method: 'POST',
+                body: JSON.stringify({ ids: selectedIds })
+            });
+            
+            if (data.code === 0) {
+                showToast(`成功删除 ${data.data.deleted_count} 条通知`, 'success');
+                loadNotifications();
+            } else {
+                showToast(data.message, 'error');
+            }
+        } catch (error) {
+            log('ERROR', '批量删除通知失败: ' + error.message, 'NOTIFICATION');
+            showToast('批量删除失败', 'error');
+        }
+    });
+}
+
+// 显示通知日志模态框
+function showNotificationLogsModal() {
+    const modal = document.getElementById('notificationLogsModal');
+    if (modal) {
+        modal.classList.add('active');
+        loadNotificationLogs();
+    }
+}
+
+// 关闭通知日志模态框
+function closeNotificationLogsModal() {
+    const modal = document.getElementById('notificationLogsModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// 格式化检测结果
+function formatDetectionResult(result) {
+    if (!result) return '-';
+    
+    try {
+        let formatted = '';
+        if (typeof result === 'object') {
+            if (result.notifications && Array.isArray(result.notifications)) {
+                formatted = `新增 ${result.notifications.length} 条通知`;
+                if (result.unreadCount) {
+                    formatted += `，未读 ${result.unreadCount} 条`;
+                }
+            } else if (result.recharge_count !== undefined) {
+                formatted = `充值审核: ${result.recharge_count} 条`;
+            } else if (result.withdraw_count !== undefined) {
+                formatted = `提现审核: ${result.withdraw_count} 条`;
+            } else if (result.agent_count !== undefined) {
+                formatted = `团长审核: ${result.agent_count} 条`;
+            } else {
+                // 其他类型的检测结果
+                const keys = Object.keys(result);
+                if (keys.length > 0) {
+                    formatted = keys.map(key => `${key}: ${result[key]}`).join('，');
+                } else {
+                    formatted = '检测完成';
+                }
+            }
+        } else {
+            formatted = String(result);
+        }
+        return formatted;
+    } catch (error) {
+        return '检测结果解析失败';
+    }
+}
+
+// 渲染通知检测日志列表
+function renderNotificationLogList(list, page, pageSize, total) {
+    const logTable = document.getElementById('notificationLogTable');
+    
+    if (list.length === 0) {
+        logTable.innerHTML = '<div class="empty-state" style="text-align: center; padding: 40px; color: #86868b;">暂无通知日志</div>';
+        return;
+    }
+    
+    let html = `
+        <div class="table-container">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f9f9f9; border-bottom: 1px solid #e5e5e5;">
+                    <th style="padding: 10px; text-align: left; width: 40px;">
+                        <input type="checkbox" id="selectAllLogs" onchange="selectAllLogs(this.checked)">
+                    </th>
+                    <th style="padding: 10px; text-align: left;">检测时间</th>
+                    <th style="padding: 10px; text-align: left;">通知状态</th>
+                    <th style="padding: 10px; text-align: left;">新增通知数量</th>
+                    <th style="padding: 10px; text-align: left;">检测结果</th>
+                    <th style="padding: 10px; text-align: left;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    list.forEach(log => {
+        const hasNewClass = log.has_new_notification === 1 ? 'has-new' : '';
+        const statusBadge = log.has_new_notification === 1 ? 
+            '<span class="badge badge-success">有新通知</span>' : 
+            '<span class="badge badge-neutral">无新通知</span>';
+        const formattedResult = formatDetectionResult(log.detection_result);
+        
+        html += `
+            <tr class="${hasNewClass}" style="border-bottom: 1px solid #e5e5e5;">
+                <td style="padding: 10px;">
+                    <input type="checkbox" class="log-checkbox" value="${log.id}">
+                </td>
+                <td style="padding: 10px;">${log.detection_time}</td>
+                <td style="padding: 10px;">${statusBadge}</td>
+                <td style="padding: 10px;">${log.notification_count}</td>
+                <td style="padding: 10px; max-width: 300px; overflow: hidden; text-overflow: ellipsis;">
+                    ${formattedResult}
+                </td>
+                <td style="padding: 10px;">
+                    <button class="btn-info btn-small" onclick="viewNotificationDetails(${JSON.stringify(log)})"><i class="ri-eye-line"></i> 查看详情</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    
+    // 添加分页
+    html += `
+        <div class="pagination" style="margin-top: 20px; text-align: center;">
+            <button class="btn-secondary btn-small" ${page === 1 ? 'disabled' : ''} onclick="loadNotificationLogs(${page - 1})"><i class="ri-arrow-left-line"></i> 上一页</button>
+            <span style="margin: 0 15px; line-height: 32px;">第 ${page} 页，共 ${Math.ceil(total / pageSize)} 页</span>
+            <button class="btn-secondary btn-small" ${page === Math.ceil(total / pageSize) ? 'disabled' : ''} onclick="loadNotificationLogs(${page + 1})"><i class="ri-arrow-right-line"></i> 下一页</button>
+        </div>
+    `;
+    
+    logTable.innerHTML = html;
+}
+
+// 全选日志
+function selectAllLogs(checked) {
+    const checkboxes = document.querySelectorAll('.log-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checked;
+    });
+}
+
+// 查看通知详情
+async function viewNotificationDetails(item) {
+    const modalBody = document.getElementById('modalBody');
+    
+    // 检查是通知ID还是完整对象
+    if (typeof item === 'number') {
+        // 通过ID获取通知详情
+        try {
+            const data = await apiRequest(`${API_BASE}/api/admin_notifications/detail.php`, {
+                method: 'POST',
+                body: JSON.stringify({ notification_id: item })
+            });
+            
+            if (data.code === 0) {
+                const notification = data.data;
+                showNotificationDetails(notification);
+            } else {
+                showToast('获取通知详情失败', 'error');
+            }
+        } catch (error) {
+            log('ERROR', '获取通知详情失败: ' + error.message, 'NOTIFICATION');
+            showToast('获取通知详情失败', 'error');
+        }
+    } else {
+        // 直接使用传入的对象
+        showNotificationDetails(item);
+    }
+}
+
+function showNotificationDetails(item) {
+    const modalBody = document.getElementById('modalBody');
+    
+    // 检查是通知还是日志
+    if (item.detection_time) {
+        // 日志详情
+        modalBody.innerHTML = `
+            <h3><i class="ri-eye-line"></i> 通知日志详情</h3>
+            <div class="notification-detail">
+                <div class="detail-item">
+                    <label>检测时间:</label>
+                    <span>${item.detection_time}</span>
+                </div>
+                <div class="detail-item">
+                    <label>通知状态:</label>
+                    <span>${item.has_new_notification === 1 ? '有新通知' : '无新通知'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>新增通知数量:</label>
+                    <span>${item.notification_count}</span>
+                </div>
+                ${item.detection_result ? `
+                    <div class="detail-item">
+                        <label>检测结果:</label>
+                        <pre style="white-space: pre-wrap; background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 5px;">${JSON.stringify(item.detection_result, null, 2)}</pre>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="button" class="btn-secondary" onclick="closeModal()">关闭</button>
+            </div>
+        `;
+    } else {
+        // 通知详情
+        modalBody.innerHTML = `
+            <h3><i class="ri-eye-line"></i> 通知详情</h3>
+            <div class="notification-detail">
+                <div class="detail-item">
+                    <label>标题:</label>
+                    <span>${item.title}</span>
+                </div>
+                <div class="detail-item">
+                    <label>内容:</label>
+                    <span>${item.content}</span>
+                </div>
+                <div class="detail-item">
+                    <label>类型:</label>
+                    <span>${item.type}</span>
+                </div>
+                <div class="detail-item">
+                    <label>状态:</label>
+                    <span>${item.status === 0 ? '未读' : '已读'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>优先级:</label>
+                    <span>${item.priority === 1 ? '重要' : '普通'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>创建时间:</label>
+                    <span>${item.created_at}</span>
+                </div>
+                ${item.data && Object.keys(item.data).length > 0 ? `
+                    <div class="detail-item">
+                        <label>附加数据:</label>
+                        <pre style="white-space: pre-wrap; background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 5px;">${JSON.stringify(item.data, null, 2)}</pre>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="button" class="btn-secondary" onclick="closeModal()">关闭</button>
+            </div>
+        `;
+    }
+    
+    document.getElementById('modal').classList.add('active');
+}
+
+// 渲染通知配置表格
+function renderNotificationConfigTable(configs) {
+    const configTable = document.getElementById('notificationConfigTable');
+    
+    if (configs.length === 0) {
+        configTable.innerHTML = '<div class="empty-state">暂无配置</div>';
+        return;
+    }
+    
+    let html = `
+        <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>编码</th>
+                    <th>名称</th>
+                    <th>描述</th>
+                    <th>状态</th>
+                    <th>检测间隔</th>
+                    <th>优先级</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    configs.forEach(config => {
+        const statusBadge = config.enabled === 1 ? '<span class="badge badge-success">启用</span>' : '<span class="badge badge-danger">禁用</span>';
+        const priorityBadge = config.priority === 1 ? '<span class="badge badge-warning">重要</span>' : '<span class="badge badge-neutral">普通</span>';
+        
+        html += `
+            <tr>
+                <td>${config.id}</td>
+                <td>${config.code}</td>
+                <td>${config.name}</td>
+                <td>${config.description || '-'}</td>
+                <td>${statusBadge}</td>
+                <td>${config.detection_interval}秒</td>
+                <td>${priorityBadge}</td>
+                <td>${config.created_at}</td>
+                <td>
+                    <button class="btn-info btn-small" onclick="editNotificationConfig(${JSON.stringify(config)})"><i class="ri-edit-line"></i> 编辑</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    configTable.innerHTML = html;
+}
+
+// 编辑通知配置
+function editNotificationConfig(config) {
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h3><i class="ri-edit-line"></i> 编辑通知配置 - ${config.name}</h3>
+        <form id="editNotificationConfigForm">
+            <input type="hidden" name="id" value="${config.id}">
+            <div class="form-group">
+                <label>编码</label>
+                <input type="text" name="code" value="${config.code}" placeholder="通知类型编码" required>
+            </div>
+            <div class="form-group">
+                <label>名称</label>
+                <input type="text" name="name" value="${config.name}" placeholder="通知类型名称" required>
+            </div>
+            <div class="form-group">
+                <label>描述</label>
+                <textarea name="description" placeholder="通知类型描述">${config.description || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select name="enabled" required>
+                    <option value="1" ${config.enabled === 1 ? 'selected' : ''}>启用</option>
+                    <option value="0" ${config.enabled === 0 ? 'selected' : ''}>禁用</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>检测间隔（秒）</label>
+                <input type="number" name="detection_interval" value="${config.detection_interval}" min="1" required>
+            </div>
+            <div class="form-group">
+                <label>判断条件</label>
+                <input type="text" name="judgment_condition" value="${config.judgment_condition || ''}" placeholder="通知判断条件">
+            </div>
+            <div class="form-group">
+                <label>优先级</label>
+                <select name="priority" required>
+                    <option value="0" ${config.priority === 0 ? 'selected' : ''}>普通</option>
+                    <option value="1" ${config.priority === 1 ? 'selected' : ''}>重要</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn-primary">保存</button>
+            </div>
+        </form>
+    `;
+    
+    document.getElementById('modal').classList.add('active');
+    
+    document.getElementById('editNotificationConfigForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {};
+        
+        for (const [key, value] of formData.entries()) {
+            if (value !== '') {
+                if (key === 'id' || key === 'enabled' || key === 'detection_interval' || key === 'priority') {
+                    data[key] = Number(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+        }
+        
+        await saveNotificationConfig(data);
+        closeModal();
+    });
+}
+
+// 新增通知配置
+function addNotificationConfig() {
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <h3><i class="ri-add-line"></i> 新增通知配置</h3>
+        <form id="addNotificationConfigForm">
+            <div class="form-group">
+                <label>编码</label>
+                <input type="text" name="code" placeholder="通知类型编码" required>
+            </div>
+            <div class="form-group">
+                <label>名称</label>
+                <input type="text" name="name" placeholder="通知类型名称" required>
+            </div>
+            <div class="form-group">
+                <label>描述</label>
+                <textarea name="description" placeholder="通知类型描述"></textarea>
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select name="enabled" required>
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>检测间隔（秒）</label>
+                <input type="number" name="detection_interval" value="60" min="1" required>
+            </div>
+            <div class="form-group">
+                <label>判断条件</label>
+                <input type="text" name="judgment_condition" placeholder="通知判断条件">
+            </div>
+            <div class="form-group">
+                <label>优先级</label>
+                <select name="priority" required>
+                    <option value="0">普通</option>
+                    <option value="1">重要</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn-primary">创建</button>
+            </div>
+        </form>
+    `;
+    
+    document.getElementById('modal').classList.add('active');
+    
+    document.getElementById('addNotificationConfigForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {};
+        
+        for (const [key, value] of formData.entries()) {
+            if (value !== '') {
+                if (key === 'enabled' || key === 'detection_interval' || key === 'priority') {
+                    data[key] = Number(value);
+                } else {
+                    data[key] = value;
+                }
+            }
+        }
+        
+        await saveNotificationConfig(data);
+        closeModal();
+    });
+}
+
+// 更新通知角标
+function updateNotificationBadge(count) {
+    // 更新导航栏链接上的角标
+    const navLink = document.querySelector('.nav-link[data-page="notification-logs"]');
+    if (navLink) {
+        let badge = navLink.querySelector('.badge-notification');
+        
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'badge-notification';
+                navLink.appendChild(badge);
+            }
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            if (badge) {
+                badge.remove();
+            }
+        }
+    }
+    
+    // 同时更新原有的通知角标元素（如果存在）
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// 更新通知分页
+function updateNotificationPagination() {
+    const paginationContainer = document.getElementById('notificationPagination');
+    
+    if (paginationContainer) {
+        paginationContainer.innerHTML = `
+            <button class="btn-secondary btn-small" ${notificationPage === 1 ? 'disabled' : ''} onclick="loadNotifications(${notificationPage - 1})"><i class="ri-arrow-left-line"></i> 上一页</button>
+            <span style="margin: 0 15px; line-height: 32px;">第 ${notificationPage} 页，共 ${notificationTotalPages} 页</span>
+            <button class="btn-secondary btn-small" ${notificationPage === notificationTotalPages ? 'disabled' : ''} onclick="loadNotifications(${notificationPage + 1})"><i class="ri-arrow-right-line"></i> 下一页</button>
+        `;
+    }
+}
+
+// 更新日志分页
+function updateLogPagination() {
+    const prevBtn = document.getElementById('prevLogPage');
+    const nextBtn = document.getElementById('nextLogPage');
+    const pageInfo = document.getElementById('logPageInfo');
+    
+    if (prevBtn && nextBtn && pageInfo) {
+        prevBtn.disabled = logPage === 1;
+        nextBtn.disabled = logPage === logTotalPages;
+        pageInfo.textContent = `第 ${logPage} 页，共 ${logTotalPages} 页`;
+    }
+}
+
+// 初始化通知中心
+function initNotificationCenter() {
+    const notificationBtn = document.getElementById('notificationBtn');
+    const notificationCenter = document.getElementById('notificationCenter');
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
+    const refreshNotificationsBtn = document.getElementById('refreshNotificationsBtn');
+    const viewNotificationLogsBtn = document.getElementById('viewNotificationLogsBtn');
+    const notificationTypeFilter = document.getElementById('notificationTypeFilter');
+    const notificationStatusFilter = document.getElementById('notificationStatusFilter');
+    const prevNotificationPage = document.getElementById('prevNotificationPage');
+    const nextNotificationPage = document.getElementById('nextNotificationPage');
+    
+    if (notificationBtn && notificationCenter) {
+        notificationBtn.addEventListener('click', () => {
+            notificationCenter.classList.add('active');
+            loadNotifications();
+        });
+    }
+    
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', () => {
+            markAllNotificationsAsRead();
+        });
+    }
+    
+    if (refreshNotificationsBtn) {
+        refreshNotificationsBtn.addEventListener('click', () => {
+            loadNotifications(notificationPage, currentNotificationType, currentNotificationStatus);
+        });
+    }
+    
+    if (viewNotificationLogsBtn) {
+        viewNotificationLogsBtn.addEventListener('click', () => {
+            const notificationLogModal = document.getElementById('notificationLogModal');
+            if (notificationLogModal) {
+                notificationLogModal.classList.add('active');
+                loadNotificationLogs();
+            }
+        });
+    }
+    
+    if (notificationTypeFilter) {
+        notificationTypeFilter.addEventListener('change', () => {
+            currentNotificationType = notificationTypeFilter.value;
+            loadNotifications(1, currentNotificationType, currentNotificationStatus);
+        });
+    }
+    
+    if (notificationStatusFilter) {
+        notificationStatusFilter.addEventListener('change', () => {
+            currentNotificationStatus = notificationStatusFilter.value;
+            loadNotifications(1, currentNotificationType, currentNotificationStatus);
+        });
+    }
+    
+    if (prevNotificationPage) {
+        prevNotificationPage.addEventListener('click', () => {
+            if (notificationPage > 1) {
+                loadNotifications(notificationPage - 1, currentNotificationType, currentNotificationStatus);
+            }
+        });
+    }
+    
+    if (nextNotificationPage) {
+        nextNotificationPage.addEventListener('click', () => {
+            if (notificationPage < notificationTotalPages) {
+                loadNotifications(notificationPage + 1, currentNotificationType, currentNotificationStatus);
+            }
+        });
+    }
+    
+    // 初始化通知检测日志模态框
+    const notificationLogModal = document.getElementById('notificationLogModal');
+    const refreshLogsBtn = document.getElementById('refreshLogsBtn');
+    const logHasNewFilter = document.getElementById('logHasNewFilter');
+    const prevLogPage = document.getElementById('prevLogPage');
+    const nextLogPage = document.getElementById('nextLogPage');
+    
+    if (refreshLogsBtn) {
+        refreshLogsBtn.addEventListener('click', () => {
+            const hasNewFilter = document.getElementById('logHasNewFilter').value;
+            loadNotificationLogs(logPage, parseInt(hasNewFilter));
+        });
+    }
+    
+    if (logHasNewFilter) {
+        logHasNewFilter.addEventListener('change', () => {
+            loadNotificationLogs(1, parseInt(logHasNewFilter.value));
+        });
+    }
+    
+    if (prevLogPage) {
+        prevLogPage.addEventListener('click', () => {
+            if (logPage > 1) {
+                const hasNewFilter = document.getElementById('logHasNewFilter').value;
+                loadNotificationLogs(logPage - 1, parseInt(hasNewFilter));
+            }
+        });
+    }
+    
+    if (nextLogPage) {
+        nextLogPage.addEventListener('click', () => {
+            if (logPage < logTotalPages) {
+                const hasNewFilter = document.getElementById('logHasNewFilter').value;
+                loadNotificationLogs(logPage + 1, parseInt(hasNewFilter));
+            }
+        });
+    }
+}
+
+// 初始化
+function init() {
+
+    
+    initLoginForm();
+    initLogout();
+    initNavigation();
+    initModal();
+    initNotificationCenter();
+    initAgentUpgradePanel();
+    
+    // 检查登录状态
+    checkLoginStatus();
+    
+    // 页面卸载时停止轮询
+    window.addEventListener('beforeunload', stopPolling);
+    
+    // 启动数据自动刷新（每10分钟）
+    setInterval(() => {
+        loadDashboard();
+    }, 10 * 60 * 1000); // 10分钟
+}
+
+// 执行所有检测
+async function performAllChecks() {
+    const startTime = getTimestamp();
+    log('INFO', `开始执行所有检测，开始时间: ${startTime}，检测类型: 全面板检测`, 'DETECTION');
+    
+    // 重置提示音标志
+    needPlaySound = false;
+    let detectionStatus = 'SUCCESS';
+    const detectionResults = {};
+    const detectionItems = [];
+    
+    try {
+        // 检测系统通知（detect.php接口已包含所有检测逻辑）
+        log('INFO', '开始检测系统通知', 'DETECTION');
+        const notificationResult = await detectNotifications();
+        detectionResults.notification = notificationResult;
+        detectionItems.push({
+            type: '系统通知',
+            status: 'SUCCESS',
+            data: notificationResult
+        });
+        log('INFO', `系统通知检测结果: 新增 ${notificationResult.notifications.length} 条，未读 ${notificationResult.unreadCount} 条`, 'DETECTION');
+        
+        // 所有检测完成后，检查是否需要播放提示音
+        if (needPlaySound) {
+            log('INFO', '检测完成，播放提示音', 'DETECTION');
+            playNotificationSound();
+        }
+        
+        const endTime = getTimestamp();
+        log('INFO', `所有检测执行完成，结束时间: ${endTime}`, 'DETECTION');
+        
+        // 持久化检测结果日志
+        const detectionLog = log('INFO', `检测结果: ${JSON.stringify(detectionResults)}, 状态: ${detectionStatus}, 检测项: ${detectionItems.length}`, 'DETECTION');
+        await persistLogToFile(detectionLog);
+    } catch (error) {
+        detectionStatus = 'ERROR';
+        log('ERROR', `检测过程中发生错误: ${error.message}`, 'DETECTION');
+        
+        // 持久化错误日志
+        const errorLog = log('ERROR', `检测错误: ${error.message}`, 'DETECTION');
+        await persistLogToFile(errorLog);
+    } finally {
+        // 重新启动倒计时
+        log('INFO', '重新启动倒计时', 'DETECTION');
+        startCountdown();
+    }
+}
 
 // 加载权限模板列表
 async function loadSystemPermissions() {
@@ -2676,8 +3529,7 @@ async function loadTaskTemplates(page = 1) {
     const status = document.getElementById('templateStatus')?.value || '';
     
     try {
-        const res = await fetch(`${API_BASE}/api/tasks/list.php?page=${page}&type=${type}&status=${status}`);
-        const data = await res.json();
+        const data = await apiRequest(`${API_BASE}/api/tasks/list.php?page=${page}&type=${type}&status=${status}`);
         
         if (data.code === 0) {
             renderTaskTemplatesTable(data.data.list);
@@ -2888,12 +3740,11 @@ function addTaskTemplate() {
         }
 
         try {
-            const res = await fetch(`${API_BASE}/api/tasks/create.php`, {
+            const result = await apiRequest(`${API_BASE}/api/tasks/create.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
             
             if (result.code === 0) {
                 showToast('创建成功', 'success');
@@ -2912,13 +3763,11 @@ function addTaskTemplate() {
 function deleteTaskTemplate(id) {
     showConfirm('确认删除该任务模板吗？删除后无法恢复。', async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/tasks/delete.php`, {
+            const result = await apiRequest(`${API_BASE}/api/tasks/delete.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id })
             });
-            const result = await res.json();
-            
             if (result.code === 0) {
                 showToast('删除成功', 'success');
                 loadTaskTemplates();
@@ -3063,12 +3912,11 @@ function editTaskTemplate(task) {
         }
 
         try {
-            const res = await fetch(`${API_BASE}/api/tasks/update.php`, {
+            const result = await apiRequest(`${API_BASE}/api/tasks/update.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
             
             if (result.code === 0) {
                 showToast('更新成功', 'success');
@@ -3111,14 +3959,16 @@ async function loadWalletLogs(page = 1) {
     });
     
     try {
-        const res = await fetch(`${API_BASE}/api/wallet_logs/list.php?${params}`);
-        const data = await res.json();
+        const data = await apiRequest(`${API_BASE}/api/wallet_logs/list.php?${params}`);
         
         if (data.code === 0) {
             renderWalletLogsTable(data.data.list, data.data.pagination);
+        } else {
+            showToast('加载钱包记录失败: ' + data.message, 'error');
         }
     } catch (err) {
         console.error('加载钱包记录失败', err);
+        showToast('加载钱包记录失败', 'error');
     }
 }
 
@@ -3194,8 +4044,7 @@ async function loadMarketTasks(page = 1) {
     });
     
     try {
-        const res = await fetch(`${API_BASE}/api/market/list.php?${params}`);
-        const data = await res.json();
+        const data = await apiRequest(`${API_BASE}/api/market/list.php?${params}`);
         
         if (data.code === 0) {
             renderMarketTasksTable(data.data.list, data.data.pagination);
@@ -3304,11 +4153,10 @@ async function loadNotificationList(page = 1) {
     }
     
     try {
-        const res = await fetch(`${API_BASE}/api/notifications/list.php?${params}`);
-        const data = await res.json();
+        const data = await apiRequest(`${API_BASE}/api/notifications/list.php?${params}`);
         
         if (data.code === 0) {
-            renderNotificationList(data.data.list, data.data.pagination);
+            renderSystemNotificationList(data.data.list, data.data.pagination);
         } else {
             showToast('加载失败: ' + data.message, 'error');
         }
@@ -3317,8 +4165,8 @@ async function loadNotificationList(page = 1) {
     }
 }
 
-// 渲染通知列表
-function renderNotificationList(list, pagination) {
+// 渲染系统通知列表
+function renderSystemNotificationList(list, pagination) {
     let html = `<div class="table-container"><table>
         <thead>
             <tr>
@@ -3465,13 +4313,13 @@ async function sendNotification() {
     }
     
     try {
-        const res = await fetch(`${API_BASE}/api/notifications/send.php`, {
+        const data = await apiRequest(`${API_BASE}/api/notifications/send.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
         
-        const data = await res.json();
+   
         
         if (data.code === 0) {
             showToast('通知发送成功', 'success');
@@ -3664,13 +4512,11 @@ function dispatchOrder(orderId, action) {
 
     showConfirm(confirmMsg, async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/rental_orders/dispatch.php`, {
+            const result = await apiRequest(`${API_BASE}/api/rental_orders/dispatch.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ order_id: orderId, action })
             });
-            const result = await res.json();
-
             if (result.code === 0) {
                 showToast(result.message, 'success');
                 loadRentalOrders();
@@ -3692,8 +4538,7 @@ async function loadTickets(page = 1) {
     if (status) params.append('status', status);
 
     try {
-        const res = await fetch(`${API_BASE}/api/rental_tickets/list.php?${params}`);
-        const result = await res.json();
+        const result = await apiRequest(`${API_BASE}/api/rental_tickets/list.php?${params}`);
 
         if (result.code === 0 || result.code === 200) {
             renderTicketsTable(result.data);
@@ -3782,8 +4627,7 @@ function renderTicketsTable(data) {
 // 打开工单聊天界面
 async function openTicketChat(ticketId, ticketNo) {
     try {
-        const res = await fetch(`${API_BASE}/api/rental_tickets/detail.php?ticket=${ticketId}`);
-        const result = await res.json();
+        const result = await apiRequest(`${API_BASE}/api/rental_tickets/detail.php?ticket=${ticketId}`);
 
         if (result.code === 0 || result.code === 200) {
             showTicketChatModal(result.data);
@@ -3932,13 +4776,12 @@ async function handleImageUpload(e) {
 
         const formData = new FormData();
         formData.append('file', file);
-
+        
         try {
-            const res = await fetch(`${API_BASE}/api/upload.php`, {
+            const result = await apiRequest(`${API_BASE}/api/upload.php`, {
                 method: 'POST',
                 body: formData
             });
-            const result = await res.json();
 
             if (result.code === 0 || result.code === 200) {
                 window.ticketUploadedImages.push(result.data.url);
@@ -4007,12 +4850,11 @@ async function sendTicketMessage(ticketId) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/rental_tickets/send-message.php`, {
+        const result = await apiRequest(`${API_BASE}/api/rental_tickets/send-message.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        const result = await res.json();
 
         if (result.code === 0 || result.code === 200) {
             showToast('消息发送成功', 'success');
@@ -4043,12 +4885,11 @@ async function closeTicket(ticketId, reason = '管理员关闭工单') {
     if (!confirm(`确定要关闭工单 #${ticketId} 吗？`)) return;
 
     try {
-        const res = await fetch(`${API_BASE}/api/rental_tickets/close.php`, {
+        const result = await apiRequest(`${API_BASE}/api/rental_tickets/close.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ticket_id: ticketId, close_reason: reason })
         });
-        const result = await res.json();
 
         if (result.code === 0 || result.code === 200) {
             showToast('工单关闭成功', 'success');
@@ -4072,8 +4913,7 @@ async function loadSystemConfig() {
     if (group) params.append('group', group);
 
     try {
-        const res = await fetch(`${API_BASE}/api/config/list.php?${params}`);
-        const result = await res.json();
+        const result = await apiRequest(`${API_BASE}/api/config/list.php?${params}`);
 
         if (result.code === 0 || result.code === 200) {
             renderConfigTable(result.data.configs);
@@ -4107,7 +4947,8 @@ function renderConfigTable(configs) {
         'general': '基础配置',
         'withdraw': '提现配置',
         'task': '任务配置',
-        'rental': '租赁配置'
+        'rental': '租赁配置',
+        'notification': '消息通知配置'
     };
 
     let html = '';
@@ -4264,7 +5105,7 @@ async function saveConfig(configKey, configType) {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/config/update.php`, {
+        const result = await apiRequest(`${API_BASE}/api/config/update.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -4272,7 +5113,6 @@ async function saveConfig(configKey, configType) {
                 config_value: configValue
             })
         });
-        const result = await res.json();
 
         if (result.code === 0 || result.code === 200) {
             showToast('配置更新成功', 'success');
@@ -4299,8 +5139,7 @@ async function loadTaskReviewList(page = 1) {
         if (bTaskId) params += `&b_task_id=${bTaskId}`;
         if (cUserId) params += `&c_user_id=${cUserId}`;
         
-        const res = await fetch(`${API_BASE}/api/tasks/pending.php?${params}`);
-        const data = await res.json();
+        const data = await apiRequest(`${API_BASE}/api/tasks/pending.php?${params}`);
         
         if (data.code === 0) {
             renderTaskReviewTable(data.data.list, data.data.pagination);
@@ -4412,7 +5251,7 @@ function reviewTask(recordId, bTaskId, action) {
     if (action === 'approve') {
         showConfirm('确认通过该任务吗？佣金将自动发放。', async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/tasks/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/tasks/review.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -4421,7 +5260,6 @@ function reviewTask(recordId, bTaskId, action) {
                         action: 'approve' 
                     })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -4436,7 +5274,7 @@ function reviewTask(recordId, bTaskId, action) {
     } else {
         showRejectModal('任务', async (reason) => {
             try {
-                const res = await fetch(`${API_BASE}/api/tasks/review.php`, {
+                const result = await apiRequest(`${API_BASE}/api/tasks/review.php`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -4446,7 +5284,6 @@ function reviewTask(recordId, bTaskId, action) {
                         reject_reason: reason 
                     })
                 });
-                const result = await res.json();
                 
                 if (result.code === 0) {
                     showToast(result.message, 'success');
@@ -4465,10 +5302,8 @@ function reviewTask(recordId, bTaskId, action) {
 
 // 加载放大镜任务列表
 async function loadMagnifierTasks(page = 1) {
-    console.log('=== 加载放大镜任务 ===');
     
     const status = document.getElementById('magnifierStatus')?.value || '';
-    console.log('状态筛选:', status);
     
     try {
         const params = new URLSearchParams({ page, pageSize: 10 });
@@ -4477,13 +5312,10 @@ async function loadMagnifierTasks(page = 1) {
         }
         
         const url = `${API_BASE}/api/magnifier/list.php?${params}`;
-        console.log('请求URL:', url);
         
         const data = await apiRequest(url);
-        console.log('API响应:', data);
         
         if (data.code === 0) {
-            console.log('加载成功，任务数量:', data.data.list.length);
             renderMagnifierTasksTable(data.data.list, data.data);
         } else {
             console.error('加载放大镜任务失败:', data.message);
@@ -4496,10 +5328,7 @@ async function loadMagnifierTasks(page = 1) {
 }
 
 // 渲染放大镜任务表格
-function renderMagnifierTasksTable(list, pagination) {
-    console.log('=== 渲染放大镜任务表格 ===');
-    console.log('任务列表:', list);
-    
+function renderMagnifierTasksTable(list, pagination) {    
     let html = `
         <div class="table-container">
         <table>
@@ -4514,6 +5343,7 @@ function renderMagnifierTasksTable(list, pagination) {
                     <th>进行中</th>
                     <th>待审核</th>
                     <th>状态</th>
+                    <th>查看状态</th>
                     <th>视频链接</th>
                     <th>蓝词搜索词</th>
                     <th>@用户</th>
@@ -4573,6 +5403,9 @@ function renderMagnifierTasksTable(list, pagination) {
             // 计算总价
             const totalPrice = task.total_price || (task.price * task.task_count);
             
+            // 查看状态
+            const viewStatusBadge = task.view_status === 1 ? '<span class="badge badge-success">已查看</span>' : '<span class="badge badge-warning">未查看</span>';
+            
             html += `
                 <tr>
                     <td>${task.id}</td>
@@ -4584,6 +5417,7 @@ function renderMagnifierTasksTable(list, pagination) {
                     <td>${task.task_doing}</td>
                     <td>${task.task_reviewing}</td>
                     <td>${statusBadge}</td>
+                    <td>${viewStatusBadge}</td>
                     <td>${videoButton}</td>
                     <td>${comment}</td>
                     <td>${atUser}</td>
@@ -4591,6 +5425,9 @@ function renderMagnifierTasksTable(list, pagination) {
                     <td>${task.created_at}</td>
                     <td>
                         <button class="btn-info btn-small" onclick="viewMagnifierTaskDetail(${task.id})"><i class="ri-eye-line"></i> 详情</button>
+                        ${task.view_status === 0 ? `
+                            <button class="btn-info btn-small" onclick="markMagnifierTaskAsViewed(${task.id})"><i class="ri-check-line"></i> 标记已查看</button>
+                        ` : ''}
                     </td>
                 </tr>
             `;
@@ -4613,20 +5450,39 @@ function renderMagnifierTasksTable(list, pagination) {
     const tableContainer = document.getElementById('magnifierTable');
     if (tableContainer) {
         tableContainer.innerHTML = html;
-        console.log('表格渲染完成');
     } else {
         console.error('未找到放大镜任务表格容器');
     }
 }
 
+// 标记放大镜任务为已查看
+async function markMagnifierTaskAsViewed(taskId) {
+    try {
+        const data = await apiRequest(`${API_BASE}/api/magnifier/mark-viewed.php`, {
+            method: 'POST',
+            body: JSON.stringify({ task_id: taskId })
+        });
+        
+        if (data.code === 0) {
+            showToast('标记成功', 'success');
+            loadMagnifierTasks();
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        console.error('标记放大镜任务已查看失败:', error);
+        showToast('标记失败', 'error');
+    }
+}
+
 // 查看放大镜任务详情
 async function viewMagnifierTaskDetail(taskId) {
-    console.log('=== 查看放大镜任务详情 ===');
-    console.log('任务ID:', taskId);
     
     try {
+        // 先标记任务为已查看
+        await markMagnifierTaskAsViewed(taskId);
+        
         const data = await apiRequest(`${API_BASE}/api/magnifier/detail.php?id=${taskId}`);
-        console.log('详情响应:', data);
         
         if (data.code === 0) {
             showMagnifierTaskDetailModal(data.data);
@@ -4824,6 +5680,215 @@ function showMagnifierTaskDetailModal(data) {
     
     modalBody.innerHTML = html;
     document.getElementById('modal').classList.add('active', 'fullscreen');
+}
+
+// 团长升级相关功能
+
+// 加载C端用户列表用于升级
+async function loadCUsersForUpgrade(page = 1) {
+    const username = document.getElementById('agentUpgradeUsername').value;
+    const userId = document.getElementById('agentUpgradeUserId').value;
+    
+    try {
+        let url = `${API_BASE}/api/agent/c-users-list.php?page=${page}`;
+        if (username) {
+            url += `&username=${encodeURIComponent(username)}`;
+        }
+        if (userId) {
+            url += `&user_id=${userId}`;
+        }
+        
+        const data = await apiRequest(url);
+        
+        if (data.code === 0) {
+            renderAgentUpgradeTable(data.data.list, data.data);
+        } else {
+            showToast('加载用户列表失败: ' + data.message, 'error');
+        }
+    } catch (err) {
+        console.error('加载C端用户失败', err);
+        showToast('加载用户列表失败', 'error');
+    }
+}
+
+// 渲染团长升级用户列表
+function renderAgentUpgradeTable(list, pagination) {
+    let html = `
+        <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>当前等级</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    if (list.length === 0) {
+        html += `
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 40px;">
+                    <i class="ri-search-line" style="font-size: 48px; color: #ccc;"></i>
+                    <p style="margin-top: 16px; color: #888;">未找到符合条件的用户</p>
+                </td>
+            </tr>
+        `;
+    } else {
+        list.forEach(u => {
+            let levelText = '普通用户';
+            let levelClass = 'badge-neutral';
+            
+            if (u.is_agent === 1) {
+                levelText = '团长';
+                levelClass = 'badge-success';
+            } else if (u.is_agent === 2) {
+                levelText = '高级团长';
+                levelClass = 'badge-warning';
+            }
+            
+            let actions = '';
+            if (u.is_agent === 0) {
+                actions = `
+                    <button class="btn-success btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 1)"><i class="ri-arrow-up-circle-line"></i> 升级成团长</button>
+                    <button class="btn-warning btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
+                `;
+            } else if (u.is_agent === 1) {
+                actions = `
+                    <button class="btn-warning btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
+                `;
+            } else {
+                actions = '<span class="text-gray">已是最高等级</span>';
+            }
+            
+            html += `
+                <tr>
+                    <td>${u.id}</td>
+                    <td><strong>${u.username}</strong></td>
+                    <td><span class="badge ${levelClass}">${levelText}</span></td>
+                    <td>${u.created_at}</td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        });
+    }
+    
+    html += '</tbody></table></div>';
+    
+    // 添加分页
+    if (pagination && pagination.total_pages > 1) {
+        html += `
+            <div class="pagination" style="margin-top: 20px; text-align: center;">
+                <button class="btn-secondary btn-small" ${pagination.page > 1 ? '' : 'disabled'} onclick="loadCUsersForUpgrade(${pagination.page - 1})"><i class="ri-arrow-left-line"></i> 上一页</button>
+                <span style="margin: 0 20px;">第 ${pagination.page} 页，共 ${pagination.total_pages} 页</span>
+                <button class="btn-secondary btn-small" ${pagination.page < pagination.total_pages ? '' : 'disabled'} onclick="loadCUsersForUpgrade(${pagination.page + 1})"><i class="ri-arrow-right-line"></i> 下一页</button>
+            </div>
+        `;
+    }
+    
+    document.getElementById('agentUpgradeTable').innerHTML = html;
+}
+
+// 升级用户为团长或高级团长
+function upgradeToAgent(userId, username, level) {
+    const levelText = level === 1 ? '团长' : '高级团长';
+    
+    showConfirm(`确认将用户 ${username} (ID: ${userId}) 升级为${levelText}吗？`, async () => {
+        try {
+            const res = await apiRequest(`${API_BASE}/api/agent/upgrade-to-senior.php`, {
+                method: 'POST',
+                body: JSON.stringify({ user_id: userId, level: level })
+            });
+            
+            if (res.code === 0) {
+                showToast(res.message, 'success');
+                loadCUsersForUpgrade();
+            } else {
+                showToast(res.message, 'error');
+            }
+        } catch (err) {
+            console.error('升级失败', err);
+            showToast('升级失败，请检查网络连接', 'error');
+        }
+    });
+}
+
+// 重置团长升级搜索
+function resetAgentUpgradeSearch() {
+    document.getElementById('agentUpgradeUsername').value = '';
+    document.getElementById('agentUpgradeUserId').value = '';
+    loadCUsersForUpgrade();
+}
+
+// 初始化团长升级面板
+function initAgentUpgradePanel() {
+    // 页面切换时加载数据
+    const agentUpgradeSection = document.getElementById('agentUpgradeSection');
+    if (agentUpgradeSection) {
+        agentUpgradeSection.addEventListener('click', (e) => {
+            if (e.target.closest('.content-section')) {
+                loadCUsersForUpgrade();
+            }
+        });
+    }
+}
+
+// 页面切换时加载团长升级数据
+function switchToPage(page) {
+    // 更新导航高亮
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    const targetLink = document.querySelector(`.nav-link[data-page="${page}"]`);
+    if (targetLink) {
+        targetLink.classList.add('active');
+    }
+    
+    // 切换内容区
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // 处理特殊页面的section ID映射
+    let sectionId = `${page}Section`;
+    if (page === 'agent-upgrade') {
+        sectionId = 'agentUpgradeSection';
+    } else if (page === 'notification-logs') {
+        sectionId = 'notification-logsSection';
+    }
+    
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+    
+    // 保存当前页面到localStorage
+    localStorage.setItem('admin_current_page', page);
+    
+    // 加载对应数据
+    switch(page) {
+        case 'dashboard': loadDashboard(); break;
+        case 'b-users': loadBUsers(); break;
+        case 'c-users': loadCUsers(); break;
+        case 'system-users': loadSystemUsers(); break;
+        case 'system-roles': loadSystemRoles(); break;
+        case 'system-permissions': loadSystemPermissions(); break;
+        case 'templates': loadTaskTemplates(); break;
+        case 'market': loadMarketTasks(); break;
+        case 'wallet-logs': loadWalletLogs(); break;
+        case 'recharge': loadRechargeList(); break;
+        case 'withdraw': loadWithdrawList(); break;
+        case 'agent': loadAgentList(); break;
+        case 'agent-upgrade': loadCUsersForUpgrade(); break;
+        case 'rental-orders': loadRentalOrders(); break;
+        case 'rental-tickets': loadTickets(); break;
+        case 'system-config': loadSystemConfig(); break;
+        case 'task-review': loadTaskReviewList(); break;
+        case 'notifications': loadNotificationList(); break;
+        case 'notification-logs': loadNotificationLogs(); break;
+        case 'magnifier': loadMagnifierTasks(); break;
+    }
 }
 
 

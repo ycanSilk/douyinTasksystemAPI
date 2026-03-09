@@ -1,5 +1,12 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: Content-Type, X-Token, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 // 引入必要的文件
 require_once __DIR__ . '/../../auth/AuthMiddleware.php';
@@ -49,7 +56,7 @@ $offset = ($page - 1) * $pageSize;
 $sql = " 
     SELECT id, b_user_id, task_id, template_id, video_url, deadline, 
            recommend_marks, task_count, task_done, task_doing, task_reviewing, 
-           unit_price, total_price, status, created_at, updated_at, completed_at, title 
+           unit_price, total_price, status, view_status, created_at, updated_at, completed_at, title 
     FROM magnifying_glass_tasks 
     {$whereClause} 
     ORDER BY created_at DESC 
@@ -98,6 +105,7 @@ foreach ($tasks as $task) {
         'unit_price' => (string)$task['unit_price'],
         'total_price' => (string)$task['total_price'],
         'status' => (int)$task['status'],
+        'view_status' => (int)$task['view_status'],
         'created_at' => $task['created_at'],
         'updated_at' => $task['updated_at'],
         'completed_at' => $task['completed_at'],

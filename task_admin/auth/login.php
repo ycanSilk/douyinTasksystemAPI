@@ -6,8 +6,9 @@
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-Token, Authorization');
+
+
 
 // 处理OPTIONS预检请求
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -28,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/../../core/Database.php';
+require_once __DIR__ . '/../../core/Token.php';
 
 // 数据库连接
 $db = Database::connect();
@@ -130,29 +132,20 @@ try {
         exit;
     }
     
-    // 生成Token（使用MD5 + 时间戳）
-    $token = md5($username . time() . rand(1000, 9999));
-    $expiredAt = time() + 86400; // 24小时
+    // 生成Token（使用Token类）
+    $tokenData = Token::generate($user['id'], Token::TYPE_ADMIN);
     
     // 更新用户Token和最后登录时间
     $stmt = $db->prepare("UPDATE system_users SET token = ?, token_expired_at = ?, last_login_at = NOW() WHERE id = ?");
-    $stmt->execute([$token, date('Y-m-d H:i:s', $expiredAt), $user['id']]);
-    
-    // 启动Session存储Token
-    session_start();
-    $_SESSION['admin_token'] = $token;
-    $_SESSION['admin_username'] = $username;
-    $_SESSION['admin_expired_at'] = $expiredAt;
-    $_SESSION['admin_user_id'] = $user['id'];
-    $_SESSION['admin_role_id'] = $user['role_id'];
+    $stmt->execute([$tokenData['token'], $tokenData['expired_at'], $user['id']]);
     
     // 写入成功登录日志到文件
     $logMessage = "[" . date('Y-m-d H:i:s') . "] === 登录成功日志 ===\n";
 $logMessage .= "[" . date('Y-m-d H:i:s') . "] 用户ID: " . $user['id'] . "\n";
 $logMessage .= "[" . date('Y-m-d H:i:s') . "] 角色ID: " . $user['role_id'] . "\n";
 $logMessage .= "[" . date('Y-m-d H:i:s') . "] 角色名称: " . $user['role_name'] . "\n";
-$logMessage .= "[" . date('Y-m-d H:i:s') . "] 生成的Token: " . $token . "\n";
-$logMessage .= "[" . date('Y-m-d H:i:s') . "] Token过期时间: " . date('Y-m-d H:i:s', $expiredAt) . "\n\n";
+$logMessage .= "[" . date('Y-m-d H:i:s') . "] 生成的Token: " . $tokenData['token'] . "\n";
+$logMessage .= "[" . date('Y-m-d H:i:s') . "] Token过期时间: " . $tokenData['expired_at'] . "\n\n";
 file_put_contents(__DIR__ . '/login.log', $logMessage, FILE_APPEND);
 
     // 返回成功响应
@@ -160,12 +153,12 @@ file_put_contents(__DIR__ . '/login.log', $logMessage, FILE_APPEND);
         'code' => 0,
         'message' => '登录成功',
         'data' => [
-            'token' => $token,
+            'token' => $tokenData['token'],
             'username' => $username,
             'user_id' => $user['id'],
             'role_id' => $user['role_id'],
             'role_name' => $user['role_name'],
-            'expired_at' => $expiredAt
+            'expired_at' => strtotime($tokenData['expired_at'])
         ],
         'timestamp' => time()
     ], JSON_UNESCAPED_UNICODE);
