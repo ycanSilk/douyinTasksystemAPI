@@ -132,11 +132,10 @@ class Token
                 return ['valid' => false, 'error' => '账号已被禁用'];
             }
 
-            // 不再检查token一致性，因为每次生成的token都会因exp字段不同而不同
-            // 改为检查用户是否存在且状态正常即可
-            // if ($user['token'] !== $token) {
-            //     return ['valid' => false, 'error' => 'Token 已失效，请重新登录'];
-            // }
+            // 检查token一致性，确保每次登录后旧token失效
+            if ($user['token'] !== $token) {
+                return ['valid' => false, 'error' => 'Token 已失效，请重新登录'];
+            }
 
             // 数据库中的过期时间二次校验
             if (strtotime($user['token_expired_at']) < time()) {
@@ -237,9 +236,11 @@ class Token
     /**
      * 从 HTTP 请求头中获取 Token
      * 
-     * 支持两种方式：
+     * 支持多种方式：
      * 1. Authorization: Bearer <token>
      * 2. X-Token: <token>
+     * 3. Token: <token>
+     * 4. 从GET参数中获取token
      * 
      * @return string|null
      */
@@ -254,6 +255,12 @@ class Token
         // 方式2：X-Token
         if (!empty($_SERVER['HTTP_X_TOKEN'])) {
             return $_SERVER['HTTP_X_TOKEN'];
+        }
+
+
+        // 方式4：从GET参数中获取token（备用方案）
+        if (!empty($_GET['token'])) {
+            return $_GET['token'];
         }
 
         return null;
