@@ -1005,6 +1005,7 @@ INSERT INTO `system_permission_template` VALUES (17, '网站配置', 'system-con
 INSERT INTO `system_permission_template` VALUES (18, '系统通知', 'notifications', '系统通知管理', NULL, 'ri-notification-3-line', 'notifications', 18, 1, '2026-03-06 16:44:05', '2026-03-06 16:44:05');
 INSERT INTO `system_permission_template` VALUES (19, '团长升级', 'agent-upgrade', 'C端用户代理等级跃迁管理', NULL, 'ri-arrow-up-circle-line', 'agent', 15, 1, '2026-03-08 14:01:49', '2026-03-08 14:01:49');
 INSERT INTO `system_permission_template` VALUES (20, '提示通知列表', 'notification-logs', '系统通知检测日志', NULL, 'ri-file-list-line', 'notification-logs', 19, 1, '2026-03-08 14:01:49', '2026-03-08 17:37:57');
+INSERT INTO `system_permission_template` VALUES (21, '登录设备配置', 'login-devices-config', '用户登录设备数量配置', NULL, 'ri-lock-unlock-line', 'login-devices-config', 20, 1, '2026-03-10 12:00:00', '2026-03-10 12:00:00');
 
 -- ----------------------------
 -- Table structure for system_role_permission_template

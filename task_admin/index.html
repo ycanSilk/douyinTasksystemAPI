@@ -35,6 +35,9 @@
         .stat-trend.negative { color: #ef4444; }
         .chart-container { position: relative; height: 300px; }
         .pie-chart-container { position: relative; height: 250px; }
+        .config-message { padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; font-weight: 500; }
+        .config-message.success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .config-message.error { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     </style>
 </head>
 <body>
@@ -52,6 +55,7 @@
                     </div>
                     <ul class="nav-menu" id="navMenu">
                         <!-- 动态生成导航栏 -->
+                    
                     </ul>
                     
                     <div class="user-profile">
@@ -773,6 +777,41 @@
                             </div>
                         </section>
 
+                        <!-- 登录设备配置 -->
+                        <section id="login-devices-configSection" class="content-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">登录设备配置</div>
+                                </div>
+                                <div class="toolbar">
+                                    <div id="config-message" class="config-message"></div>
+                                </div>
+                                <div style="padding: 20px;">
+                                    <!-- C端用户设备配置 -->
+                                    <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #e5e5e5; border-radius: 8px;">
+                                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">C端用户登录设备配置</h4>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <label for="c-max-devices" style="font-weight: 500;">最大允许登录设备数：</label>
+                                            <input type="number" id="c-max-devices" min="1" max="10" value="1" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <button id="save-c-config" class="btn-primary" style="padding: 8px 16px;">保存配置</button>
+                                        </div>
+                                        <p style="margin-top: 10px; font-size: 14px; color: #666;">设置C端用户（接单用户）最多可以同时登录的设备数量，范围1-10。</p>
+                                    </div>
+                                    
+                                    <!-- B端用户设备配置 -->
+                                    <div style="padding: 15px; border: 1px solid #e5e5e5; border-radius: 8px;">
+                                        <h4 style="margin-top: 0; margin-bottom: 15px; color: #333;">B端用户登录设备配置</h4>
+                                        <div style="display: flex; align-items: center; gap: 15px;">
+                                            <label for="b-max-devices" style="font-weight: 500;">最大允许登录设备数：</label>
+                                            <input type="number" id="b-max-devices" min="1" max="10" value="1" style="width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <button id="save-b-config" class="btn-primary" style="padding: 8px 16px;">保存配置</button>
+                                        </div>
+                                        <p style="margin-top: 10px; font-size: 14px; color: #666;">设置B端用户（商家用户）最多可以同时登录的设备数量，范围1-10。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
                         <!-- 消息通知配置 -->
         <section id="notification-configSection" class="content-section">
             <div class="card">
@@ -975,6 +1014,7 @@
     <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
     <script src="assets/js/app.js?v=2.0"></script>
     <script src="assets/js/dashboard.js?v=1.0"></script>
+    <script src="assets/js/login_devices_config.js?v=1.0"></script>
     
     <script>
         // 页面加载完成后初始化仪表板

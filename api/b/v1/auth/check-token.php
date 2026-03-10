@@ -48,6 +48,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
+// 获取设备ID
+$deviceId = trim($_GET['device_id'] ?? '');
+if (empty($deviceId)) {
+    http_response_code(401);
+    echo json_encode([
+        'code' => $errorCodes['AUTH_DEVICE_ID_MISSING'] ?? 401,
+        'message' => '设备ID不能为空',
+        'data' => ['valid' => false],
+        'timestamp' => time()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 require_once __DIR__ . '/../../../../core/Database.php';
 require_once __DIR__ . '/../../../../core/Token.php';
 require_once __DIR__ . '/../../../../core/Response.php';
@@ -73,12 +86,12 @@ try {
     }
     
     // 2. 校验 Token（B端）
-    $result = Token::verify($token, Token::TYPE_B, $db);
+    $result = Token::verify($token, Token::TYPE_B, $db, $deviceId);
     
     if (!$result['valid']) {
         http_response_code(401);
         echo json_encode([
-            'code' => $errorCodes['AUTH_TOKEN_INVALID'],
+            'code' => $result['code'] ?? $errorCodes['AUTH_TOKEN_INVALID'],
             'message' => $result['error'],
             'data' => ['valid' => false],
             'timestamp' => time()
@@ -90,7 +103,7 @@ try {
     $stmt = $db->prepare("
         SELECT 
             id, username, email, organization_name, 
-            organization_leader, status, token_expired_at
+            organization_leader, status, token_expired_at, device_id, device_list
         FROM b_users 
         WHERE id = ?
     ");
@@ -118,6 +131,34 @@ try {
             'timestamp' => time()
         ], JSON_UNESCAPED_UNICODE);
         exit;
+    }
+    
+    // 5. 检查设备ID是否匹配
+    if (!empty($user['device_id']) && $user['device_id'] !== $deviceId) {
+        // 检查设备是否在设备列表中
+        $deviceList = [];
+        if (!empty($user['device_list'])) {
+            $deviceList = json_decode($user['device_list'], true) ?: [];
+        }
+        
+        $deviceExists = false;
+        foreach ($deviceList as $device) {
+            if ($device['device_id'] == $deviceId) {
+                $deviceExists = true;
+                break;
+            }
+        }
+        
+        if (!$deviceExists) {
+            http_response_code(401);
+            echo json_encode([
+                'code' => $errorCodes['AUTH_DEVICE_ID_MISMATCH'] ?? 401,
+                'message' => '设备ID不匹配',
+                'data' => ['valid' => false],
+                'timestamp' => time()
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
     }
     
     // 5. 计算Token剩余有效时间（秒）

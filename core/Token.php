@@ -86,36 +86,37 @@ class Token
      * @param string $token 待校验的token
      * @param int $expectedType 期望的用户类型 1=C端 2=B端 3=Admin端
      * @param PDO $db 数据库连接
+     * @param string $deviceId 设备ID（可选）
      * @return array 成功返回 ['valid' => true, 'user_id' => xxx, 'type' => xxx]
-     *               失败返回 ['valid' => false, 'error' => '错误原因']
+     *               失败返回 ['valid' => false, 'error' => '错误原因', 'code' => 错误代码]
      */
-    public static function verify($token, $expectedType, $db)
+    public static function verify($token, $expectedType, $db, $deviceId = null)
     {
         // 1. 解码 Token
         $payload = self::decode($token);
         if (!$payload) {
-            return ['valid' => false, 'error' => 'Token 格式无效'];
+            return ['valid' => false, 'error' => 'Token 格式无效', 'code' => 401];
         }
 
         // 2. 校验过期时间
         if ($payload['exp'] < time()) {
-            return ['valid' => false, 'error' => 'Token 已过期'];
+            return ['valid' => false, 'error' => 'Token 已过期', 'code' => 401];
         }
 
         // 3. 校验用户类型是否匹配（防止跨端访问）
         if ((int)$payload['type'] !== (int)$expectedType) {
-            return ['valid' => false, 'error' => '权限不足，禁止跨端访问'];
+            return ['valid' => false, 'error' => '权限不足，禁止跨端访问', 'code' => 403];
         }
 
         // 4. 从数据库校验 Token 是否一致
         $tableName = self::getTableName($payload['type']);
         if (!$tableName) {
-            return ['valid' => false, 'error' => '用户类型错误'];
+            return ['valid' => false, 'error' => '用户类型错误', 'code' => 400];
         }
 
         try {
             $stmt = $db->prepare("
-                SELECT id, token, token_expired_at, status 
+                SELECT id, token, token_expired_at, status, device_id, device_list 
                 FROM {$tableName} 
                 WHERE id = :user_id
             ");
@@ -124,22 +125,43 @@ class Token
 
             // 用户不存在
             if (!$user) {
-                return ['valid' => false, 'error' => '用户不存在'];
+                return ['valid' => false, 'error' => '用户不存在', 'code' => 404];
             }
 
             // 用户已被禁用
             if ($user['status'] != 1) {
-                return ['valid' => false, 'error' => '账号已被禁用'];
+                return ['valid' => false, 'error' => '账号已被禁用', 'code' => 403];
             }
 
             // 检查token一致性，确保每次登录后旧token失效
             if ($user['token'] !== $token) {
-                return ['valid' => false, 'error' => 'Token 已失效，请重新登录'];
+                return ['valid' => false, 'error' => '账号已在其他设备登录，请重新登录', 'code' => 4011];
             }
 
             // 数据库中的过期时间二次校验
             if (strtotime($user['token_expired_at']) < time()) {
-                return ['valid' => false, 'error' => 'Token 已过期'];
+                return ['valid' => false, 'error' => 'Token 已过期', 'code' => 401];
+            }
+
+            // 5. 校验设备ID（如果提供）
+            if ($deviceId && !empty($user['device_id'])) {
+                if ($user['device_id'] !== $deviceId) {
+                    // 检查设备是否在设备列表中
+                    $deviceExists = false;
+                    if (!empty($user['device_list'])) {
+                        $deviceList = json_decode($user['device_list'], true) ?: [];
+                        foreach ($deviceList as $device) {
+                            if ($device['device_id'] == $deviceId) {
+                                $deviceExists = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!$deviceExists) {
+                        return ['valid' => false, 'error' => '设备未授权，请重新登录', 'code' => 4012];
+                    }
+                }
             }
 
             // 校验通过
@@ -150,7 +172,7 @@ class Token
             ];
 
         } catch (PDOException $e) {
-            return ['valid' => false, 'error' => '数据库查询失败'];
+            return ['valid' => false, 'error' => '数据库查询失败', 'code' => 500];
         }
     }
 
