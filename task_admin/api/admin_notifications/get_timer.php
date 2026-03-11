@@ -50,6 +50,7 @@ try {
     if ($timer) {
         $currentTime = time();
         $nextDetectionTime = strtotime($timer['next_detection_time']);
+        // 直接计算剩余时间，不添加额外的60秒
         $remainingSeconds = max(0, $nextDetectionTime - $currentTime);
         
         error_log('获取计时器状态: ' . $remainingSeconds . '秒');

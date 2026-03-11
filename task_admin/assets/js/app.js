@@ -25,7 +25,7 @@ let pollingTimer = null;
 let countdownTimer = null;
 
 // 倒计时秒数
-let countdownSeconds = 60;
+let countdownSeconds = 0;
 
 // 倒计时日志输出计数器
 let countdownLogCounter = 0;
@@ -1332,6 +1332,13 @@ async function updateTimerStatus(lastDetectionTime, detectionInterval) {
 
 // 启动倒计时
 async function startCountdown() {
+    // 首先清除任何可能存在的旧计时器，避免时间叠加
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        log('INFO', '清除旧计时器，避免时间叠加', 'TIMER');
+    }
+    
     // 获取通知配置，读取检测间隔时间
     let detectionInterval = 60; // 默认60秒
     try {
@@ -1346,13 +1353,14 @@ async function startCountdown() {
         log('ERROR', '读取检测间隔配置失败，使用默认值60秒: ' + error.message, 'TIMER');
     }
     
-    // 获取计时器状态，避免页面刷新重置
-    let remainingSeconds = detectionInterval;
+    // 获取计时器状态，从数据库读取准确的时间数据
+    let remainingSeconds = 60; // 默认60秒
     try {
         log('INFO', '开始获取计时器状态', 'TIMER');
         const timerData = await getTimerStatus();
         log('INFO', `获取计时器状态成功: ${JSON.stringify(timerData)}`, 'TIMER');
-        remainingSeconds = timerData.remaining_seconds || detectionInterval;
+        // 直接使用数据库返回的剩余时间，不使用默认值
+        remainingSeconds = timerData.remaining_seconds;
         log('INFO', `从服务器获取剩余时间: ${remainingSeconds}秒`, 'TIMER');
     } catch (error) {
         log('ERROR', '获取计时器状态失败，使用默认值: ' + error.message, 'TIMER');
@@ -1361,10 +1369,6 @@ async function startCountdown() {
     log('INFO', '启动倒计时', 'TIMER');
     countdownSeconds = remainingSeconds;
     countdownLogCounter = 0;
-    
-    if (countdownTimer) {
-        clearInterval(countdownTimer);
-    }
     
     // 更新倒计时显示
     function updateCountdownDisplay() {

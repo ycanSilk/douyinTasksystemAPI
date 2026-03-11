@@ -115,8 +115,13 @@ class Token
         }
 
         try {
+            // 根据用户类型选择不同的查询字段
+            $fields = $payload['type'] === self::TYPE_ADMIN 
+                ? 'id, token, token_expired_at, status' 
+                : 'id, token, token_expired_at, status, device_id, device_list';
+            
             $stmt = $db->prepare("
-                SELECT id, token, token_expired_at, status, device_id, device_list 
+                SELECT {$fields} 
                 FROM {$tableName} 
                 WHERE id = :user_id
             ");
@@ -143,8 +148,8 @@ class Token
                 return ['valid' => false, 'error' => 'Token 已过期', 'code' => 401];
             }
 
-            // 5. 校验设备ID（如果提供）
-            if ($deviceId && !empty($user['device_id'])) {
+            // 5. 校验设备ID（如果提供，且不是管理员用户）
+            if ($deviceId && $payload['type'] !== self::TYPE_ADMIN && !empty($user['device_id'])) {
                 if ($user['device_id'] !== $deviceId) {
                     // 检查设备是否在设备列表中
                     $deviceExists = false;

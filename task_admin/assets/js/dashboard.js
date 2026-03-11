@@ -1,6 +1,5 @@
 // 仪表板相关功能
 // 全局图表实例
-let taskTrendChart = null;
 let revenueDistributionChart = null;
 // 当前图表周期
 let currentChartPeriod = 7;
@@ -23,15 +22,11 @@ let financePieChartInstance = null;
 
 // 切换图表周期
 function changeChartPeriod(period) {
-    console.log('=== 开始切换周期 ===');
-    console.log('切换到周期:', period, '天');
     
 
     currentChartPeriod = period;
-    console.log('更新后 currentChartPeriod:', currentChartPeriod);
     
-    // 更新按钮状态
-    console.log('更新按钮状态...');
+  
     document.querySelectorAll('.period-btn').forEach(btn => {
         btn.style.background = 'transparent';
         btn.style.color = '#64748b';
@@ -40,7 +35,6 @@ function changeChartPeriod(period) {
     
     const activeBtn = document.getElementById(`period${period}`);
     if (activeBtn) {
-        console.log('激活按钮:', activeBtn.id);
         activeBtn.style.background = '#4f46e5';
         activeBtn.style.color = 'white';
         activeBtn.style.boxShadow = '0 2px 4px rgba(79, 70, 229, 0.3)';
@@ -48,24 +42,15 @@ function changeChartPeriod(period) {
         console.warn('未找到对应按钮:', `period${period}`);
     }
     
-    // 重新加载仪表板数据
-    console.log('开始重新加载仪表板数据...');
     loadDashboard();
-    console.log('数据尺度:', currentDataScale);
-    console.log('=== 切换周期完成 ===');
 }
 
 // 设置数据尺度
 function setDataScale(scale) {
-    console.log('=== 开始切换数据库维度 ===');
-    console.log('切换到数据库维度:', scale);
     
     // 更新全局变量
     currentDataScale = scale;
-    console.log('更新后 currentDataScale:', currentDataScale);
-    
     // 更新按钮状态
-    console.log('更新按钮状态...');
     document.querySelectorAll('.scale-btn').forEach(btn => {
         btn.style.background = 'transparent';
         btn.style.color = '#64748b';
@@ -74,7 +59,6 @@ function setDataScale(scale) {
     
     const activeBtn = document.getElementById(`scale${scale}`);
     if (activeBtn) {
-        console.log('激活按钮:', activeBtn.id);
         activeBtn.style.background = '#4f46e5';
         activeBtn.style.color = 'white';
         activeBtn.style.boxShadow = '0 2px 4px rgba(79, 70, 229, 0.3)';
@@ -83,31 +67,24 @@ function setDataScale(scale) {
     }
     
     // 重新加载仪表板数据
-    console.log('开始重新加载仪表板数据...');
+  
     loadDashboard();
-    console.log('=== 切换数据库维度完成 ===');
+ 
 }
 
 // 加载统计面板
-async function loadDashboard() {
-    console.log('=== 开始加载仪表板数据 ===');
-    console.log('当前周期:', currentChartPeriod, '天');
-    
+async function loadDashboard() {    
     try {
         const apiUrl = `${API_BASE}/api/stats/dashboard.php?period=${currentChartPeriod}&scale=${currentDataScale}`;
-        console.log('请求API:', apiUrl);
-        console.log('当前数据库维度:', currentDataScale);
+       
         
         const data = await apiRequest(apiUrl);
-        console.log('API响应:', data);
         
         if (data.code === 0) {
-            console.log('API请求成功，开始更新数据...');
             const d = data.data;
             
             // 任务核心模块
             if (d.task_core) {
-                console.log('更新任务核心模块数据');
                 const statTotalSendTasks = document.getElementById('stat_total_send_tasks');
                 if (statTotalSendTasks) statTotalSendTasks.textContent = String(d.task_core.total_send_tasks ?? 0);
                 const statTotalExpiredTasks = document.getElementById('stat_total_expired_tasks');
@@ -134,7 +111,6 @@ async function loadDashboard() {
             
             // 财务收支模块
             if (d.finance) {
-                console.log('更新财务收支模块数据');
                 //充值收入
                 const statTotalRecharge = document.getElementById('stat_total_recharge');
                 if (statTotalRecharge) statTotalRecharge.textContent = '+' + (d.finance.total_recharge ?? '0.00');
@@ -178,7 +154,6 @@ async function loadDashboard() {
             
             // 用户分析模块
             if (d.user_analysis) {
-                console.log('更新用户分析模块数据');
                 const statTotalSendUsersCounts = document.getElementById('stat_total_send_users_counts');
                 if (statTotalSendUsersCounts) statTotalSendUsersCounts.textContent = String(d.user_analysis.total_send_users ?? 0);    
                 const statTotalSendUsers = document.getElementById('stat_total_send_users');
@@ -204,7 +179,6 @@ async function loadDashboard() {
             
             // 今日运营数据分析模块
             if (d.today_operation) {
-                console.log('更新今日运营数据分析模块数据');
                 const statTodayNewUsers = document.getElementById('stat_today_new_users');
                 if (statTodayNewUsers) statTodayNewUsers.textContent = String(d.today_operation.today_new_users ?? 0);
                 const statTodayRecharge = document.getElementById('stat_today_recharge');
@@ -221,7 +195,6 @@ async function loadDashboard() {
             
             // 任务支出细分模块
             if (d.task_expense) {
-                console.log('更新任务支出细分模块数据');
                 const statSingleTaskExpense = document.getElementById('stat_single_task_expense');
                 if (statSingleTaskExpense) statSingleTaskExpense.textContent = '¥' + (d.task_expense.single_task_expense ?? '0.00');
                 const statComboTaskExpense = document.getElementById('stat_combo_task_expense');
@@ -242,7 +215,6 @@ async function loadDashboard() {
             
             // 工单处理模块
             if (d.ticket_handling) {
-                console.log('更新工单处理模块数据');
                 const statTotalTickets = document.getElementById('stat_total_tickets');
                 if (statTotalTickets) statTotalTickets.textContent = String(d.ticket_handling.total_tickets ?? 0);
                 const statClosedTickets = document.getElementById('stat_closed_tickets');
@@ -258,9 +230,7 @@ async function loadDashboard() {
             }
             
             // 渲染图表
-            console.log('开始渲染图表...');
             renderCharts(d, currentChartPeriod);
-            console.log('图表渲染完成');
         } else {
             console.error('加载统计数据失败', data);
             showToast('加载统计数据失败: ' + data.message, 'error');
@@ -269,7 +239,6 @@ async function loadDashboard() {
         console.error('加载统计数据失败', err);
         showToast('加载统计数据失败', 'error');
     } finally {
-        console.log('=== 加载仪表板数据完成 ===');
     }
 }
 
@@ -280,9 +249,7 @@ function formatDataSize(value) {
 
 // 渲染图表
 function renderCharts(data, period = currentChartPeriod) {
-    console.log('=== 开始渲染图表 ===');
-    console.log('周期:', period, '天');
-    console.log('数据尺度:', currentDataScale);
+
     
     // 生成日期标签
     function generateDateLabels(period) {
@@ -305,7 +272,6 @@ function renderCharts(data, period = currentChartPeriod) {
     
     // 根据数据尺度调整数据范围
     const scaleFactor = currentDataScale / 100;
-    console.log('数据尺度因子:', scaleFactor);
     
     // 渲染迷你任务图表
     const miniTaskCtx = document.getElementById('miniTaskChart');
@@ -718,10 +684,7 @@ function renderCharts(data, period = currentChartPeriod) {
         const comboTasks = data?.task_core?.combo_tasks ?? 0;
         const magnifierTasks = data?.task_core?.magnifier_tasks ?? 0;
         const rentalTasks = data?.task_core?.rental_tasks?.total ?? 0;
-        
-        console.log('任务类型图表数据（与统计数据一致）:', {
-            singleTasks, comboTasks, magnifierTasks, rentalTasks
-        });
+
         
         // 创建过滤后的数据 - 只显示有数据的项
         const taskTypeData = [];
@@ -759,11 +722,7 @@ function renderCharts(data, period = currentChartPeriod) {
             taskTypeColors.push('#9ca3af');
         }
         
-        console.log('任务类型图表过滤后数据:', {
-            labels: taskTypeLabels,
-            data: taskTypeData,
-            colors: taskTypeColors
-        });
+ 
         
         // 销毁旧的图表实例
         if (taskTypePieChartInstance) {
@@ -934,11 +893,7 @@ function renderCharts(data, period = currentChartPeriod) {
             financeColors.push('#9ca3af');
         }
         
-        console.log('财务收支图表数据:', {
-            labels: financeLabels,
-            data: financeData,
-            colors: financeColors
-        });
+   
         
         // 销毁旧的图表实例
         if (financePieChartInstance) {

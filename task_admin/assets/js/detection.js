@@ -52,6 +52,17 @@ async function performAllChecks() {
         const errorLog = log('ERROR', `检测错误: ${error.message}`, 'DETECTION');
         await persistLogToFile(errorLog);
     } finally {
+        // 更新计时器状态到数据库
+        try {
+            const detectionInterval = 60; // 默认60秒
+            const lastDetectionTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            log('INFO', '更新计时器状态到数据库', 'TIMER');
+            await updateTimerStatus(lastDetectionTime, detectionInterval);
+            log('INFO', '计时器状态更新成功', 'TIMER');
+        } catch (error) {
+            log('ERROR', '更新计时器状态失败: ' + error.message, 'TIMER');
+        }
+        
         // 重新启动倒计时
         log('INFO', '重新启动倒计时', 'DETECTION');
         startCountdown();
