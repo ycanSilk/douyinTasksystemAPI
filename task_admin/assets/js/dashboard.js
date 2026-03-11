@@ -1,6 +1,5 @@
 // 仪表板相关功能
 // 全局图表实例
-let revenueDistributionChart = null;
 // 当前图表周期
 let currentChartPeriod = 7;
 

@@ -40,6 +40,7 @@ $input = json_decode(file_get_contents('php://input'), true);
 $username = trim($input['username'] ?? '');
 $password = trim($input['password'] ?? ''); // 前端已MD5
 $email = trim($input['email'] ?? '');
+$email = empty($email) ? null : $email; // 邮箱为空时设置为null
 $phone = trim($input['phone'] ?? '');
 $role_id = (int)($input['role_id'] ?? 0);
 
