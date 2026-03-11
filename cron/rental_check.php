@@ -182,8 +182,6 @@ try {
             ro.seller_amount,
             ro.agent_user_id,
             ro.agent_amount,
-            ro.second_agent_user_id,
-            ro.second_agent_amount,
             ro.order_json,
             CASE 
                 WHEN ro.buyer_user_type = 'c' OR ro.buyer_user_type = '1' THEN cu_buyer.username
@@ -311,58 +309,10 @@ try {
                             $agentCurrentBalance,
                             $agentNewBalance,
                             $orderId,
-                            "租赁订单一级团长佣金（订单#{$orderId}）"
+                            "租赁订单团长佣金（订单#{$orderId}）"
                         ]);
 
-                        logMessage("  - 一级团长佣金结算: {$agentUser['username']} +{$agentAmount}分");
-                    }
-                }
-            }
-
-            // 新增：结算二级团长佣金（如果有）
-            $secondAgentUserId = $order['second_agent_user_id'] ?? null;
-            $secondAgentAmount = intval($order['second_agent_amount'] ?? 0);
-
-            if ($secondAgentUserId && $secondAgentAmount > 0) {
-                // 查询二级团长信息
-                $secondAgentStmt = $db->prepare("SELECT id, username, wallet_id FROM c_users WHERE id = ?");
-                $secondAgentStmt->execute([$secondAgentUserId]);
-                $secondAgentUser = $secondAgentStmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($secondAgentUser) {
-                    $secondAgentWalletId = $secondAgentUser['wallet_id'];
-
-                    // 获取二级团长钱包余额
-                    $secondAgentWalletStmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
-                    $secondAgentWalletStmt->execute([$secondAgentWalletId]);
-                    $secondAgentCurrentBalance = $secondAgentWalletStmt->fetchColumn();
-
-                    if ($secondAgentCurrentBalance !== false) {
-                        $secondAgentNewBalance = $secondAgentCurrentBalance + $secondAgentAmount;
-
-                        // 更新二级团长钱包
-                        $updateSecondAgentWalletStmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
-                        $updateSecondAgentWalletStmt->execute([$secondAgentNewBalance, $secondAgentWalletId]);
-
-                        // 插入二级团长钱包流水
-                        $insertSecondAgentLogStmt = $db->prepare("
-                            INSERT INTO wallets_log
-                            (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at)
-                            VALUES
-                            (?, ?, ?, 1, 1, ?, ?, ?, 'rental_second_agent_commission', ?, ?, NOW())
-                        ");
-                        $insertSecondAgentLogStmt->execute([
-                            $secondAgentWalletId,
-                            $secondAgentUser['id'],
-                            $secondAgentUser['username'],
-                            $secondAgentAmount,
-                            $secondAgentCurrentBalance,
-                            $secondAgentNewBalance,
-                            $orderId,
-                            "租赁订单二级团长佣金（订单#{$orderId}）"
-                        ]);
-
-                        logMessage("  - 二级团长佣金结算: {$secondAgentUser['username']} +{$secondAgentAmount}分");
+                        logMessage("  - 团长佣金结算: {$agentUser['username']} +{$agentAmount}分");
                     }
                 }
             }

@@ -18,8 +18,7 @@
 
     <!-- C端用户管理相关脚本 -->
     <script src="assets/js/c-users.js"></script>
-    <!-- 检测相关脚本 -->
-    <script src="assets/js/detection.js"></script>
+
     <style>
         .module-card { transition: all 0.15s ease; }
         .module-card:hover { box-shadow: 0 12px 30px -12px rgba(0,0,0,0.15); }
@@ -41,6 +40,11 @@
     </style>
 </head>
 <body>
+    <!-- 通知音频元素 -->
+    <audio id="notificationSound" preload="auto">
+        <source src="public/videos/preview.mp3" type="audio/mpeg">
+        您的浏览器不支持音频元素。
+    </audio>
     <div id="app-root">
         <!-- 主页面 -->
         <div id="mainPage" class="page active">
@@ -76,10 +80,7 @@
                             <!-- 动态标题 -->
                         </div>
                         <div class="header-right">
-                            <div id="countdownDisplay" style="margin-right: 20px; font-size: 14px; color: #0663dd;">
-                                刷新：<span id="countdownSeconds"></span> 秒
-                            </div>
-                            <button class="btn-secondary btn-small">
+                            <button class="btn-info btn-small">
                                 <i class="ri-refresh-line"></i> 刷新数据
                             </button>
                         </div>
@@ -1015,13 +1016,22 @@
     <script src="assets/js/app.js?v=2.0"></script>
     <script src="assets/js/dashboard.js?v=1.0"></script>
     <script src="assets/js/login_devices_config.js?v=1.0"></script>
+    <script src="assets/js/detection.js?v=1.1"></script>
     
     <script>
         // 页面加载完成后初始化仪表板
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             // 初始化仪表板
             initDashboard();
-        });
+            
+            // 页面刷新时立即调用 detect.php 接口获取最新数据
+            try {
+                log('INFO', '页面加载完成，立即调用 detect.php 接口', 'INIT');
+                await detectNotifications();
+            } catch (error) {
+                log('ERROR', '页面加载时调用 detect.php 接口失败：' + error.message, 'INIT');
+            }
+    });
     </script>
        
 </body>

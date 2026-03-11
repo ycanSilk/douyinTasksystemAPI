@@ -13,6 +13,12 @@ date_default_timezone_set('Asia/Shanghai');
 error_log('=== Update Timer API Called ===');
 error_log('Request Method: ' . $_SERVER['REQUEST_METHOD']);
 error_log('Request URI: ' . $_SERVER['REQUEST_URI']);
+error_log('Server Time: ' . date('Y-m-d H:i:s'));
+error_log('Server Timezone: ' . date_default_timezone_get());
+
+// 记录请求体
+$requestBody = file_get_contents('php://input');
+error_log('Request Body: ' . $requestBody);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -38,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 // 验证请求体
-$requestBody = file_get_contents('php://input');
 if (empty($requestBody)) {
     error_log('请求体为空');
     http_response_code(400);

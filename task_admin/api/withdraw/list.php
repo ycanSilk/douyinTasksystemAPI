@@ -25,8 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // 引入必要的文件
-require_once __DIR__ . '/../../../../core/Database.php';
-require_once __DIR__ . '/../../../../core/Response.php';
+require_once __DIR__ . '/../../../core/Database.php';
+require_once __DIR__ . '/../../../core/Response.php';
 require_once __DIR__ . '/../../auth/AuthMiddleware.php';
 
 // 认证中间件
@@ -124,5 +124,5 @@ $response->success([
     'page' => $page,
     'pageSize' => $pageSize,
     'total_pages' => $total > 0 ? (int)ceil($total / $pageSize) : 0
-], time());
+]);
 ?>

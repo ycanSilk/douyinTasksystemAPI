@@ -23,8 +23,16 @@ require_once __DIR__ . '/../../auth/AuthMiddleware.php';
 require_once __DIR__ . '/../../../core/Database.php';
 require_once __DIR__ . '/../../../core/Token.php';
 
-// 认证中间件
-AdminAuthMiddleware::authenticate();
+// 认证中间件 - 为WebSocket服务器添加特殊认证
+// 检查是否来自WebSocket服务器的请求
+$isWebSocketRequest = isset($_GET['ws_server']) && $_GET['ws_server'] === 'true';
+
+if (!$isWebSocketRequest) {
+    AdminAuthMiddleware::authenticate();
+} else {
+    // WebSocket服务器请求，跳过认证
+    error_log('WebSocket server detected, skipping authentication');
+}
 
 // 初始化数据库连接
 $db = Database::connect();
@@ -40,7 +48,8 @@ try {
     $has_new_notification = 0;
     $notification_count = 0;
 
-    // 审核类型配置
+    // 需要检测的项目类型配置
+    // 只保留：团长审核、充值提醒、提现提醒、放大镜任务
     $auditTypes = [
         'recharge' => [
             'name' => '充值审核',
@@ -59,24 +68,21 @@ try {
             'path' => __DIR__ . '/../agent/list.php',
             'status' => 0,
             'message' => '新增了N条团长审核任务待处理'
-        ],
-        'rental' => [
-            'name' => '租赁处理',
-            'path' => __DIR__ . '/../rental_orders/list.php',
-            'status' => 1,
-            'message' => '新增了N条租赁处理任务待处理'
-        ],
-        'ticket' => [
-            'name' => '工单管理',
-            'path' => __DIR__ . '/../rental_tickets/list.php',
-            'status' => 0,
-            'message' => '新增了N条工单管理任务待处理'
         ]
     ];
+
+    // 定义需要排除的检测类型
+    $excludedCodes = ['ticket', 'rental', 'notification_list', 'system_message'];
 
     // 遍历配置，执行检测
     foreach ($configs as $config) {
         $code = $config['code'];
+        
+        // 跳过需要排除的检测类型
+        if (in_array($code, $excludedCodes)) {
+            continue;
+        }
+        
         $judgment_condition = $config['judgment_condition'];
         $template = json_decode($config['notification_template'], true);
         $priority = $config['priority'];
@@ -128,16 +134,6 @@ try {
                     break;
                 case 'agent':
                     $stmt = $db->prepare("SELECT COUNT(*) as count FROM agent_applications WHERE status = ?");
-                    $stmt->execute([$config['status']]);
-                    $count = (int)$stmt->fetchColumn();
-                    break;
-                case 'rental':
-                    $stmt = $db->prepare("SELECT COUNT(*) as count FROM rental_orders WHERE status = ?");
-                    $stmt->execute([$config['status']]);
-                    $count = (int)$stmt->fetchColumn();
-                    break;
-                case 'ticket':
-                    $stmt = $db->prepare("SELECT COUNT(*) as count FROM rental_tickets WHERE status = ?");
                     $stmt->execute([$config['status']]);
                     $count = (int)$stmt->fetchColumn();
                     break;
@@ -202,8 +198,8 @@ try {
         $stmt->execute();
     }
 
-    // 获取未读通知数量
-    $stmt = $db->query("SELECT COUNT(*) as count FROM admin_system_notification WHERE status = 0");
+    // 获取未读通知数量（排除系统通知 type=system）
+    $stmt = $db->query("SELECT COUNT(*) as count FROM admin_system_notification WHERE status = 0 AND type != 'system'");
     $unread_count = $stmt->fetch()['count'];
 
     // 清除之前的输出缓冲

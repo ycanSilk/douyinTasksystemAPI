@@ -4,35 +4,6 @@ const API_BASE = '/task_admin';
 // 全局状态
 let currentUser = null;
 
-// 实时通知功能相关变量
-// 存储各审核面板的待审核状态
-let auditStatusRecord = {
-    recharge: false,
-    withdraw: false,
-    agent: false
-};
-
-// 存储放大镜任务数量
-let lastMagnifierTaskCount = 0;
-
-// 存储租赁订单待处理数量
-let lastRentalOrderCount = 0;
-
-// 轮询定时器ID
-let pollingTimer = null;
-
-// 倒计时定时器ID
-let countdownTimer = null;
-
-// 倒计时秒数
-let countdownSeconds = 0;
-
-// 倒计时日志输出计数器
-let countdownLogCounter = 0;
-
-// 是否需要播放提示音
-let needPlaySound = false;
-
 // 通知中心相关变量
 let notificationPage = 1;
 let notificationTotalPages = 1;
@@ -146,64 +117,9 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// 增强的播放提示音函数，带日志记录
-function playNotificationSound() {
-    const audio = document.getElementById('notificationSound');
-    if (audio) {
-        audio.currentTime = 0; // 重置音频播放位置
-        audio.play().catch(error => {
-            log('ERROR', '提示音播放失败: ' + error.message, 'AUDIO');
-            console.error('提示音播放失败:', error);
-        });
-        // 记录提示音事件
-        log('INFO', '播放提示音，触发场景: 系统通知', 'AUDIO');
-    }
-}
 
-// 预处理音频播放权限
-function preloadAudioPermission() {
-    const audio = document.getElementById('notificationSound');
-    if (audio) {
-        // 尝试静音播放一小段，以获得后续播放权限
-        audio.volume = 0;
-        audio.play().then(() => {
-            log('INFO', '音频权限已预处理', 'AUDIO');
-        }).catch(error => {
-            log('INFO', '音频权限预处理失败，等待用户交互', 'AUDIO');
-        }).finally(() => {
-            // 无论成功失败，都重置音量
-            audio.volume = 1;
-        });
-    }
-}
 
-// 监听用户交互事件，获取音频播放权限
-function setupAudioPermission() {
-    // 检测是否已经获得音频权限
-    let audioPermissionGranted = false;
-    
-    // 监听用户交互事件
-    const interactionEvents = ['click', 'touchstart', 'keydown', 'mousedown'];
-    
-    function handleInteraction() {
-        if (!audioPermissionGranted) {
-            preloadAudioPermission();
-            audioPermissionGranted = true;
-            
-            // 移除事件监听器，避免重复触发
-            interactionEvents.forEach(event => {
-                document.removeEventListener(event, handleInteraction);
-            });
-            
-            log('INFO', '用户交互后获得音频播放权限', 'AUDIO');
-        }
-    }
-    
-    // 添加事件监听器
-    interactionEvents.forEach(event => {
-        document.addEventListener(event, handleInteraction, { once: true });
-    });
-}
+
 
 // 带认证的API请求
 async function apiRequest(url, options = {}) {
@@ -243,9 +159,6 @@ async function apiRequest(url, options = {}) {
         
         // 处理未授权错误
         if (response.status === 401) {
-            // 停止轮询检测
-            stopPolling();
-            
             // 清除登录状态
             sessionStorage.clear();
             localStorage.removeItem('admin_current_page'); // 清除页面记忆
@@ -266,9 +179,6 @@ async function apiRequest(url, options = {}) {
             
             // 检查响应中的code字段
             if (data.code === 401) {
-                // 停止轮询检测
-                stopPolling();
-                
                 // 清除登录状态
                 sessionStorage.clear();
                 localStorage.removeItem('admin_current_page'); // 清除页面记忆
@@ -296,9 +206,6 @@ async function apiRequest(url, options = {}) {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', init);
-
-// 页面加载时设置音频权限
-document.addEventListener('DOMContentLoaded', setupAudioPermission);
 
 // 检查登录状态
 function checkLoginStatus() {
@@ -339,11 +246,6 @@ async function loadNavigation() {
         
         if (data.code === 0) {
             renderNavigation(data.data);
-            // 导航栏加载完成后启动通知检测
-            log('INFO', '导航栏加载完成，启动通知检测', 'NAVIGATION');
-            startPolling();
-            // 初始化音频权限
-            setupAudioPermission();
         } else {
             console.error('加载导航栏失败:', data.message);
         }
@@ -384,9 +286,6 @@ function initLogout() {
         try {
             await apiRequest(`${API_BASE}/auth/logout.php`, { method: 'POST' });
         } catch (err) {}
-        
-        // 停止轮询检测
-        stopPolling();
         
         sessionStorage.clear();
         localStorage.removeItem('admin_current_page'); // 清除页面记忆
@@ -1103,304 +1002,7 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// 播放提示音
-function playNotificationSound() {
-    const audio = document.getElementById('notificationSound');
-    if (audio) {
-        audio.currentTime = 0; // 重置音频播放位置
-        
-        // 尝试静音播放，然后逐渐增加音量
-        audio.volume = 0;
-        audio.play().then(() => {
-            // 播放成功后，逐渐增加音量
-            let volume = 0;
-            const volumeIncreaseInterval = setInterval(() => {
-                volume += 0.1;
-                if (volume >= 1) {
-                    volume = 1;
-                    clearInterval(volumeIncreaseInterval);
-                }
-                audio.volume = volume;
-            }, 50);
-        }).catch(error => {
-            console.error('提示音播放失败:', error);
-            // 尝试备用方案：创建新的音频元素
-            try {
-                const newAudio = new Audio('public/videos/preview.mp3');
-                newAudio.volume = 0;
-                newAudio.play().then(() => {
-                    let volume = 0;
-                    const volumeIncreaseInterval = setInterval(() => {
-                        volume += 0.1;
-                        if (volume >= 1) {
-                            volume = 1;
-                            clearInterval(volumeIncreaseInterval);
-                        }
-                        newAudio.volume = volume;
-                    }, 50);
-                }).catch(err => {
-                    console.error('备用方案播放失败:', err);
-                });
-            } catch (e) {
-                console.error('创建音频元素失败:', e);
-            }
-        });
-    }
-}
 
-// 检测审核面板
-async function checkAuditPanels() {
-    try {
-        // 获取充值审核待审核数量
-        const rechargeRes = await apiRequest(`${API_BASE}/api/recharge/list.php?status=0&page=1&pageSize=1`);
-        const rechargeCount = rechargeRes.code === 0 ? rechargeRes.data.list.length : 0;
-        
-        // 获取提现审核待审核数量
-        const withdrawRes = await apiRequest(`${API_BASE}/api/withdraw/list.php?status=0&page=1&pageSize=1`);
-        const withdrawCount = withdrawRes.code === 0 ? withdrawRes.data.list.length : 0;
-        
-        // 获取团长审核待审核数量
-        const agentRes = await apiRequest(`${API_BASE}/api/agent/list.php?status=0&page=1&pageSize=1`);
-        const agentCount = agentRes.code === 0 ? agentRes.data.list.length : 0;
-        
-        
-        // 检查是否有新的待审核记录
-        let needNotification = false;
-        
-        if (rechargeCount > 0) {
-            needNotification = true;
-            auditStatusRecord.recharge = true;
-        } else {
-            auditStatusRecord.recharge = false;
-        }
-        
-        if (withdrawCount > 0) {
-            needNotification = true;
-            auditStatusRecord.withdraw = true;
-        } else {
-            auditStatusRecord.withdraw = false;
-        }
-        
-        if (agentCount > 0) {
-            needNotification = true;
-            auditStatusRecord.agent = true;
-        } else {
-            auditStatusRecord.agent = false;
-        }
-        
-        // 更新红色角标
-        updateBadge('recharge', rechargeCount);
-        updateBadge('withdraw', withdrawCount);
-        updateBadge('agent', agentCount);
-        
-        if (needNotification) {
-            needPlaySound = true;
-        }
-        
-        return {
-            recharge: rechargeCount,
-            withdraw: withdrawCount,
-            agent: agentCount
-        };
-    } catch (error) {
-        console.error('审核面板检测失败:', error);
-        return {
-            recharge: 0,
-            withdraw: 0,
-            agent: 0
-        };
-    }
-}
-
-// 检测放大镜任务
-async function checkMagnifierTasks() {
-    try {
-        // 获取当前放大镜任务数量
-        const magnifierRes = await apiRequest(`${API_BASE}/api/magnifier/list.php?page=1&pageSize=10`);
-        const currentTaskCount = magnifierRes.code === 0 ? magnifierRes.data.total : 0;
-        
-        // 检测是否有新增任务
-        if (currentTaskCount > lastMagnifierTaskCount) {
-            needPlaySound = true;
-        }
-        
-        // 更新红色角标
-        updateBadge('magnifier', currentTaskCount);
-        
-        // 更新任务数量记录
-        lastMagnifierTaskCount = currentTaskCount;
-        
-        return currentTaskCount;
-    } catch (error) {
-        console.error('放大镜任务检测失败:', error);
-        return 0;
-    }
-}
-
-// 检测租赁订单
-async function checkRentalOrders() {
-    try {
-        // 获取状态为"已支付/待客服"的租赁订单数量
-        const rentalRes = await apiRequest(`${API_BASE}/api/rental_orders/list.php?status=1&page=1&pageSize=1`);
-        const currentOrderCount = rentalRes.code === 0 ? rentalRes.data.list.length : 0;
-        
-        // 检测是否有待客服处理的订单
-        if (currentOrderCount > 0) {
-            needPlaySound = true;
-        }
-        
-        // 更新红色角标
-        updateBadge('rental-orders', currentOrderCount);
-        
-        // 更新订单数量记录
-        lastRentalOrderCount = currentOrderCount;
-        
-        return currentOrderCount;
-    } catch (error) {
-        console.error('租赁订单检测失败:', error);
-        return 0;
-    }
-}
-
-// 启动轮询检测
-function startPolling() {
-    log('INFO', '=== 启动轮询检测 ===', 'POLLING');
-    
-    // 直接启动倒计时，不立即执行检测
-    // 这样页面刷新时不会重置数据库计时器
-    startCountdown();
-}
-
-// 停止轮询检测
-function stopPolling() {
-    if (pollingTimer) {
-        clearInterval(pollingTimer);
-        pollingTimer = null;
-    }
-    
-    if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-    }
-}
-
-// 获取通知配置
-async function getNotificationConfig() {
-    try {
-        const data = await apiRequest(`${API_BASE}/api/admin_notifications/config.php`);
-        if (data.code === 0) {
-            return data.data;
-        }
-    } catch (error) {
-        log('ERROR', '获取通知配置失败: ' + error.message, 'NOTIFICATION');
-    }
-    return [];
-}
-
-// 获取计时器状态
-async function getTimerStatus() {
-    try {
-        log('INFO', `调用get_timer.php接口: ${API_BASE}/api/admin_notifications/get_timer.php`, 'TIMER');
-        const data = await apiRequest(`${API_BASE}/api/admin_notifications/get_timer.php`);
-        log('INFO', `get_timer.php接口返回: ${JSON.stringify(data)}`, 'TIMER');
-        if (data.code === 0) {
-            // 确保返回的数据结构包含所需字段
-            return {
-                remaining_seconds: data.data.remaining_seconds || 60,
-                detection_interval: data.data.detection_interval || 60
-            };
-        } else {
-            log('ERROR', `get_timer.php接口返回错误: ${data.message}`, 'TIMER');
-        }
-    } catch (error) {
-        log('ERROR', '获取计时器状态失败: ' + error.message, 'TIMER');
-    }
-    return { remaining_seconds: 60, detection_interval: 60 };
-}
-
-// 更新计时器状态
-async function updateTimerStatus(lastDetectionTime, detectionInterval) {
-    try {
-        await apiRequest(`${API_BASE}/api/admin_notifications/update_timer.php`, {
-            method: 'POST',
-            body: JSON.stringify({ last_detection_time: lastDetectionTime, detection_interval: detectionInterval })
-        });
-    } catch (error) {
-        log('ERROR', '更新计时器状态失败: ' + error.message, 'TIMER');
-    }
-}
-
-// 启动倒计时
-async function startCountdown() {
-    // 首先清除任何可能存在的旧计时器，避免时间叠加
-    if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-        log('INFO', '清除旧计时器，避免时间叠加', 'TIMER');
-    }
-    
-    // 获取通知配置，读取检测间隔时间
-    let detectionInterval = 60; // 默认60秒
-    try {
-        const configs = await getNotificationConfig();
-        // 从任何一个启用的配置中获取检测间隔，优先使用recharge配置
-        const anyConfig = configs.find(config => config.enabled === 1);
-        if (anyConfig && anyConfig.detection_interval) {
-            detectionInterval = anyConfig.detection_interval;
-            log('INFO', `从配置读取检测间隔: ${detectionInterval}秒`, 'TIMER');
-        }
-    } catch (error) {
-        log('ERROR', '读取检测间隔配置失败，使用默认值60秒: ' + error.message, 'TIMER');
-    }
-    
-    // 获取计时器状态，从数据库读取准确的时间数据
-    let remainingSeconds = 60; // 默认60秒
-    try {
-        log('INFO', '开始获取计时器状态', 'TIMER');
-        const timerData = await getTimerStatus();
-        log('INFO', `获取计时器状态成功: ${JSON.stringify(timerData)}`, 'TIMER');
-        // 直接使用数据库返回的剩余时间，不使用默认值
-        remainingSeconds = timerData.remaining_seconds;
-        log('INFO', `从服务器获取剩余时间: ${remainingSeconds}秒`, 'TIMER');
-    } catch (error) {
-        log('ERROR', '获取计时器状态失败，使用默认值: ' + error.message, 'TIMER');
-    }
-    
-    log('INFO', '启动倒计时', 'TIMER');
-    countdownSeconds = remainingSeconds;
-    countdownLogCounter = 0;
-    
-    // 更新倒计时显示
-    function updateCountdownDisplay() {
-        const countdownElement = document.getElementById('countdownSeconds');
-        if (countdownElement) {
-            countdownElement.textContent = countdownSeconds;
-        }
-    }
-    
-    // 初始更新
-    updateCountdownDisplay();
-    
-    countdownTimer = setInterval(() => {
-        countdownSeconds--;
-        countdownLogCounter++;
-        
-        // 更新倒计时显示
-        updateCountdownDisplay();
-        
-        // 每5秒输出一次日志
-        if (countdownLogCounter % 5 === 0) {
-            log('INFO', `倒计时状态更新，剩余 ${countdownSeconds} 秒`, 'TIMER');
-        }
-        
-        if (countdownSeconds <= 0) {
-            log('INFO', '倒计时结束，执行检测', 'TIMER');
-            clearInterval(countdownTimer);
-            countdownTimer = null;
-            performAllChecks();
-        }
-    }, 1000);
-}
 
 
 
@@ -2132,52 +1734,10 @@ async function loadPermissionTemplatesForRole(roleId) {
 // 通知API调用函数
 
 // 检测通知
-async function detectNotifications() {
-    try {
-        const data = await apiRequest(`${API_BASE}/api/admin_notifications/detect.php`);
-        
-        if (data.code === 0) {
-            const notifications = data.data.notifications;
-            const unreadCount = data.data.unread_count;
-            const detectionResult = data.data.detection_result || data.data.detectionResult || {};
-            
-            // 更新通知角标
-            updateNotificationBadge(unreadCount);
-            
-            // 更新导航栏面板红色角标
-            updateNavigationBadges(detectionResult);
-            
-            // 检查是否有新通知或未读通知
-            let hasNonSystemNotifications = false;
-            
-            // 检查是否有非系统通知
-            for (const notification of notifications) {
-                if (notification.type !== 'system') {
-                    hasNonSystemNotifications = true;
-                    break;
-                }
-            }
-            
-            // 有非系统通知或未读通知时播放提示音
-            if (hasNonSystemNotifications || unreadCount > 0) {
-                // 有未读通知或新通知时播放提示音
-                needPlaySound = true;
-                // 有新通知时刷新通知列表，只加载未读通知
-                loadNotifications(1, '', '0');
-            }
-            
-            // 如果只有系统通知，也刷新通知列表，但不播放提示音
-            else if (notifications.length > 0) {
-                loadNotifications(1, '', '0');
-            }
-            
-            return { notifications, unreadCount, detectionResult };
-        }
-    } catch (error) {
-        log('ERROR', '检测通知失败: ' + error.message, 'NOTIFICATION');
-        return { notifications: [], unreadCount: 0, detectionResult: {} };
-    }
-}
+// 静默重载页面数据
+
+
+
 
 // 更新通知角标
 function updateNotificationBadge(count) {
@@ -2215,29 +1775,7 @@ function updateNotificationBadge(count) {
 }
 
 // 更新导航栏面板红色角标
-function updateNavigationBadges(detectionResult) {
-    // 映射检测结果到导航栏面板
-    const badgeMap = {
-        'recharge': 'recharge',
-        'withdraw': 'withdraw',
-        'agent': 'agent',
-        'magnifier': 'magnifier',
-        'rental': 'rental-orders',
-        'ticket': 'rental-tickets'
-    };
-    
-    // 更新每个面板的角标
-    for (const [key, value] of Object.entries(detectionResult)) {
-        // 跳过 system 字段，不显示角标
-        if (key === 'system') {
-            continue;
-        }
-        
-        if (badgeMap[key]) {
-            updateBadge(badgeMap[key], value);
-        }
-    }
-}
+
 
 // 标记通知已读
 async function markNotificationAsRead(notificationId) {
@@ -2588,9 +2126,6 @@ function formatDetectionResult(result) {
         if (typeof result === 'object') {
             if (result.notifications && Array.isArray(result.notifications)) {
                 formatted = `新增 ${result.notifications.length} 条通知`;
-                if (result.unreadCount) {
-                    formatted += `，未读 ${result.unreadCount} 条`;
-                }
             } else if (result.recharge_count !== undefined) {
                 formatted = `充值审核: ${result.recharge_count} 条`;
             } else if (result.withdraw_count !== undefined) {
@@ -3171,8 +2706,7 @@ function init() {
     // 检查登录状态
     checkLoginStatus();
     
-    // 页面卸载时停止轮询
-    window.addEventListener('beforeunload', stopPolling);
+
     
     // 启动数据自动刷新（每10分钟）
     setInterval(() => {
@@ -3180,54 +2714,7 @@ function init() {
     }, 10 * 60 * 1000); // 10分钟
 }
 
-// 执行所有检测
-async function performAllChecks() {
-    const startTime = getTimestamp();
-    log('INFO', `开始执行所有检测，开始时间: ${startTime}，检测类型: 全面板检测`, 'DETECTION');
-    
-    // 重置提示音标志
-    needPlaySound = false;
-    let detectionStatus = 'SUCCESS';
-    const detectionResults = {};
-    const detectionItems = [];
-    
-    try {
-        // 检测系统通知（detect.php接口已包含所有检测逻辑）
-        log('INFO', '开始检测系统通知', 'DETECTION');
-        const notificationResult = await detectNotifications();
-        detectionResults.notification = notificationResult;
-        detectionItems.push({
-            type: '系统通知',
-            status: 'SUCCESS',
-            data: notificationResult
-        });
-        log('INFO', `系统通知检测结果: 新增 ${notificationResult.notifications.length} 条，未读 ${notificationResult.unreadCount} 条`, 'DETECTION');
-        
-        // 所有检测完成后，检查是否需要播放提示音
-        if (needPlaySound) {
-            log('INFO', '检测完成，播放提示音', 'DETECTION');
-            playNotificationSound();
-        }
-        
-        const endTime = getTimestamp();
-        log('INFO', `所有检测执行完成，结束时间: ${endTime}`, 'DETECTION');
-        
-        // 持久化检测结果日志
-        const detectionLog = log('INFO', `检测结果: ${JSON.stringify(detectionResults)}, 状态: ${detectionStatus}, 检测项: ${detectionItems.length}`, 'DETECTION');
-        await persistLogToFile(detectionLog);
-    } catch (error) {
-        detectionStatus = 'ERROR';
-        log('ERROR', `检测过程中发生错误: ${error.message}`, 'DETECTION');
-        
-        // 持久化错误日志
-        const errorLog = log('ERROR', `检测错误: ${error.message}`, 'DETECTION');
-        await persistLogToFile(errorLog);
-    } finally {
-        // 重新启动倒计时
-        log('INFO', '重新启动倒计时', 'DETECTION');
-        startCountdown();
-    }
-}
+
 
 // 加载权限模板列表
 async function loadSystemPermissions() {

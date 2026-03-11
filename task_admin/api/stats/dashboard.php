@@ -603,9 +603,6 @@ try {
     $stmt = $db->prepare("SELECT * FROM wallets_log WHERE DATE(created_at) BETWEEN ? AND ? ORDER BY created_at DESC");
     $stmt->execute([$startDate, $endDate]);
     $walletLogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    error_log('=================================: ' );
-    error_log('从 wallets_log 表查询所有财务数据结果: ' . json_encode($walletLogs));
-    error_log('查询到的钱包流水记录数量: ' . count($walletLogs));
     
     // 初始化财务变量
     $totalRecharge = 0; // 充值总数
@@ -625,58 +622,52 @@ try {
         $userType = (int)$log['user_type']; // 1=C端, 2=B端, 3=Admin端
         $relatedType = $log['related_type'];
         
-        // 详细日志输出
-        error_log('Wallet log: id=' . $log['id'] . ', 用户类型=' . $userType . ', 支出类型=' . $type . ', 记录关联类型=' . $relatedType . ', amount_in_cents=' . $amountInCents . ', 金额=' . $amount . ', 备注=' . $log['remark']);
-        
+       
         // 处理收入项
         if ($type == 1) {
             switch ($relatedType) {
                 case 'recharge':
                     $totalRecharge += $amount;
-                    error_log('Added recharge: ' . $amount . ', totalRecharge=' . $totalRecharge);
+                   
                     break;
             }
             
             // C端用户的收入是平台的支出
             if ($userType == 1) {
-                error_log('C端用户收入，计算为平台支出: related_type=' . $relatedType . ', amount=' . $amount);
+              
                 switch ($relatedType) {
                     // 任务奖励佣金
                     case 'commission':
                         $taskRewardExpense += $amount;
-                        error_log('任务佣金 ' . $amount . ', taskRewardExpense=' . $taskRewardExpense);
+                      
                         break;
                     // 普通团长佣金支出（一级团长）
                     case 'agent_commission':
                         $normalAgentCommission += $amount;
-                        error_log('一级团长佣金 ' . $amount . ', normalAgentCommission=' . $normalAgentCommission);
+                        
                         break;
          
                     // 二级团长佣金支出
                     case 'second_agent_commission':
                         // 二级团长佣金应该计入高级团长佣金
                         $seniorAgentCommission += $amount;
-                        error_log('高级团长佣金 ' . $amount . ', seniorAgentCommission=' . $seniorAgentCommission);
+                      
                         break;
                
                    
                     // 任务佣金
                     case 'task':
                         $taskRewardExpense += $amount;
-                        error_log('任务佣金 ' . $amount . ', taskRewardExpense=' . $taskRewardExpense);
                         break;
                     // 账号租赁奖励金额
                     case 'rental_freeze':
                         $accountRentalReward += $amount;
-                        error_log('账号租赁奖励金额 ' . $amount . ', accountRentalReward=' . $accountRentalReward);
                         break;
                     // 账号购买支出
                     case 'rental_unfreeze':
                         $accountPurchaseExpense += $amount;
-                        error_log('账号购买支出 ' . $amount . ', accountPurchaseExpense=' . $accountPurchaseExpense);
                         break;
                     default:
-                        error_log('C端用户收入，未分类的支出类型: ' . $relatedType . ', amount=' . $amount);
                         break;
                 }
             }
@@ -686,7 +677,6 @@ try {
             switch ($relatedType) {
                 case 'withdraw':
                     $totalWithdraw += $amount;
-                    error_log('Added withdraw: ' . $amount . ', totalWithdraw=' . $totalWithdraw);
                     break;
                 // 处理其他支出项
                 case 'rental_freeze':
@@ -808,7 +798,6 @@ try {
             }
         }
     } catch (PDOException $e) {
-        error_log('Wallet log statistics failed: ' . $e->getMessage());
         $totalIncome = 0;
         $totalExpense = 0;
         $walletStats = [
@@ -845,7 +834,6 @@ try {
         $stmt->execute([$date30DaysAgo]);
         $activeBUsers = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     } catch (PDOException $e) {
-        error_log('B user statistics failed: ' . $e->getMessage());
         $totalBUsers = 0;
         $activeBUsers = 0;
     }
@@ -860,13 +848,12 @@ try {
     $activeCUsers = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     // 6. 派单用户（发布过任务的用户）
-    error_log('Executing send users query');
+
     try {
         // 尝试查询 b_tasks 表的结构，查看是否有 user_id 字段
         $stmt = $db->query("DESCRIBE b_tasks");
         $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $columnNames = array_column($columns, 'Field');
-        error_log('b_tasks columns: ' . implode(', ', $columnNames));
         
         // 检查是否有 user_id 字段
         if (in_array('user_id', $columnNames)) {
@@ -878,12 +865,9 @@ try {
             $totalSendUsers = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
         } else {
             // 如果没有相关字段，设置为 0
-            error_log('b_tasks table does not have user_id or b_user_id column');
             $totalSendUsers = 0;
         }
-        error_log('Send users query completed: ' . $totalSendUsers);
     } catch (PDOException $e) {
-        error_log('Send users query failed: ' . $e->getMessage());
         $totalSendUsers = 0;
     }
     
@@ -955,7 +939,6 @@ try {
             }
         }
     } catch (PDOException $e) {
-        error_log('User status statistics failed: ' . $e->getMessage());
         $cUserStatus = [
             'active' => 0,
             'inactive' => 0
