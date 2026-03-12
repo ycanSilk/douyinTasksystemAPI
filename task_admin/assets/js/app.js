@@ -4439,7 +4439,9 @@ function renderConfigTable(configs) {
         'withdraw': '提现配置',
         'task': '任务配置',
         'rental': '租赁配置',
-        'notification': '消息通知配置'
+        'notification': '消息通知配置',
+        'agent': '大团团长佣金配置',
+        'incentive': '团长激励配置'
     };
 
     let html = '';
@@ -5239,6 +5241,9 @@ function renderAgentUpgradeTable(list, pagination) {
             } else if (u.is_agent === 2) {
                 levelText = '高级团长';
                 levelClass = 'badge-warning';
+            } else if (u.is_agent === 3) {
+                levelText = '大团团长';
+                levelClass = 'badge-danger';
             }
             
             let actions = '';
@@ -5246,10 +5251,16 @@ function renderAgentUpgradeTable(list, pagination) {
                 actions = `
                     <button class="btn-success btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 1)"><i class="ri-arrow-up-circle-line"></i> 升级成团长</button>
                     <button class="btn-warning btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
+                    <button class="btn-danger btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 3)"><i class="ri-arrow-up-circle-line"></i> 升级成大团团长</button>
                 `;
             } else if (u.is_agent === 1) {
                 actions = `
                     <button class="btn-warning btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
+                    <button class="btn-danger btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 3)"><i class="ri-arrow-up-circle-line"></i> 升级成大团团长</button>
+                `;
+            } else if (u.is_agent === 2) {
+                actions = `
+                    <button class="btn-danger btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 3)"><i class="ri-arrow-up-circle-line"></i> 升级成大团团长</button>
                 `;
             } else {
                 actions = '<span class="text-gray">已是最高等级</span>';
@@ -5283,9 +5294,14 @@ function renderAgentUpgradeTable(list, pagination) {
     document.getElementById('agentUpgradeTable').innerHTML = html;
 }
 
-// 升级用户为团长或高级团长
+// 升级用户为团长、高级团长或大团团长
 function upgradeToAgent(userId, username, level) {
-    const levelText = level === 1 ? '团长' : '高级团长';
+    let levelText = '团长';
+    if (level === 2) {
+        levelText = '高级团长';
+    } else if (level === 3) {
+        levelText = '大团团长';
+    }
     
     showConfirm(`确认将用户 ${username} (ID: ${userId}) 升级为${levelText}吗？`, async () => {
         try {

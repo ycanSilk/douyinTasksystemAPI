@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 自动审核任务脚本
  * 每1分钟执行一次，检查提交时间超过10分钟的待审核任务
@@ -12,9 +13,14 @@ $errorCodes = require __DIR__ . '/../config/error_codes.php';
 
 // 数据库连接
 $db = Database::connect();
-
-// 定义自动审核时间阈值（10分钟）
-$autoReviewThreshold = 10 * 60; // 秒
+if ($db) {
+    echo "数据库连接成功\n";
+} else {
+    echo "数据库连接失败\n";
+    exit;
+}
+// 定义自动审核时间阈值（1分钟，用于测试）
+$autoReviewThreshold = 1 * 60; // 秒
 $currentTime = time();
 $thresholdTime = $currentTime - $autoReviewThreshold;
 
@@ -28,23 +34,24 @@ try {
         WHERE c.status = 2 -- 待审核状态
           AND UNIX_TIMESTAMP(c.submitted_at) < ?
     ");
+    echo "开始执行查询\n";
     $stmt->execute([$thresholdTime]);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+    // 查询到的待审核任务数量
+
     if (empty($records)) {
-        echo "没有需要自动审核的任务\n";
+        echo "没有超过10分钟需要自动审核的任务\n";
         exit;
     }
-    
+
     echo "找到 " . count($records) . " 个需要自动审核的任务\n";
-    
+
     foreach ($records as $record) {
         echo "处理任务记录ID: " . $record['id'] . "，任务ID: " . $record['b_task_id'] . "\n";
-        
+
         // 执行自动审核通过逻辑
         autoApproveTask($db, $record, $errorCodes);
     }
-    
 } catch (PDOException $e) {
     echo "自动审核失败: " . $e->getMessage() . "\n";
 }
@@ -52,7 +59,8 @@ try {
 /**
  * 自动审核通过任务
  */
-function autoApproveTask($db, $record, $errorCodes) {
+function autoApproveTask($db, $record, $errorCodes)
+{
     try {
         // 1. 查询C端用户信息
         $stmt = $db->prepare("
@@ -62,12 +70,12 @@ function autoApproveTask($db, $record, $errorCodes) {
         ");
         $stmt->execute([$record['c_user_id']]);
         $cUser = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$cUser) {
             echo "C端用户不存在，任务记录ID: " . $record['id'] . "\n";
             return;
         }
-        
+
         // 2. 查询或创建当日统计记录
         $today = date('Y-m-d');
         $stmt = $db->prepare("
@@ -77,7 +85,7 @@ function autoApproveTask($db, $record, $errorCodes) {
         ");
         $stmt->execute([$record['c_user_id'], $today]);
         $dailyStats = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$dailyStats) {
             $stmt = $db->prepare("
                 INSERT INTO c_user_daily_stats (c_user_id, stat_date)
@@ -88,12 +96,12 @@ function autoApproveTask($db, $record, $errorCodes) {
         } else {
             $dailyStatsId = $dailyStats['id'];
         }
-        
+
         // 3. 开启事务
         $db->beginTransaction();
-        
+
         $reviewedAt = date('Y-m-d H:i:s');
-        
+
         // 4. 更新任务记录状态
         $stmt = $db->prepare("
             UPDATE c_task_records 
@@ -101,7 +109,7 @@ function autoApproveTask($db, $record, $errorCodes) {
             WHERE id = ?
         ");
         $stmt->execute([$reviewedAt, $record['id']]);
-        
+
         // 5. 更新B端任务统计
         $stmt = $db->prepare("
             UPDATE b_tasks 
@@ -110,7 +118,7 @@ function autoApproveTask($db, $record, $errorCodes) {
             WHERE id = ?
         ");
         $stmt->execute([$record['b_task_id']]);
-        
+
         // 6. 检查任务是否全部完成，如果完成则更新状态为"已完成"
         $stmt = $db->prepare("
             SELECT task_count, task_done
@@ -119,7 +127,7 @@ function autoApproveTask($db, $record, $errorCodes) {
         ");
         $stmt->execute([$record['b_task_id']]);
         $taskProgress = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($taskProgress && (int)$taskProgress['task_done'] >= (int)$taskProgress['task_count']) {
             // 任务全部完成，更新状态为已完成(status=2)
             $stmt = $db->prepare("
@@ -129,7 +137,7 @@ function autoApproveTask($db, $record, $errorCodes) {
             ");
             $stmt->execute([$reviewedAt, $record['b_task_id']]);
         }
-        
+
         // 7. 检查组合任务是否需要开放第二阶段
         $stmt = $db->prepare("
             SELECT 
@@ -139,14 +147,14 @@ function autoApproveTask($db, $record, $errorCodes) {
         ");
         $stmt->execute([$record['b_task_id']]);
         $bTask = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($bTask && !empty($bTask['combo_task_id']) && (int)$bTask['stage'] === 1) {
             // 这是组合任务的第一阶段
             // 检查第一阶段是否全部完成（组合任务阶段1固定为1个任务）
             if ((int)$bTask['task_done'] === (int)$bTask['task_count']) {
                 // 第一阶段完成，获取C端用户提交的评论链接作为阶段2的video_url
                 $commentUrl = $record['comment_url'] ?? '';
-                
+
                 if (!empty($commentUrl)) {
                     // 开放第二阶段，并设置video_url为阶段1的评论链接
                     $stmt = $db->prepare("
@@ -166,7 +174,7 @@ function autoApproveTask($db, $record, $errorCodes) {
                 }
             }
         }
-        
+
         // 8. 更新当日统计
         $stmt = $db->prepare("
             UPDATE c_user_daily_stats 
@@ -174,12 +182,41 @@ function autoApproveTask($db, $record, $errorCodes) {
             WHERE id = ?
         ");
         $stmt->execute([$dailyStatsId]);
-        
+
         // 9. 计算佣金（从模板读取固定金额）
-        // 查询b_task获取template_id和stage
-        $stmt = $db->prepare("SELECT template_id, stage FROM b_tasks WHERE id = ?");
+        // 查询b_task获取template_id、stage和unit_price
+        $stmt = $db->prepare("SELECT template_id, stage, unit_price FROM b_tasks WHERE id = ?");
         $stmt->execute([$record['b_task_id']]);
         $bTaskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        // 获取派单单价
+        $taskUnitPrice = (float)($bTaskInfo['unit_price'] ?? 0);
+
+        // 检查用户的上级代理中是否有大团团长
+        function hasLargeGroupAgent($db, $userId, $maxLevel = 2)
+        {
+            $currentUserId = $userId;
+            $level = 0;
+
+            while ($level < $maxLevel) {
+                $stmt = $db->prepare("SELECT parent_id, is_agent FROM c_users WHERE id = ?");
+                $stmt->execute([$currentUserId]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$user || !$user['parent_id']) {
+                    break;
+                }
+
+                if ($user['is_agent'] == 3) {
+                    return true;
+                }
+
+                $currentUserId = $user['parent_id'];
+                $level++;
+            }
+
+            return false;
+        }
 
         if (!$bTaskInfo) {
             $db->rollBack();
@@ -223,25 +260,33 @@ function autoApproveTask($db, $record, $errorCodes) {
             $secondAgentCommissionAmount = $agentCommissionAmount;
             $secondSeniorAgentCommissionAmount = $seniorAgentCommissionAmount;
         }
-        
+
+        // 大团团长佣金计算逻辑
+        $userAgentLevel = (int)($cUser['is_agent'] ?? 0);
+        if ($userAgentLevel == 3) {
+            // 当前用户是大团团长，使用大团佣金比例
+            $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+            $cUserCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+        }
+
         // 10. 查询C端用户钱包
         $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
         $stmt->execute([$cUser['wallet_id']]);
         $cWallet = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$cWallet) {
             $db->rollBack();
             echo "C端用户钱包不存在，任务记录ID: " . $record['id'] . "\n";
             return;
         }
-        
+
         $cBeforeBalance = (int)$cWallet['balance'];
         $cAfterBalance = $cBeforeBalance + $cUserCommission;
-        
+
         // 11. 更新C端用户钱包
         $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
         $stmt->execute([$cAfterBalance, $cUser['wallet_id']]);
-        
+
         // 12. 记录C端用户钱包流水
         $cRemark = "自动审核通过任务获得佣金，任务ID：{$record['b_task_id']}";
         $stmt = $db->prepare("
@@ -261,7 +306,7 @@ function autoApproveTask($db, $record, $errorCodes) {
             $record['b_task_id'],
             $cRemark
         ]);
-        
+
         // 13. 检查是否有团长上级
         if (!empty($cUser['parent_id'])) {
             // 查询一级上级用户
@@ -276,28 +321,44 @@ function autoApproveTask($db, $record, $errorCodes) {
             $parentAgentLevel = $parentUser ? (int)$parentUser['is_agent'] : 0;
 
             if ($parentUser && $parentAgentLevel >= 1) {
-                // 高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
-                if ($parentAgentLevel === 2) {
+                // 大团团长(3)用大团佣金比例，高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
+                if ($parentAgentLevel === 3) {
+                    // 一级上级是大团团长，使用大团佣金比例
+                    $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+                    $agentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+                } elseif ($parentAgentLevel === 2) {
                     $agentCommission = $seniorAgentCommissionAmount;
                 } else {
                     $agentCommission = $agentCommissionAmount;
                 }
-                
+
                 // 查询团长钱包
                 $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
                 $stmt->execute([$parentUser['wallet_id']]);
                 $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
-                
+
                 if ($agentWallet) {
                     $agentBeforeBalance = (int)$agentWallet['balance'];
                     $agentAfterBalance = $agentBeforeBalance + $agentCommission;
-                    
+
                     // 更新团长钱包
                     $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
                     $stmt->execute([$agentAfterBalance, $parentUser['wallet_id']]);
-                    
                     // 记录团长钱包流水
-                    $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得一级团长佣金，任务ID：{$record['b_task_id']}";
+                    if ($parentAgentLevel === 3) {
+                        // 大团团长佣金记录
+                        $agentRemark = "下级用户 {$cUser['username']}是大团团长 完成任务，获得一级团长佣金，任务ID：{$record['b_task_id']}";
+                    } elseif ($parentAgentLevel === 2) {
+                        // 高级团长佣金记录
+                        $agentRemark = "下级用户 {$cUser['username']}是高级团长 完成任务，获得高级团长佣金，任务ID：{$record['b_task_id']}";
+                    } elseif ($parentAgentLevel === 1) {
+                        // 普通团长佣金记录
+                        $agentRemark = "下级用户 {$cUser['username']}是普通团长 完成任务，获得普通团长佣金，任务ID：{$record['b_task_id']}";
+                    }else{
+                        $agentRemark = "下级用户 {$cUser['username']}是未知等级团长 完成任务，获得未知等级团长佣金，任务ID：{$record['b_task_id']}";
+                    }
+                    // 记录团长钱包流水
+                   // $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得一级团长佣金，任务ID：{$record['b_task_id']}";
                     $stmt = $db->prepare("
                         INSERT INTO wallets_log (
                             wallet_id, user_id, username, user_type, type, 
@@ -316,7 +377,7 @@ function autoApproveTask($db, $record, $errorCodes) {
                         $agentRemark
                     ]);
                 }
-                
+
                 // 查询二级上级用户
                 if (!empty($parentUser['parent_id'])) {
                     $stmt = $db->prepare("
@@ -330,26 +391,30 @@ function autoApproveTask($db, $record, $errorCodes) {
                     $secondParentAgentLevel = $secondParentUser ? (int)$secondParentUser['is_agent'] : 0;
 
                     if ($secondParentUser && $secondParentAgentLevel >= 1) {
-                        // 高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
-                        if ($secondParentAgentLevel === 2) {
+                        // 大团团长(3)用大团佣金比例，高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
+                        if ($secondParentAgentLevel === 3) {
+                            // 二级上级是大团团长，使用大团佣金比例
+                            $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+                            $secondAgentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+                        } elseif ($secondParentAgentLevel === 2) {
                             $secondAgentCommission = $secondSeniorAgentCommissionAmount;
                         } else {
                             $secondAgentCommission = $secondAgentCommissionAmount;
                         }
-                        
+
                         // 查询二级团长钱包
                         $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
                         $stmt->execute([$secondParentUser['wallet_id']]);
                         $secondAgentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
-                        
+
                         if ($secondAgentWallet) {
                             $secondAgentBeforeBalance = (int)$secondAgentWallet['balance'];
                             $secondAgentAfterBalance = $secondAgentBeforeBalance + $secondAgentCommission;
-                            
+
                             // 更新二级团长钱包
                             $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
                             $stmt->execute([$secondAgentAfterBalance, $secondParentUser['wallet_id']]);
-                            
+
                             // 记录二级团长钱包流水
                             $secondAgentRemark = "下级用户 {$parentUser['username']} 的团队成员完成任务，获得二级团长佣金，任务ID：{$record['b_task_id']}";
                             $stmt = $db->prepare("
@@ -374,19 +439,81 @@ function autoApproveTask($db, $record, $errorCodes) {
                 }
             }
         }
-        
+
         // 14. 提交事务
         $db->commit();
+
+        // 输出结算详情日志
+        echo "查询到的待审核任务详情：\n";
+        echo "任务ID: " . $record['b_task_id'] . "\n";
+        echo "C端用户（当前任务完成用户）: " . $cUser['username'] . " (ID: " . $cUser['id'] . ")\n";
         
+        // 输出一级代理信息
+        if (isset($parentUser) && !empty($parentUser)) {
+            echo "一级代理（当前任务完成用户的一级代理）: " . $parentUser['username'] . " (ID: " . $parentUser['id'] . ")\n";
+        } else {
+            echo "一级代理（当前任务完成用户的一级代理）: 无\n";
+        }
+        
+        // 输出二级代理信息
+        if (isset($secondParentUser) && !empty($secondParentUser)) {
+            echo "二级代理（当前任务完成用户的一级代理的一级代理）: " . $secondParentUser['username'] . " (ID: " . $secondParentUser['id'] . ")\n";
+        } else {
+            echo "二级代理（当前任务完成用户的一级代理的一级代理）: 无\n";
+        }
+        
+        // 输出大团团长信息
+        if (isset($secondParentUser) && !empty($secondParentUser) && $secondParentAgentLevel === 3) {
+            echo "大团团长（当前任务完成用户的大团团长）: " . $secondParentUser['username'] . " (ID: " . $secondParentUser['id'] . ")\n";
+        } else {
+            echo "大团团长（当前任务完成用户的大团团长）: 无\n";
+        }
+        
+        // 输出大团团长佣金
+        if (isset($secondAgentCommission)) {
+            echo "大团团长佣金（当前任务完成用户的大团团长）: " . ($secondAgentCommission / 100) . " 元\n";
+        } else {
+            echo "大团团长佣金（当前任务完成用户的大团团长）: 0 元\n";
+        }
+        
+        echo "B端任务单价: " . ($taskUnitPrice) . " 元\n";
+        echo "用户佣金: " . ($cUserCommission / 100) . " 元\n";
+
+        echo "自动审核通过奖励金额: " . ($record['reward_amount'] / 100) . " 元\n";
+
+
+        // 输出代理佣金信息
+        if (!empty($cUser['parent_id'])) {
+            if ($parentUser && $parentAgentLevel >= 1) {
+                echo "（当前任务完成用户）一级代理: " . $parentUser['username'] . " (ID: " . $parentUser['id'] . ")\n";
+                echo "（当前任务完成用户）一级代理佣金: " . ($agentCommission / 100) . " 元\n";
+
+                // 检查是否是大团团长
+                if ($parentAgentLevel === 3) {
+                    echo "（当前任务完成用户的大团团长）[大团团长] " . $parentUser['username'] . " (ID: " . $parentUser['id'] . ")\n";
+                }
+
+                if (!empty($parentUser['parent_id'])) {
+                    if ($secondParentUser && $secondParentAgentLevel >= 1) {
+                        echo "（当前任务完成用户）二级代理: " . $secondParentUser['username'] . " (ID: " . $secondParentUser['id'] . ")\n";
+                        echo "（当前任务完成用户）二级代理佣金: " . ($secondAgentCommission / 100) . " 元\n";
+
+                        // 检查是否是大团团长
+                        if ($secondParentAgentLevel === 3) {
+                            echo "[大团团长] " . $secondParentUser['username'] . " (ID: " . $secondParentUser['id'] . ")\n";
+                        }
+                    }
+                }
+            }
+        }
+
         echo "自动审核通过任务记录ID: " . $record['id'] . "\n";
-        
     } catch (PDOException $e) {
         // 回滚事务
         if ($db->inTransaction()) {
             $db->rollBack();
         }
-        
+
         echo "自动审核失败，任务记录ID: " . $record['id'] . "，错误: " . $e->getMessage() . "\n";
     }
 }
-?>

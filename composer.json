@@ -11,5 +11,10 @@
         "psr-4": {
             "TaskSystem\\": "core/"
         }
-    }
+    },
+    "repositories": [{
+        "name": "packagist",
+        "type": "composer",
+        "url": "https://mirrors.aliyun.com/composer/"
+    }]
 }

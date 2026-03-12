@@ -123,18 +123,12 @@ try {
     $sellerRate = (int)AppConfig::get('rental_seller_rate', 70);
     $agentRate = (int)AppConfig::get('rental_agent_rate', 10);
     $seniorAgentRate = (int)AppConfig::get('rental_senior_agent_rate', 10);
-    // 二级代理分成比例复用一级代理分成比例
-    $secondAgentRate = $agentRate;
-    $secondSeniorAgentRate = $seniorAgentRate;
 
     $sellerAmount = intval($totalAmount * $sellerRate / 100);
 
     // 查询卖方（出租方）的团长上级
     $agentUserId = null;
     $agentAmount = 0;
-    // 新增：二级代理信息
-    $secondAgentUserId = null;
-    $secondAgentAmount = 0;
 
     // 卖方是C端用户时才查团长
     if ($offer['user_type'] == Token::TYPE_C) {
@@ -143,7 +137,7 @@ try {
         $sellerCUser = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($sellerCUser && !empty($sellerCUser['parent_id'])) {
-            $stmt = $db->prepare("SELECT id, is_agent, parent_id FROM c_users WHERE id = ?");
+            $stmt = $db->prepare("SELECT id, is_agent FROM c_users WHERE id = ?");
             $stmt->execute([$sellerCUser['parent_id']]);
             $parentUser = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -154,27 +148,11 @@ try {
                 } else {
                     $agentAmount = intval($totalAmount * $agentRate / 100);
                 }
-                
-                // 新增：查询二级代理
-                if (!empty($parentUser['parent_id'])) {
-                    $stmt = $db->prepare("SELECT id, is_agent FROM c_users WHERE id = ?");
-                    $stmt->execute([$parentUser['parent_id']]);
-                    $secondParentUser = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                    if ($secondParentUser && (int)$secondParentUser['is_agent'] >= 1) {
-                        $secondAgentUserId = (int)$secondParentUser['id'];
-                        if ((int)$secondParentUser['is_agent'] === 2) {
-                            $secondAgentAmount = intval($totalAmount * $secondSeniorAgentRate / 100);
-                        } else {
-                            $secondAgentAmount = intval($totalAmount * $secondAgentRate / 100);
-                        }
-                    }
-                }
             }
         }
     }
 
-    $platformAmount = $totalAmount - $sellerAmount - $agentAmount - $secondAgentAmount;
+    $platformAmount = $totalAmount - $sellerAmount - $agentAmount;
 
     // 创建订单
     $createOrderStmt = $db->prepare("
@@ -184,13 +162,12 @@ try {
             buyer_user_id, buyer_user_type, buyer_wallet_id, buyer_info_json,
             seller_user_id, seller_user_type, seller_wallet_id, seller_info_json,
             agent_user_id, agent_amount,
-            second_agent_user_id, second_agent_amount,
             total_amount, platform_amount, seller_amount,
             days, allow_renew, order_json,
             status, created_at, updated_at
         )
         VALUES
-        (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
+        (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())
     ");
     $createOrderStmt->execute([
         $offerId,
@@ -204,8 +181,6 @@ try {
         $offer['content_json'],
         $agentUserId,
         $agentAmount,
-        $secondAgentUserId,
-        $secondAgentAmount,
         $totalAmount,
         $platformAmount,
         $sellerAmount,

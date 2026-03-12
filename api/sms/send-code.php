@@ -25,8 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // 加载必要的文件
 require_once __DIR__ . '/../../core/Response.php';
 require_once __DIR__ . '/../../config/smsconf.php';
+$path = __DIR__ . '/../../vendor/autoload.php';
 
-$path = __DIR__ . '\..\..\vendor\autoload.php';
 if (file_exists($path)) {
     require_once $path;
 } else {

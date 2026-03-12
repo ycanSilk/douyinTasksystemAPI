@@ -56,6 +56,53 @@ $db = Database::connect();
 $auth = new AuthMiddleware($db);
 $currentUser = $auth->authenticateC();
 
+// 检查用户的一级和二级邀请人是否是大团团长
+// 返回值：true表示不允许提现（一级或二级邀请人中有大团团长），false表示允许提现
+function hasLargeGroupAgentInUpperChain($db, $userId) {
+    // 查询当前用户信息，获取一级邀请人
+    $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
+    $stmt->execute([$userId]);
+    $currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$currentUser || !$currentUser['parent_id']) {
+        return false; // 没有一级邀请人，允许提现
+    }
+    
+    // 查询一级邀请人信息
+    $stmt = $db->prepare("SELECT id, username, is_agent, parent_id FROM c_users WHERE id = ?");
+    $stmt->execute([$currentUser['parent_id']]);
+    $firstLevelUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$firstLevelUser) {
+        return false; // 一级邀请人不存在，允许提现
+    }
+    
+    // 检查一级邀请人是否是大团团长
+    if ($firstLevelUser['is_agent'] == 3) {
+        return true; // 一级邀请人是大团团长，不允许提现
+    }
+    
+    // 查询二级邀请人信息
+    if (!$firstLevelUser['parent_id']) {
+        return false; // 没有二级邀请人，允许提现
+    }
+    
+    $stmt = $db->prepare("SELECT id, username, is_agent FROM c_users WHERE id = ?");
+    $stmt->execute([$firstLevelUser['parent_id']]);
+    $secondLevelUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$secondLevelUser) {
+        return false; // 二级邀请人不存在，允许提现
+    }
+    
+    // 检查二级邀请人是否是大团团长
+    if ($secondLevelUser['is_agent'] == 3) {
+        return true; // 二级邀请人是大团团长，不允许提现
+    }
+    
+    return false; // 一级和二级邀请人都不是大团团长，允许提现
+}
+
 // 获取请求参数
 $input = json_decode(file_get_contents('php://input'), true);
 $amount = $input['amount'] ?? 0;
@@ -114,12 +161,49 @@ if (empty($accountName)) {
 
 try {
     // 查询C端用户信息
-    $stmt = $db->prepare("SELECT wallet_id, username FROM c_users WHERE id = ?");
+    $stmt = $db->prepare("SELECT wallet_id, username, is_agent FROM c_users WHERE id = ?");
     $stmt->execute([$currentUser['user_id']]);
     $cUser = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$cUser) {
         Response::error('用户信息异常', $errorCodes['USER_NOT_FOUND']);
+    }
+    
+    // 检查用户是否在大团团长的2级邀请链中
+    // 业务规则：
+    // 1. 大团团长本人可以提现
+    // 2. 大团团长直接邀请的一级用户无法提现
+    // 3. 大团团长间接邀请的二级用户无法提现
+    // 4. 三级及以上邀请用户（其一级和二级邀请人都不是大团团长）可以正常提现
+    $userAgentLevel = (int)($cUser['is_agent'] ?? 0);
+    
+    // 添加调试日志
+    error_log("=== 提现权限检查开始 ===");
+    error_log("用户ID: " . $currentUser['user_id']);
+    error_log("用户名: " . $cUser['username']);
+    error_log("用户代理等级: " . $userAgentLevel);
+    
+    // 判断用户是否是大团团长
+    $isLargeGroupAgent = ($userAgentLevel == 3);
+    error_log("是否为大团团长: " . ($isLargeGroupAgent ? '是' : '否'));
+    
+    if ($isLargeGroupAgent) {
+        error_log("大团团长本人，允许提现");
+        error_log("=== 提现权限检查结束 ===");
+    } else {
+        // 检查一级和二级邀请人中是否有大团团长
+        $hasLargeGroupInUpperChain = hasLargeGroupAgentInUpperChain($db, $currentUser['user_id']);
+        error_log("一级或二级邀请人中是否有大团团长: " . ($hasLargeGroupInUpperChain ? '是' : '否'));
+        
+        // 如果一级或二级邀请人中有大团团长，则不允许提现
+        if ($hasLargeGroupInUpperChain) {
+            error_log("一级或二级邀请人中有大团团长，不允许提现");
+            error_log("=== 提现权限检查结束 ===");
+            Response::error('您的一级或二级邀请人中有大团团长，不允许提现', $errorCodes['WITHDRAW_NOT_ALLOWED']);
+        } else {
+            error_log("一级和二级邀请人中都没有大团团长，允许提现");
+            error_log("=== 提现权限检查结束 ===");
+        }
     }
     
     // 查询钱包当前余额

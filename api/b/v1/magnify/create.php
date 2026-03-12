@@ -31,12 +31,10 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
-// 禁止跨域
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: X-Token, Content-Type');
 
-// 只允许 POST 请求
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode([
@@ -53,15 +51,13 @@ require_once __DIR__ . '/../../../../core/Response.php';
 
 $errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
 
-// 数据库连接
 $db = Database::connect();
 
-// Token 认证（必须是 B端用户）
 $auth = new AuthMiddleware($db);
 $currentUser = $auth->authenticateB();
 
-// 获取请求参数
 $input = json_decode(file_get_contents('php://input'), true);
+
 $videoUrl = trim($input['video_url'] ?? '');
 $deadline = $input['deadline'] ?? 0;
 $taskCount = $input['task_count'] ?? 0;
@@ -70,7 +66,6 @@ $totalPrice = $input['total_price'] ?? 0;
 $title = trim($input['title'] ?? '');
 $recommendMarks = $input['recommend_marks'] ?? [];
 
-// 参数校验
 if (empty($videoUrl)) {
     Response::error('视频链接不能为空', $errorCodes['INVALID_PARAMS']);
 }
@@ -99,17 +94,14 @@ if (empty($title)) {
     Response::error('任务标题不能为空', $errorCodes['INVALID_PARAMS']);
 }
 
-// 校验 recommend_marks 格式
 if (!is_array($recommendMarks)) {
     Response::error('推荐标记格式错误', $errorCodes['INVALID_PARAMS']);
 }
 
-// 限制评论推荐数量为仅包含一组评论
 if (count($recommendMarks) !== 1) {
     Response::error('推荐标记数量必须为1组', $errorCodes['INVALID_PARAMS']);
 }
 
-// 校验每组数据格式
 foreach ($recommendMarks as $index => $mark) {
     if (!is_array($mark)) {
         Response::error('推荐标记格式错误', $errorCodes['INVALID_PARAMS']);
@@ -120,14 +112,12 @@ foreach ($recommendMarks as $index => $mark) {
     }
 }
 
-// 校验总价
 $calculatedTotalPrice = (float)$unitPrice * (int)$taskCount;
 if (abs($calculatedTotalPrice - (float)$totalPrice) > 0.01) {
     Response::error('总价计算错误，应为 ' . number_format($calculatedTotalPrice, 2), $errorCodes['INVALID_PARAMS']);
 }
 
 try {
-    // 查询B端用户信息（获取钱包ID和用户名）
     $stmt = $db->prepare("SELECT wallet_id, username FROM b_users WHERE id = ?");
     $stmt->execute([$currentUser['user_id']]);
     $bUser = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -136,7 +126,6 @@ try {
         Response::error('用户信息异常', $errorCodes['USER_NOT_FOUND']);
     }
     
-    // 查询钱包余额
     $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
     $stmt->execute([$bUser['wallet_id']]);
     $wallet = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -145,30 +134,26 @@ try {
         Response::error('钱包不存在', $errorCodes['WALLET_NOT_FOUND']);
     }
     
-    // 将总价转换为分（元 -> 分）
     $totalPriceInCents = (int)round($calculatedTotalPrice * 100);
     $beforeBalance = (int)$wallet['balance'];
     
-    // 校验余额是否足够
     if ($beforeBalance < $totalPriceInCents) {
         $needAmount = number_format($totalPriceInCents / 100, 2);
         $currentAmount = number_format($beforeBalance / 100, 2);
         Response::error("余额不足，当前余额：¥{$currentAmount}，需要：¥{$needAmount}", $errorCodes['WALLET_INSUFFICIENT_BALANCE']);
     }
     
-    // 开启事务
     $db->beginTransaction();
     
-    // 1. 创建放大镜任务
     $stmt = $db->prepare(" 
         INSERT INTO magnifying_glass_tasks (
             b_user_id, task_id, template_id, video_url, deadline, 
             recommend_marks, task_count, task_done, task_doing, task_reviewing, 
-            unit_price, total_price, status, title
-        ) VALUES (?, NULL, 3, ?, ?, ?, ?, 0, 0, 0, ?, ?, 2, ?)
+            unit_price, total_price, status, title, view_status
+        ) VALUES (?, NULL, 3, ?, ?, ?, ?, 0, 0, 0, ?, ?, 2, ?, 0)
     ");
     
-    $stmt->execute([
+    $executeResult = $stmt->execute([
         $currentUser['user_id'],
         $videoUrl,
         $deadline,
@@ -179,14 +164,20 @@ try {
         $title
     ]);
     
+    if (!$executeResult) {
+        throw new Exception('创建任务失败: ' . implode(', ', $stmt->errorInfo()));
+    }
+    
     $taskId = $db->lastInsertId();
     
-    // 2. 扣除钱包余额
     $afterBalance = $beforeBalance - $totalPriceInCents;
     $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
-    $stmt->execute([$afterBalance, $bUser['wallet_id']]);
+    $executeResult = $stmt->execute([$afterBalance, $bUser['wallet_id']]);
     
-    // 3. 记录钱包流水
+    if (!$executeResult) {
+        throw new Exception('更新余额失败: ' . implode(', ', $stmt->errorInfo()));
+    }
+    
     $remark = "发布放大镜任务【{$title}】{$taskCount}个任务，扣除 ¥" . number_format($calculatedTotalPrice, 2);
     $stmt = $db->prepare(" 
         INSERT INTO wallets_log (
@@ -195,7 +186,7 @@ try {
             related_type, related_id, remark
         ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, 'task', ?, ?)
     ");
-    $stmt->execute([
+    $executeResult = $stmt->execute([
         $bUser['wallet_id'],
         $currentUser['user_id'],
         $bUser['username'],
@@ -206,10 +197,12 @@ try {
         $remark
     ]);
     
-    // 提交事务
+    if (!$executeResult) {
+        throw new Exception('记录流水失败: ' . implode(', ', $stmt->errorInfo()));
+    }
+    
     $db->commit();
     
-    // 获取创建的任务信息
     $stmt = $db->prepare(" 
         SELECT id, b_user_id, task_id, template_id, video_url, deadline, 
                recommend_marks, task_count, task_done, task_doing, task_reviewing, 
@@ -220,12 +213,10 @@ try {
     $stmt->execute([$taskId]);
     $task = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // 处理JSON字段
     if ($task && !empty($task['recommend_marks'])) {
         $task['recommend_marks'] = json_decode($task['recommend_marks'], true);
     }
     
-    // 状态文本映射
     $statusMap = [
         0 => '已发布',
         1 => '进行中',
@@ -233,13 +224,12 @@ try {
         3 => '已取消'
     ];
     $task['status_text'] = $statusMap[$task['status']] ?? '未知状态';
-    $task['price'] = $task['unit_price']; // 保持与现有接口一致
+    $task['price'] = $task['unit_price'];
     
-    // 返回成功响应
     Response::success([
         'id' => (int)$task['id'],
         'b_user_id' => (int)$task['b_user_id'],
-        'combo_task_id' => null, // 保持与现有接口一致
+        'combo_task_id' => null,
         'parent_task_id' => $task['task_id'] ? (int)$task['task_id'] : null,
         'template_id' => (int)$task['template_id'],
         'video_url' => $task['video_url'],
@@ -266,10 +256,16 @@ try {
     ], '放大镜任务发布成功');
     
 } catch (PDOException $e) {
-    // 回滚事务
     if ($db->inTransaction()) {
         $db->rollBack();
     }
     
-    Response::error('任务发布失败', $errorCodes['TASK_CREATE_FAILED'], 500);
+    Response::error('任务发布失败: ' . $e->getMessage(), $errorCodes['TASK_CREATE_FAILED'], 500);
+} catch (Exception $e) {
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    
+    Response::error('任务发布失败: ' . $e->getMessage(), $errorCodes['TASK_CREATE_FAILED'], 500);
 }
+?>

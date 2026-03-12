@@ -100,59 +100,68 @@ class WebSocketManager {
     // 建立WebSocket连接
     connect() {
         console.log('=== 建立WebSocket连接 ===');
+        console.log('WebSocket连接开始时间:', new Date().toISOString());
         try {
             // 直接使用固定的WebSocket URL
             const wsUrl = 'ws://localhost:8080';
             
-            console.log('连接到WebSocket服务器:', wsUrl);
-
+            console.log('WebSocket URL:', wsUrl);
+            console.log('尝试连接...');
             
             // 创建WebSocket连接
-            console.log('创建WebSocket连接');
             this.socket = new WebSocket(wsUrl);
+            console.log('WebSocket对象已创建');
             
             // 设置onopen事件处理程序
             this.socket.onopen = (event) => {
-                console.log('✅ WebSocket连接已建立');
+                console.log('✅ WebSocket连接已建立 - 连接成功');
+                console.log('连接建立时间:', new Date().toISOString());
+                console.log('连接状态:', this.socket.readyState);
                 this.connected = true;
                 this.reconnectAttempts = 0;
                 
-                // 如果有token，发送token进行认证
-                if (token) {
-                    console.log('发送token进行认证');
-                    this.send(JSON.stringify({ type: 'auth', token: token }));
-                }
-                
                 // 连接成功后发送队列中的消息
-                console.log('发送队列中的消息');
+                console.log('准备发送队列中的消息');
                 this.flushMessageQueue();
             };
             
             // 设置onmessage事件处理程序
             this.socket.onmessage = (event) => {
-                console.log('接收到WebSocket消息');
+                console.log('=== 🔔 接收到WebSocket消息 ===');
+                console.log('接收时间:', new Date().toISOString());
+                console.log('原始消息数据(event.data):', event.data);
+                console.log('消息数据类型:', typeof event.data);
+                console.log('消息数据长度:', event.data ? event.data.length : 0);
+                
                 this.handleMessage(event.data);
             };
             
             // 设置onclose事件处理程序
             this.socket.onclose = (event) => {
-                console.log('❌ WebSocket连接已关闭:', event.code, event.reason);
+                console.log('❌ WebSocket连接已关闭');
+                console.log('关闭时间:', new Date().toISOString());
+                console.log('关闭状态码:', event.code);
+                console.log('关闭原因:', event.reason);
                 this.connected = false;
-                console.log('尝试重新连接');
+                console.log('准备尝试重新连接...');
                 this.attemptReconnect();
             };
             
             // 设置onerror事件处理程序
             this.socket.onerror = (error) => {
-                console.error('❌ WebSocket错误:', error);
+                console.error('❌ WebSocket发生错误');
+                console.error('错误时间:', new Date().toISOString());
+                console.error('错误详情:', error);
                 this.connected = false;
-                console.log('尝试重新连接');
+                console.log('准备尝试重新连接...');
                 this.attemptReconnect();
             };
         } catch (error) {
-            console.error('❌ WebSocket连接失败:', error);
+            console.error('❌ WebSocket连接异常');
+            console.error('异常时间:', new Date().toISOString());
+            console.error('异常详情:', error);
             this.connected = false;
-            console.log('尝试重新连接');
+            console.log('准备尝试重新连接...');
             this.attemptReconnect();
         }
     }
@@ -213,46 +222,76 @@ class WebSocketManager {
 
     // 处理接收到的消息
     handleMessage(data) {
-        console.log('=== 处理接收到的消息 ===');
+        console.log('=== 🚀 开始处理WebSocket消息 ===');
+        console.log('处理开始时间:', new Date().toISOString());
+        console.log('原始数据:', data);
+        
         try {
-            console.log('接收到WebSocket原始数据:', data);
+            console.log('开始解析JSON数据...');
             const message = JSON.parse(data);
-            console.log('解析后的WebSocket消息:', message);
+            console.log('✅ JSON解析成功');
+            
+            console.log('解析后的消息对象:', message);
+            console.log('消息JSON字符串:', JSON.stringify(message, null, 2));
+            
+            // 输出消息类型和完整数据结构
+            console.log('消息类型 (message.type):', message.type);
+            console.log('消息完整数据 (JSON.stringify):', JSON.stringify(message, null, 2));
             
             // 处理审核任务通知
             if (message.type === 'audit_notification') {
-                console.log('处理审核任务通知:', message.data);
+                console.log('检测到审核任务通知类型');
+                console.log('消息数据 (message.data):', message.data);
                 this.handleAuditNotification(message.data);
-            } else if (message.type === 'auth_response') {
-                console.log('处理认证响应:', message);
             } else {
-                console.log('处理未知类型的消息:', message.type);
+                console.log('⚠️ 未知消息类型:', message.type);
             }
+            
+            console.log('消息处理完成');
         } catch (error) {
-            console.error('❌ 解析WebSocket消息失败:', error);
+            console.error('❌ 解析WebSocket消息失败');
+            console.error('错误:', error);
             console.error('原始数据:', data);
         }
     }
 
     // 处理审核通知
     handleAuditNotification(data) {
-        console.log('=== 处理审核通知 ===');
-        console.log('后端传递的审核通知数据:', data);
+        console.log('=== 📋 开始处理审核通知 ===');
+        console.log('处理时间:', new Date().toISOString());
+        console.log('接收到的完整数据:', data);
+        console.log('数据类型:', typeof data);
+        console.log('数据JSON:', JSON.stringify(data, null, 2));
+        
+        // 输出完整的审核通知数据结构
+        console.log('审核通知完整数据 (JSON):', JSON.stringify(data, null, 2));
+        
+        // 检查是否有 detection_result 字段
+        console.log('检查 detection_result 字段是否存在...');
+        console.log('data.detection_result:', data.detection_result);
         
         if (data.detection_result) {
             const detectionResult = data.detection_result;
             console.log('审核任务检测结果:', detectionResult);
+            
+            // 输出每个检测结果的详细信息
+            console.log('=== 详细检测结果分析 ===');
+            for (const [key, value] of Object.entries(detectionResult)) {
+                console.log(`检测项: ${key} = ${value}`);
+                console.log(`类型说明: ${this.getDetectionTypeDescription(key)}`);
+            }
             
             // 检查是否有新的审核任务
             let hasNewTasks = false;
             let totalTasks = 0;
             
             // 更新导航栏角标
-            console.log('开始更新导航栏角标');
+            console.log('开始更新导航栏角标...');
             for (const [key, value] of Object.entries(detectionResult)) {
                 console.log(`处理任务类型: ${key}, 数量: ${value}`);
                 if (this.badgeMap[key]) {
                     const panelType = this.badgeMap[key];
+                    console.log(`映射到面板类型: ${panelType}`);
                     console.log(`更新 ${panelType} 角标，数量: ${value}`);
                     this.updateBadge(panelType, value);
                     if (value > 0) {
@@ -260,7 +299,7 @@ class WebSocketManager {
                         totalTasks += value;
                     }
                 } else {
-                    console.log(`未知任务类型: ${key}`);
+                    console.log(`未知任务类型: ${key} (不在badgeMap中)`);
                 }
             }
             
@@ -268,15 +307,29 @@ class WebSocketManager {
             
             // 如果有新任务，先模拟用户点击获取权限，然后播放提示音
             if (hasNewTasks) {
-                console.log('检测到新任务，准备模拟用户点击获取音频播放权限');
+                console.log('检测到新任务，准备播放提示音...');
                 this.simulateUserInteraction(() => {
                     console.log('模拟点击完成，准备播放提示音');
                     this.playNotificationSound();
                 });
             }
         } else {
-            console.warn('❌ 审核通知数据中没有detection_result字段:', data);
+            console.warn('⚠️ 审核通知数据中没有 detection_result 字段');
+            console.warn('可用字段:', Object.keys(data));
         }
+        
+        console.log('审核通知处理完成');
+    }
+    
+    // 获取检测类型说明
+    getDetectionTypeDescription(key) {
+        const descriptions = {
+            'recharge': '充值审核任务',
+            'withdraw': '提现审核任务', 
+            'agent': '代理审核任务',
+            'magnifier': '放大镜审核任务'
+        };
+        return descriptions[key] || '未知类型';
     }
 
     // 模拟用户交互以获取音频播放权限

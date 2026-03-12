@@ -52,7 +52,14 @@ function renderCUsersTable(list, pagination) {
     
     list.forEach(u => {
         const statusBadge = u.status === 1 ? '<span class="badge badge-success">正常</span>' : '<span class="badge badge-danger">禁用</span>';
-        const agentBadge = u.is_agent === 2 ? '<span class="badge badge-warning"><i class="ri-vip-diamond-fill"></i> 高级团长</span>' : u.is_agent === 1 ? '<span class="badge badge-success"><i class="ri-vip-crown-fill"></i> 普通团长</span>' : '<span class="badge badge-neutral">普通用户</span>';
+        let agentBadge = '<span class="badge badge-neutral">普通用户</span>';
+        if (u.is_agent === 3) {
+            agentBadge = '<span class="badge badge-danger"><i class="ri-vip-crown-fill"></i> 大团团长</span>';
+        } else if (u.is_agent === 2) {
+            agentBadge = '<span class="badge badge-warning"><i class="ri-vip-diamond-fill"></i> 高级团长</span>';
+        } else if (u.is_agent === 1) {
+            agentBadge = '<span class="badge badge-success"><i class="ri-vip-crown-fill"></i> 普通团长</span>';
+        }
         // 处理封禁状态显示
         let blockedStatusText = '正常';
         let blockedStatusClass = 'badge-neutral';
@@ -142,6 +149,7 @@ function editCUser(user) {
                     <option value="0" ${user.is_agent === 0 ? 'selected' : ''}>普通用户</option>
                     <option value="1" ${user.is_agent === 1 ? 'selected' : ''}>普通团长</option>
                     <option value="2" ${user.is_agent === 2 ? 'selected' : ''}>高级团长</option>
+                    <option value="3" ${user.is_agent === 3 ? 'selected' : ''}>大团团长</option>
                 </select>
             </div>
             <div class="form-group">

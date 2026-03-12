@@ -236,14 +236,42 @@ try {
         $stmt->execute([$dailyStatsId]);
         
         // 10. 计算佣金（从模板读取固定金额）
-        // 查询b_task获取template_id和stage
-        $stmt = $db->prepare("SELECT template_id, stage FROM b_tasks WHERE id = ?");
+        // 查询b_task获取template_id、stage和unit_price
+        $stmt = $db->prepare("SELECT template_id, stage, unit_price FROM b_tasks WHERE id = ?");
         $stmt->execute([$bTaskId]);
         $bTaskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$bTaskInfo) {
             $db->rollBack();
             Response::error('任务信息不存在', $errorCodes['TASK_NOT_FOUND']);
+        }
+
+        // 获取派单单价
+        $taskUnitPrice = (float)($bTaskInfo['unit_price'] ?? 0);
+
+        // 检查用户的上级代理中是否有大团团长
+        function hasLargeGroupAgent($db, $userId, $maxLevel = 2) {
+            $currentUserId = $userId;
+            $level = 0;
+            
+            while ($level < $maxLevel) {
+                $stmt = $db->prepare("SELECT parent_id, is_agent FROM c_users WHERE id = ?");
+                $stmt->execute([$currentUserId]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$user || !$user['parent_id']) {
+                    break;
+                }
+                
+                if ($user['is_agent'] == 3) {
+                    return true;
+                }
+                
+                $currentUserId = $user['parent_id'];
+                $level++;
+            }
+            
+            return false;
         }
 
         // 查询模板佣金配置
@@ -280,6 +308,14 @@ try {
             // 二级代理佣金复用一级代理佣金字段
             $secondAgentCommissionAmount = $agentCommissionAmount;
             $secondSeniorAgentCommissionAmount = $seniorAgentCommissionAmount;
+        }
+
+        // 大团团长佣金计算逻辑
+        $userAgentLevel = (int)($cUser['is_agent'] ?? 0);
+        if ($userAgentLevel == 3) {
+            // 当前用户是大团团长，使用大团佣金比例
+            $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+            $cUserCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
         }
         
         // 11. 查询C端用户钱包
@@ -329,7 +365,7 @@ try {
 
         if (!empty($cUser['parent_id'])) {
             // 查询一级上级用户
-            $stmt = $db->prepare("
+            $stmt = $db->prepare(" 
                 SELECT id, username, wallet_id, is_agent, parent_id
                 FROM c_users
                 WHERE id = ?
@@ -340,8 +376,15 @@ try {
             $parentAgentLevel = $parentUser ? (int)$parentUser['is_agent'] : 0;
 
             if ($parentUser && $parentAgentLevel >= 1) {
-                // 高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
-                if ($parentAgentLevel === 2) {
+                // 检查是否有大团团长
+                $hasLargeGroupAgent = hasLargeGroupAgent($db, $cUser['id']);
+                
+                // 大团团长(3)用大团佣金比例，高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
+                if ($parentAgentLevel === 3) {
+                    // 一级上级是大团团长，使用大团佣金比例
+                    $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+                    $agentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+                } elseif ($parentAgentLevel === 2) {
                     $agentCommission = $seniorAgentCommissionAmount;
                 } else {
                     $agentCommission = $agentCommissionAmount;
@@ -364,7 +407,7 @@ try {
                     
                     // 记录团长钱包流水
                     $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得一级团长佣金，任务ID：{$bTaskId}";
-                    $stmt = $db->prepare("
+                    $stmt = $db->prepare(" 
                         INSERT INTO wallets_log (
                             wallet_id, user_id, username, user_type, type, 
                             amount, before_balance, after_balance, 
@@ -385,7 +428,7 @@ try {
                 
                 // 新增：查询二级上级用户
                 if (!empty($parentUser['parent_id'])) {
-                    $stmt = $db->prepare("
+                    $stmt = $db->prepare(" 
                         SELECT id, username, wallet_id, is_agent
                         FROM c_users
                         WHERE id = ?
@@ -396,8 +439,12 @@ try {
                     $secondParentAgentLevel = $secondParentUser ? (int)$secondParentUser['is_agent'] : 0;
 
                     if ($secondParentUser && $secondParentAgentLevel >= 1) {
-                        // 高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
-                        if ($secondParentAgentLevel === 2) {
+                        // 大团团长(3)用大团佣金比例，高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
+                        if ($secondParentAgentLevel === 3) {
+                            // 二级上级是大团团长，使用大团佣金比例
+                            $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+                            $secondAgentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+                        } elseif ($secondParentAgentLevel === 2) {
                             $secondAgentCommission = $secondSeniorAgentCommissionAmount;
                         } else {
                             $secondAgentCommission = $secondAgentCommissionAmount;
@@ -420,7 +467,7 @@ try {
                             
                             // 记录二级团长钱包流水
                             $secondAgentRemark = "下级用户 {$parentUser['username']} 的团队成员完成任务，获得二级团长佣金，任务ID：{$bTaskId}";
-                            $stmt = $db->prepare("
+                            $stmt = $db->prepare(" 
                                 INSERT INTO wallets_log (
                                     wallet_id, user_id, username, user_type, type, 
                                     amount, before_balance, after_balance, 

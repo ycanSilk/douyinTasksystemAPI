@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 // 引入必要的文件
+// 引入必要的文件
 require_once __DIR__ . '/../../../core/Database.php';
 require_once __DIR__ . '/../../../core/Response.php';
 require_once __DIR__ . '/../../auth/AuthMiddleware.php';

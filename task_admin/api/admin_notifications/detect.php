@@ -19,20 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/../../auth/AuthMiddleware.php';
 require_once __DIR__ . '/../../../core/Database.php';
-require_once __DIR__ . '/../../../core/Token.php';
 
-// 认证中间件 - 为WebSocket服务器添加特殊认证
-// 检查是否来自WebSocket服务器的请求
-$isWebSocketRequest = isset($_GET['ws_server']) && $_GET['ws_server'] === 'true';
-
-if (!$isWebSocketRequest) {
-    AdminAuthMiddleware::authenticate();
-} else {
-    // WebSocket服务器请求，跳过认证
-    error_log('WebSocket server detected, skipping authentication');
-}
+// 直接跳过认证，因为这是后端内部调用的接口
 
 // 初始化数据库连接
 $db = Database::connect();

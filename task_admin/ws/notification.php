@@ -21,7 +21,7 @@ if (php_sapi_name() === 'cli') {
     // 检查是否是 WebSocket 连接请求
     if (!isset($_SERVER['HTTP_UPGRADE']) || $_SERVER['HTTP_UPGRADE'] !== 'websocket') {
         http_response_code(400);
-        echo 'Not a WebSocket request';
+        echo '不是 WebSocket 请求';
         exit(0);
     }
 }
@@ -32,7 +32,6 @@ class WebSocketServer {
     private $clients = [];
     private $lastTaskCheckTime = 0;
     private $checkInterval = 60; // 检查间隔（秒）
-    private $token = null; // 存储认证token
     
     public function __construct() {
         // 创建 WebSocket 服务器
@@ -49,12 +48,12 @@ class WebSocketServer {
         $port = 8080;
         
         if (!socket_bind($this->server, $address, $port)) {
-            die('Could not bind socket: ' . socket_strerror(socket_last_error()));
+            die('绑定 socket 失败: ' . socket_strerror(socket_last_error()));
         }
         
         // 开始监听
         if (!socket_listen($this->server, 5)) {
-            die('Could not listen on socket: ' . socket_strerror(socket_last_error()));
+            die('监听 socket 失败: ' . socket_strerror(socket_last_error()));
         }
         
         echo "WebSocket server started on ws://$address:$port\n";
@@ -72,7 +71,7 @@ class WebSocketServer {
             $activity = socket_select($readSockets, $writeSockets, $errorSockets, 1);
             
             if ($activity === false) {
-                echo 'Socket select error: ' . socket_strerror(socket_last_error()) . "\n";
+                echo 'Select 错误: ' . socket_strerror(socket_last_error()) . "\n";
                 continue;
             }
             
@@ -92,7 +91,8 @@ class WebSocketServer {
             
             // 处理客户端消息
             foreach ($readSockets as $client) {
-                $data = socket_read($client, 1024);
+                // 尝试读取数据，捕获可能的错误
+                $data = @socket_read($client, 1024);
                 
                 if ($data === false || $data === '') {
                     // 客户端断开连接
@@ -100,7 +100,7 @@ class WebSocketServer {
                     if ($key !== false) {
                         unset($this->clients[$key]);
                         socket_close($client);
-                        echo "Client disconnected\n";
+                        echo "连接断开\n";
                     }
                     continue;
                 }
@@ -108,27 +108,7 @@ class WebSocketServer {
                 // 处理 WebSocket 消息
                 $message = $this->decodeMessage($data);
                 if ($message) {
-                    echo "Received message: $message\n";
-                    
-                    // 处理认证消息
-                    try {
-                        $parsedMessage = json_decode($message, true);
-                        if (isset($parsedMessage['type']) && $parsedMessage['type'] === 'auth' && isset($parsedMessage['token'])) {
-                            $this->token = $parsedMessage['token'];
-                            echo "Authenticated with token: $this->token\n";
-                            
-                            // 发送认证成功响应
-                            $authResponse = [
-                                'type' => 'auth_response',
-                                'status' => 'success',
-                                'message' => 'Authentication successful'
-                            ];
-                            $encodedResponse = $this->encodeMessage(json_encode($authResponse));
-                            socket_write($client, $encodedResponse, strlen($encodedResponse));
-                        }
-                    } catch (Exception $e) {
-                        echo 'Error processing auth message: ' . $e->getMessage() . "\n";
-                    }
+                    echo "收到消息: $message\n";
                 }
             }
             
@@ -146,29 +126,25 @@ class WebSocketServer {
         $request = socket_read($client, 1024);
         
         // 提取 Sec-WebSocket-Key
-        preg_match('/Sec-WebSocket-Key: (.*)\r\n/', $request, $matches);
-        $key = $matches[1];
-        
-        // 提取 token（如果存在）
-        if (preg_match('/X-Token: (.*)\r\n/', $request, $tokenMatches)) {
-            $this->token = $tokenMatches[1];
-            echo "Token received: $this->token\n";
-        } elseif (preg_match('/Authorization: Bearer (.*)\r\n/', $request, $authMatches)) {
-            $this->token = $authMatches[1];
-            echo "Bearer token received: $this->token\n";
+        if (preg_match('/Sec-WebSocket-Key: (.*)\r\n/', $request, $matches)) {
+            $key = $matches[1];
+            
+            // 生成 Sec-WebSocket-Accept
+            $acceptKey = base64_encode(sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
+            
+            // 构建握手响应
+            $response = "HTTP/1.1 101 Switching Protocols\r\n";
+            $response .= "Upgrade: websocket\r\n";
+            $response .= "Connection: Upgrade\r\n";
+            $response .= "Sec-WebSocket-Accept: $acceptKey\r\n\r\n";
+            
+            // 发送响应
+            socket_write($client, $response, strlen($response));
+        } else {
+            // 无法提取 Sec-WebSocket-Key，关闭连接
+            echo "提取 Sec-WebSocket-Key 失败\n";
+            socket_close($client);
         }
-        
-        // 生成 Sec-WebSocket-Accept
-        $acceptKey = base64_encode(sha1($key . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11', true));
-        
-        // 构建握手响应
-        $response = "HTTP/1.1 101 Switching Protocols\r\n";
-        $response .= "Upgrade: websocket\r\n";
-        $response .= "Connection: Upgrade\r\n";
-        $response .= "Sec-WebSocket-Accept: $acceptKey\r\n\r\n";
-        
-        // 发送响应
-        socket_write($client, $response, strlen($response));
     }
     
     private function decodeMessage($data) {
@@ -209,16 +185,11 @@ class WebSocketServer {
     private function checkAuditTasks() {
         try {
             // 调用 detect.php 接口获取真实的审核任务数据
-            $url = 'http://localhost:28806/task_admin/api/admin_notifications/detect.php';
+            // 使用正确的HTTP服务器端口（8000）
+            $url = 'http://localhost:8000/task_admin/api/admin_notifications/detect.php';
             
-            // 添加WebSocket服务器标识，跳过认证
+            // 添加WebSocket服务器标识
             $url .= '?ws_server=true';
-            
-            // 如果有token，添加到URL参数中
-            if ($this->token) {
-                $url .= '&token=' . urlencode($this->token);
-                echo "Using token for authentication\n";
-            }
             
             echo "Calling detect.php at: $url\n";
             
@@ -253,7 +224,7 @@ class WebSocketServer {
             // 移除 curl_close() 调用，因为在 PHP 8.0+ 中它已无效果
             // curl_close($ch);
             
-            echo "Response from detect.php: $response\n";
+            echo "从 detect.php 收到响应: $response\n";
             
             if ($response) {
                 $data = json_decode($response, true);
@@ -267,16 +238,24 @@ class WebSocketServer {
                     
                     echo "Detection result: " . print_r($detectionResult, true) . "\n";
                     
-                    // 检查是否有审核任务
+                    // 检查是否有审核任务（使用英文key）
                     $hasTasks = false;
                     $checkFields = ['recharge', 'withdraw', 'agent', 'magnifier'];
                     
+                    echo "开始检查审核任务...\n";
+                    echo "检测字段列表: " . implode(', ', $checkFields) . "\n";
+                    
                     foreach ($checkFields as $field) {
+                        $fieldValue = isset($detectionResult[$field]) ? $detectionResult[$field] : 'not set';
+                        echo "检查字段: $field, 值: $fieldValue\n";
+                        
                         if (isset($detectionResult[$field]) && $detectionResult[$field] > 0) {
                             $hasTasks = true;
-                            break;
+                            echo "✅ 检测到审核任务: $field = " . $detectionResult[$field] . "\n";
                         }
                     }
+                    
+                    echo "是否有审核任务: " . ($hasTasks ? '是' : '否') . "\n";
                     
                     // 只有当有审核任务时才推送通知
                     if ($hasTasks) {

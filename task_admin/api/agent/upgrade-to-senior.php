@@ -52,10 +52,10 @@ try {
         exit;
     }
 
-    if (!in_array($level, [1, 2])) {
+    if (!in_array($level, [1, 2, 3])) {
         echo json_encode([
             'code' => 400,
-            'message' => '目标等级必须是 1（团长）或 2（高级团长）',
+            'message' => '目标等级必须是 1（团长）、2（高级团长）或 3（大团团长）',
             'data' => [],
             'timestamp' => time()
         ], JSON_UNESCAPED_UNICODE);
@@ -91,8 +91,8 @@ try {
     // 检查用户当前状态
     $currentLevel = (int)$user['is_agent'];
     if ($currentLevel >= $level) {
-        $levelText = $level === 1 ? '团长' : '高级团长';
-        $currentLevelText = $currentLevel === 0 ? '普通用户' : ($currentLevel === 1 ? '团长' : '高级团长');
+        $levelText = $level === 1 ? '团长' : ($level === 2 ? '高级团长' : '大团团长');
+        $currentLevelText = $currentLevel === 0 ? '普通用户' : ($currentLevel === 1 ? '团长' : ($currentLevel === 2 ? '高级团长' : '大团团长'));
         echo json_encode([
             'code' => 400,
             'message' => "用户当前已是{$currentLevelText}，无法升级为{$levelText}",
@@ -127,7 +127,7 @@ try {
         $db->commit();
 
         // 返回成功响应
-        $levelText = $level === 1 ? '团长' : '高级团长';
+        $levelText = $level === 1 ? '团长' : ($level === 2 ? '高级团长' : '大团团长');
         echo json_encode([
             'code' => 0,
             'message' => "用户已成功升级为{$levelText}",
