@@ -1,23 +1,21 @@
-// 仪表板相关功能
-// 全局图表实例
-// 当前图表周期
-let currentChartPeriod = 7;
-
-// 是否显示数据级别
-let showDataSizeFormat = true;
-
-// 当前数据尺度
-let currentDataScale = 100;
+// 检查变量是否已存在，避免重复声明
+if (typeof currentChartPeriod === 'undefined') {
+    var currentChartPeriod = 7;
+    var showDataSizeFormat = true;
+    var currentDataScale = 100;
+}
 
 // 全局图表实例
-let miniTaskChart = null;
-let miniFinanceChart = null;
-let miniUserChart = null;
-let miniExpenseChart = null;
-let miniTicketChart = null;
-let mainTrendChart = null;
-let taskTypePieChartInstance = null;
-let financePieChartInstance = null;
+if (typeof miniTaskChart === 'undefined') {
+    var miniTaskChart = null;
+    var miniFinanceChart = null;
+    var miniUserChart = null;
+    var miniExpenseChart = null;
+    var miniTicketChart = null;
+    var mainTrendChart = null;
+    var taskTypePieChartInstance = null;
+    var financePieChartInstance = null;
+}
 
 // 切换图表周期
 function changeChartPeriod(period) {
@@ -74,169 +72,199 @@ function setDataScale(scale) {
 // 加载统计面板
 async function loadDashboard() {    
     try {
-        const apiUrl = `${API_BASE}/api/stats/dashboard.php?period=${currentChartPeriod}&scale=${currentDataScale}`;
+        const apiUrl = `/task_admin/api/stats/dashboard.php?period=${currentChartPeriod}&scale=${currentDataScale}`;
        
+       
+        // 使用传统的fetch方法
+        const token = sessionStorage.getItem('admin_token');
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token && { 'Authorization': `Bearer ${token}` })
+            }
+        });
         
-        const data = await apiRequest(apiUrl);
+        // 检查响应状态码
+        if (!response.ok) {
+            console.error('加载统计数据失败: 状态码', response.status, response.statusText);
+            showToast(`加载统计数据失败: ${response.status} ${response.statusText}`, 'error');
+            return;
+        }
         
-        if (data.code === 0) {
-            const d = data.data;
+        // 尝试解析JSON
+        try {
+            const data = await response.json();
             
-            // 任务核心模块
-            if (d.task_core) {
-                const statTotalSendTasks = document.getElementById('stat_total_send_tasks');
-                if (statTotalSendTasks) statTotalSendTasks.textContent = String(d.task_core.total_send_tasks ?? 0);
-                const statTotalExpiredTasks = document.getElementById('stat_total_expired_tasks');
-                if (statTotalExpiredTasks) statTotalExpiredTasks.textContent = String(d.task_core.total_expired_tasks ?? 0);
-                const statTotalReceiveTasks = document.getElementById('stat_total_receive_tasks');
-                if (statTotalReceiveTasks) statTotalReceiveTasks.textContent = String(d.task_core.total_receive_tasks ?? 0);
-                const statTotalPendingTasks = document.getElementById('stat_total_pending_tasks');
-                if (statTotalPendingTasks) statTotalPendingTasks.textContent = String(d.task_core.total_pending_tasks ?? 0);
-                const statTotalCompletedTasks = document.getElementById('stat_total_completed_tasks');
-                if (statTotalCompletedTasks) statTotalCompletedTasks.textContent = String(d.task_core.total_completed_tasks ?? 0);
-                const statTodayDoingTasks = document.getElementById('stat_today_doing_tasks');
-                if (statTodayDoingTasks) statTodayDoingTasks.textContent = String(d.task_core.today_doing_tasks ?? 0);
-                const statTodayReviewingTasks = document.getElementById('stat_today_reviewing_tasks');
-                if (statTodayReviewingTasks) statTodayReviewingTasks.textContent = String(d.task_core.today_reviewing_tasks ?? 0);
-                const statSingleTasks = document.getElementById('stat_single_tasks');
-                if (statSingleTasks) statSingleTasks.textContent = String(d.task_core.single_tasks ?? 0);
-                const statComboTasks = document.getElementById('stat_combo_tasks');
-                if (statComboTasks) statComboTasks.textContent = String(d.task_core.combo_tasks ?? 0);
-                const statMagnifierTasks = document.getElementById('stat_magnifier_tasks');
-                if (statMagnifierTasks) statMagnifierTasks.textContent = String(d.task_core.magnifier_tasks ?? 0);
-            } else {
-                console.warn('任务核心模块数据不存在');
-            }
-            
-            // 财务收支模块
-            if (d.finance) {
-                //充值收入
-                const statTotalRecharge = document.getElementById('stat_total_recharge');
-                if (statTotalRecharge) statTotalRecharge.textContent = '+' + (d.finance.total_recharge ?? '0.00');
+            if (data && data.code === 0) {
+                const d = data.data;
+                
+                // 任务核心模块
+                if (d.task_core) {
+                    const statTotalSendTasks = document.getElementById('stat_total_send_tasks');
+                    if (statTotalSendTasks) statTotalSendTasks.textContent = String(d.task_core.total_send_tasks ?? 0);
+                    const statTotalExpiredTasks = document.getElementById('stat_total_expired_tasks');
+                    if (statTotalExpiredTasks) statTotalExpiredTasks.textContent = String(d.task_core.total_expired_tasks ?? 0);
+                    const statTotalReceiveTasks = document.getElementById('stat_total_receive_tasks');
+                    if (statTotalReceiveTasks) statTotalReceiveTasks.textContent = String(d.task_core.total_receive_tasks ?? 0);
+                    const statTotalPendingTasks = document.getElementById('stat_total_pending_tasks');
+                    if (statTotalPendingTasks) statTotalPendingTasks.textContent = String(d.task_core.total_pending_tasks ?? 0);
+                    const statTotalCompletedTasks = document.getElementById('stat_total_completed_tasks');
+                    if (statTotalCompletedTasks) statTotalCompletedTasks.textContent = String(d.task_core.total_completed_tasks ?? 0);
+                    const statTodayDoingTasks = document.getElementById('stat_today_doing_tasks');
+                    if (statTodayDoingTasks) statTodayDoingTasks.textContent = String(d.task_core.today_doing_tasks ?? 0);
+                    const statTodayReviewingTasks = document.getElementById('stat_today_reviewing_tasks');
+                    if (statTodayReviewingTasks) statTodayReviewingTasks.textContent = String(d.task_core.today_reviewing_tasks ?? 0);
+                    const statSingleTasks = document.getElementById('stat_single_tasks');
+                    if (statSingleTasks) statSingleTasks.textContent = String(d.task_core.single_tasks ?? 0);
+                    const statComboTasks = document.getElementById('stat_combo_tasks');
+                    if (statComboTasks) statComboTasks.textContent = String(d.task_core.combo_tasks ?? 0);
+                    const statMagnifierTasks = document.getElementById('stat_magnifier_tasks');
+                    if (statMagnifierTasks) statMagnifierTasks.textContent = String(d.task_core.magnifier_tasks ?? 0);
+                } else {
+                    console.warn('任务核心模块数据不存在');
+                }
+                
+                // 财务收支模块
+                if (d.finance) {
+                    //充值收入
+                    const statTotalRecharge = document.getElementById('stat_total_recharge');
+                    if (statTotalRecharge) statTotalRecharge.textContent = '+' + (d.finance.total_recharge ?? '0.00');
 
-                //提现支出
-                const statTotalWithdraw = document.getElementById('stat_total_withdraw');
-                if (statTotalWithdraw) statTotalWithdraw.textContent = '-' + (d.finance.total_withdraw ?? '0.00');
+                    //提现支出
+                    const statTotalWithdraw = document.getElementById('stat_total_withdraw');
+                    if (statTotalWithdraw) statTotalWithdraw.textContent = '-' + (d.finance.total_withdraw ?? '0.00');
 
-              
-                //高级团长佣金支出
-                const statSecondAgentCommission = document.getElementById('stat_second_agent_commission');
-                if (statSecondAgentCommission) statSecondAgentCommission.textContent = '-' + (d.finance.second_agent_commission ?? '0.00');
+                  
+                    //高级团长佣金支出
+                    const statSecondAgentCommission = document.getElementById('stat_second_agent_commission');
+                    if (statSecondAgentCommission) statSecondAgentCommission.textContent = '-' + (d.finance.second_agent_commission ?? '0.00');
 
-                 //普通团长佣金支出
-                const statNormalAgentCommission = document.getElementById('stat_normal_agent_commission');
-                if (statNormalAgentCommission) statNormalAgentCommission.textContent = '-' + (d.finance.normal_agent_commission ?? '0.00');
+                     //普通团长佣金支出
+                    const statNormalAgentCommission = document.getElementById('stat_normal_agent_commission');
+                    if (statNormalAgentCommission) statNormalAgentCommission.textContent = '-' + (d.finance.normal_agent_commission ?? '0.00');
+                    
+                   
+                    //任务奖励支出
+                    const statTaskRewardExpense = document.getElementById('stat_task_reward_expense');
+                    if (statTaskRewardExpense) statTaskRewardExpense.textContent = '-' + (d.finance.task_reward_expense ?? '0.00');
+                    
+                    //账号购买支出
+                    const statAccountPurchaseExpense = document.getElementById('stat_account_purchase_expense');
+                    if (statAccountPurchaseExpense) statAccountPurchaseExpense.textContent = '-' + (d.finance.account_purchase_expense ?? '0.00');
+                    
+                    //账号租金奖励支出
+                    const statAccountRentalReward = document.getElementById('stat_account_rental_reward');
+                    if (statAccountRentalReward) statAccountRentalReward.textContent = '-' + (d.finance.account_rental_reward ?? '0.00');
+                    
+                    //总利润
+                    const statTotalProfit = document.getElementById('stat_total_profit');
+                    if (statTotalProfit) statTotalProfit.textContent = '+' + (d.finance.total_profit ?? '0.00');
+                    
+                    //利润margin
+                    const statProfitMargin = document.getElementById('stat_profit_margin');
+                    if (statProfitMargin) statProfitMargin.textContent = (d.finance.profit_margin ?? '0.00') + '%';
+                } else {
+                    console.warn('财务收支模块数据不存在');
+                }
                 
-               
-                //任务奖励支出
-                const statTaskRewardExpense = document.getElementById('stat_task_reward_expense');
-                if (statTaskRewardExpense) statTaskRewardExpense.textContent = '-' + (d.finance.task_reward_expense ?? '0.00');
+                // 用户分析模块
+                if (d.user_analysis) {
+                    const statTotalSendUsersCounts = document.getElementById('stat_total_send_users_counts');
+                    if (statTotalSendUsersCounts) statTotalSendUsersCounts.textContent = String(d.user_analysis.total_send_users ?? 0);    
+                    const statTotalSendUsers = document.getElementById('stat_total_send_users');
+                    if (statTotalSendUsers) statTotalSendUsers.textContent = String(d.user_analysis.total_send_users ?? 0);
+                    const statTotalReceiveUsers = document.getElementById('stat_total_receive_users');
+                    if (statTotalReceiveUsers) statTotalReceiveUsers.textContent = String(d.user_analysis.total_receive_users ?? 0);
+                    const statSeniorAgents = document.getElementById('stat_senior_agents');
+                    if (statSeniorAgents) statSeniorAgents.textContent = String(d.user_analysis.senior_agents ?? 0);
+                    const statNormalAgents = document.getElementById('stat_normal_agents');
+                    if (statNormalAgents) statNormalAgents.textContent = String(d.user_analysis.normal_agents ?? 0);
+                    const statNormalUsers = document.getElementById('stat_normal_users');
+                    if (statNormalUsers) statNormalUsers.textContent = String(d.user_analysis.normal_users ?? 0);
+                    const statSeniorAgentRatio = document.getElementById('stat_senior_agent_ratio');
+                    if (statSeniorAgentRatio) statSeniorAgentRatio.textContent = (d.user_analysis.senior_agent_ratio ?? '0.00') + '%';
+                    const statNormalAgentRatio = document.getElementById('stat_normal_agent_ratio');
+                    if (statNormalAgentRatio) statNormalAgentRatio.textContent = (d.user_analysis.normal_agent_ratio ?? '0.00') + '%';
+                    const statNormalUserRatio = document.getElementById('stat_normal_user_ratio');
+                    if (statNormalUserRatio) statNormalUserRatio.textContent = (d.user_analysis.normal_user_ratio ?? '0.00') + '%';
+                    // 注意：stat_active_users 和 stat_today_new_users 由今日运营数据模块处理，避免重复赋值
+                } else {
+                    console.warn('用户分析模块数据不存在');
+                }
                 
-                //账号购买支出
-                const statAccountPurchaseExpense = document.getElementById('stat_account_purchase_expense');
-                if (statAccountPurchaseExpense) statAccountPurchaseExpense.textContent = '-' + (d.finance.account_purchase_expense ?? '0.00');
+                // 今日运营数据分析模块
+                if (d.today_operation) {
+                    const statTodayNewUsers = document.getElementById('stat_today_new_users');
+                    if (statTodayNewUsers) statTodayNewUsers.textContent = String(d.today_operation.today_new_users ?? 0);
+                    const statTodayRecharge = document.getElementById('stat_today_recharge');
+                    if (statTodayRecharge) statTodayRecharge.textContent = '+' + (d.today_operation.today_recharge ?? '0.00');
+                    const statTodayWithdraw = document.getElementById('stat_today_withdraw');
+                    if (statTodayWithdraw) statTodayWithdraw.textContent = '-' + (d.today_operation.today_withdraw ?? '0.00');
+                    const statTodayPendingWithdraw = document.getElementById('stat_today_pending_withdraw');
+                    if (statTodayPendingWithdraw) statTodayPendingWithdraw.textContent = '-' + (d.today_operation.today_pending_withdraw ?? '0.00');
+                    const statActiveUsers = document.getElementById('stat_active_users');
+                    if (statActiveUsers) statActiveUsers.textContent = String(d.today_operation.active_users ?? 0);
+                } else {
+                    console.warn('今日运营数据分析模块数据不存在');
+                }
                 
-                //账号租金奖励支出
-                const statAccountRentalReward = document.getElementById('stat_account_rental_reward');
-                if (statAccountRentalReward) statAccountRentalReward.textContent = '-' + (d.finance.account_rental_reward ?? '0.00');
+                // 任务支出细分模块
+                if (d.task_expense) {
+                    const statSingleTaskExpense = document.getElementById('stat_single_task_expense');
+                    if (statSingleTaskExpense) statSingleTaskExpense.textContent = '¥' + (d.task_expense.single_task_expense ?? '0.00');
+                    const statComboTaskExpense = document.getElementById('stat_combo_task_expense');
+                    if (statComboTaskExpense) statComboTaskExpense.textContent = '¥' + (d.task_expense.combo_task_expense ?? '0.00');
+                    const statPositiveCommentExpense = document.getElementById('stat_positive_comment_expense');
+                    if (statPositiveCommentExpense) statPositiveCommentExpense.textContent = '¥' + (d.task_expense.positive_comment_expense ?? '0.00');
+                    const statNeutralCommentExpense = document.getElementById('stat_neutral_comment_expense');
+                    if (statNeutralCommentExpense) statNeutralCommentExpense.textContent = '¥' + (d.task_expense.neutral_comment_expense ?? '0.00');
+                    const statPositiveNeutralExpense = document.getElementById('stat_positive_neutral_expense');
+                    if (statPositiveNeutralExpense) statPositiveNeutralExpense.textContent = '¥' + (d.task_expense.positive_neutral_expense ?? '0.00');
+                    const statNeutralNegativeExpense = document.getElementById('stat_neutral_negative_expense');
+                    if (statNeutralNegativeExpense) statNeutralNegativeExpense.textContent = '¥' + (d.task_expense.neutral_negative_expense ?? '0.00');
+                    const statMagnifierTaskExpense = document.getElementById('stat_magnifier_task_expense');
+                    if (statMagnifierTaskExpense) statMagnifierTaskExpense.textContent = '¥' + (d.task_expense.magnifier_task_expense ?? '0.00');
+                } else {
+                    console.warn('任务支出细分模块数据不存在');
+                }
                 
-                //总利润
-                const statTotalProfit = document.getElementById('stat_total_profit');
-                if (statTotalProfit) statTotalProfit.textContent = '+' + (d.finance.total_profit ?? '0.00');
+                // 工单处理模块
+                if (d.ticket_handling) {
+                    const statTotalTickets = document.getElementById('stat_total_tickets');
+                    if (statTotalTickets) statTotalTickets.textContent = String(d.ticket_handling.total_tickets ?? 0);
+                    const statClosedTickets = document.getElementById('stat_closed_tickets');
+                    if (statClosedTickets) statClosedTickets.textContent = String(d.ticket_handling.closed_tickets ?? 0);
+                    const statCompletedTickets = document.getElementById('stat_completed_tickets');
+                    if (statCompletedTickets) statCompletedTickets.textContent = String(d.ticket_handling.completed_tickets ?? 0);
+                    const statInProgressTickets = document.getElementById('stat_in_progress_tickets');
+                    if (statInProgressTickets) statInProgressTickets.textContent = String(d.ticket_handling.in_progress_tickets ?? 0);
+                    const statPendingTickets = document.getElementById('stat_pending_tickets');
+                    if (statPendingTickets) statPendingTickets.textContent = String(d.ticket_handling.pending_tickets ?? 0);
+                } else {
+                    console.warn('工单处理模块数据不存在');
+                }
                 
-                //利润margin
-                const statProfitMargin = document.getElementById('stat_profit_margin');
-                if (statProfitMargin) statProfitMargin.textContent = (d.finance.profit_margin ?? '0.00') + '%';
+                // 渲染图表
+                renderCharts(d, currentChartPeriod);
+            } else if (data) {
+                console.error('加载统计数据失败', data);
+                showToast('加载统计数据失败: ' + (data.message || '未知错误'), 'error');
             } else {
-                console.warn('财务收支模块数据不存在');
+                console.error('加载统计数据失败: 响应数据为undefined');
+                showToast('加载统计数据失败', 'error');
             }
-            
-            // 用户分析模块
-            if (d.user_analysis) {
-                const statTotalSendUsersCounts = document.getElementById('stat_total_send_users_counts');
-                if (statTotalSendUsersCounts) statTotalSendUsersCounts.textContent = String(d.user_analysis.total_send_users ?? 0);    
-                const statTotalSendUsers = document.getElementById('stat_total_send_users');
-                if (statTotalSendUsers) statTotalSendUsers.textContent = String(d.user_analysis.total_send_users ?? 0);
-                const statTotalReceiveUsers = document.getElementById('stat_total_receive_users');
-                if (statTotalReceiveUsers) statTotalReceiveUsers.textContent = String(d.user_analysis.total_receive_users ?? 0);
-                const statSeniorAgents = document.getElementById('stat_senior_agents');
-                if (statSeniorAgents) statSeniorAgents.textContent = String(d.user_analysis.senior_agents ?? 0);
-                const statNormalAgents = document.getElementById('stat_normal_agents');
-                if (statNormalAgents) statNormalAgents.textContent = String(d.user_analysis.normal_agents ?? 0);
-                const statNormalUsers = document.getElementById('stat_normal_users');
-                if (statNormalUsers) statNormalUsers.textContent = String(d.user_analysis.normal_users ?? 0);
-                const statSeniorAgentRatio = document.getElementById('stat_senior_agent_ratio');
-                if (statSeniorAgentRatio) statSeniorAgentRatio.textContent = (d.user_analysis.senior_agent_ratio ?? '0.00') + '%';
-                const statNormalAgentRatio = document.getElementById('stat_normal_agent_ratio');
-                if (statNormalAgentRatio) statNormalAgentRatio.textContent = (d.user_analysis.normal_agent_ratio ?? '0.00') + '%';
-                const statNormalUserRatio = document.getElementById('stat_normal_user_ratio');
-                if (statNormalUserRatio) statNormalUserRatio.textContent = (d.user_analysis.normal_user_ratio ?? '0.00') + '%';
-                // 注意：stat_active_users 和 stat_today_new_users 由今日运营数据模块处理，避免重复赋值
-            } else {
-                console.warn('用户分析模块数据不存在');
-            }
-            
-            // 今日运营数据分析模块
-            if (d.today_operation) {
-                const statTodayNewUsers = document.getElementById('stat_today_new_users');
-                if (statTodayNewUsers) statTodayNewUsers.textContent = String(d.today_operation.today_new_users ?? 0);
-                const statTodayRecharge = document.getElementById('stat_today_recharge');
-                if (statTodayRecharge) statTodayRecharge.textContent = '+' + (d.today_operation.today_recharge ?? '0.00');
-                const statTodayWithdraw = document.getElementById('stat_today_withdraw');
-                if (statTodayWithdraw) statTodayWithdraw.textContent = '-' + (d.today_operation.today_withdraw ?? '0.00');
-                const statTodayPendingWithdraw = document.getElementById('stat_today_pending_withdraw');
-                if (statTodayPendingWithdraw) statTodayPendingWithdraw.textContent = '-' + (d.today_operation.today_pending_withdraw ?? '0.00');
-                const statActiveUsers = document.getElementById('stat_active_users');
-                if (statActiveUsers) statActiveUsers.textContent = String(d.today_operation.active_users ?? 0);
-            } else {
-                console.warn('今日运营数据分析模块数据不存在');
-            }
-            
-            // 任务支出细分模块
-            if (d.task_expense) {
-                const statSingleTaskExpense = document.getElementById('stat_single_task_expense');
-                if (statSingleTaskExpense) statSingleTaskExpense.textContent = '¥' + (d.task_expense.single_task_expense ?? '0.00');
-                const statComboTaskExpense = document.getElementById('stat_combo_task_expense');
-                if (statComboTaskExpense) statComboTaskExpense.textContent = '¥' + (d.task_expense.combo_task_expense ?? '0.00');
-                const statPositiveCommentExpense = document.getElementById('stat_positive_comment_expense');
-                if (statPositiveCommentExpense) statPositiveCommentExpense.textContent = '¥' + (d.task_expense.positive_comment_expense ?? '0.00');
-                const statNeutralCommentExpense = document.getElementById('stat_neutral_comment_expense');
-                if (statNeutralCommentExpense) statNeutralCommentExpense.textContent = '¥' + (d.task_expense.neutral_comment_expense ?? '0.00');
-                const statPositiveNeutralExpense = document.getElementById('stat_positive_neutral_expense');
-                if (statPositiveNeutralExpense) statPositiveNeutralExpense.textContent = '¥' + (d.task_expense.positive_neutral_expense ?? '0.00');
-                const statNeutralNegativeExpense = document.getElementById('stat_neutral_negative_expense');
-                if (statNeutralNegativeExpense) statNeutralNegativeExpense.textContent = '¥' + (d.task_expense.neutral_negative_expense ?? '0.00');
-                const statMagnifierTaskExpense = document.getElementById('stat_magnifier_task_expense');
-                if (statMagnifierTaskExpense) statMagnifierTaskExpense.textContent = '¥' + (d.task_expense.magnifier_task_expense ?? '0.00');
-            } else {
-                console.warn('任务支出细分模块数据不存在');
-            }
-            
-            // 工单处理模块
-            if (d.ticket_handling) {
-                const statTotalTickets = document.getElementById('stat_total_tickets');
-                if (statTotalTickets) statTotalTickets.textContent = String(d.ticket_handling.total_tickets ?? 0);
-                const statClosedTickets = document.getElementById('stat_closed_tickets');
-                if (statClosedTickets) statClosedTickets.textContent = String(d.ticket_handling.closed_tickets ?? 0);
-                const statCompletedTickets = document.getElementById('stat_completed_tickets');
-                if (statCompletedTickets) statCompletedTickets.textContent = String(d.ticket_handling.completed_tickets ?? 0);
-                const statInProgressTickets = document.getElementById('stat_in_progress_tickets');
-                if (statInProgressTickets) statInProgressTickets.textContent = String(d.ticket_handling.in_progress_tickets ?? 0);
-                const statPendingTickets = document.getElementById('stat_pending_tickets');
-                if (statPendingTickets) statPendingTickets.textContent = String(d.ticket_handling.pending_tickets ?? 0);
-            } else {
-                console.warn('工单处理模块数据不存在');
-            }
-            
-            // 渲染图表
-            renderCharts(d, currentChartPeriod);
-        } else {
-            console.error('加载统计数据失败', data);
-            showToast('加载统计数据失败: ' + data.message, 'error');
+        } catch (e) {
+            console.error('响应格式错误:', e);
+            showToast('响应格式错误', 'error');
         }
     } catch (err) {
+        
         console.error('加载统计数据失败', err);
-        showToast('加载统计数据失败', 'error');
+        // 未授权错误已经在apiRequest中处理，这里不需要重复处理
+        if (err.message !== 'Unauthorized') {
+            showToast('加载统计数据失败', 'error');
+        }
     } finally {
     }
 }

@@ -64,14 +64,16 @@ try {
     }
     
     // 插入数据
-    $stmt = $db->prepare("INSERT INTO system_permission_template (name, code, icon, sort_order, status, description, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+    $stmt = $db->prepare("INSERT INTO system_permission_template (name, code, icon, sort_order, status, description, parent_level, parent_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
     $result = $stmt->execute([
         $data['name'],
         $data['code'],
         $data['icon'],
         $data['sort_order'] ?? 0,
         $data['status'] ?? 1,
-        $data['description'] ?? ''
+        $data['description'] ?? '',
+        $data['parent_level'] ?? 1,
+        $data['parent_id'] ?? 0
     ]);
     
     if ($result) {

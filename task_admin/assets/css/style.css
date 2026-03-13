@@ -233,6 +233,114 @@ a {
     color: white;
 }
 
+/* 二级导航菜单样式 */
+.nav-link.has-children {
+    justify-content: space-between;
+}
+
+.dropdown-icon {
+    transition: transform var(--transition-fast);
+}
+
+.nav-link.has-children.active .dropdown-icon {
+    transform: rotate(180deg);
+}
+
+.sub-menu {
+    list-style: none;
+    margin-top: 4px;
+    margin-left: 24px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-fast);
+}
+
+.sub-menu.active {
+    max-height: 500px;
+}
+
+.sub-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.sub-nav-link i {
+    font-size: 16px;
+    transition: color var(--transition-fast);
+}
+
+.sub-nav-link:hover {
+    background: rgba(0,0,0,0.03);
+    color: var(--text-primary);
+}
+
+.sub-nav-link.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+}
+
+.sub-nav-link.active i {
+    color: white;
+}
+
+/* 面板内二级导航样式 */
+.sub-nav-container {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sub-nav {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sub-nav li {
+    margin-right: 10px;
+}
+
+.sub-nav-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.sub-nav-item i {
+    font-size: 16px;
+    transition: color var(--transition-fast);
+}
+
+.sub-nav-item:hover {
+    background: rgba(0,0,0,0.03);
+    color: var(--text-primary);
+}
+
+.sub-nav-item.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25);
+}
+
+.sub-nav-item.active i {
+    color: white;
+}
+
 .user-profile {
     margin-top: auto;
     padding: 16px;

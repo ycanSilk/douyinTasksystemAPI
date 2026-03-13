@@ -54,13 +54,30 @@ try {
     // 开始事务
     $db->beginTransaction();
     
-    // 首先删除角色关联
-    $stmt = $db->prepare("DELETE FROM system_role_permission_template WHERE template_id = ?");
-    $stmt->execute([$data['id']]);
+    // 首先获取所有需要删除的模板ID（包括子导航）
+    $templateIds = [$data['id']];
     
-    // 然后删除模板
-    $stmt = $db->prepare("DELETE FROM system_permission_template WHERE id = ?");
-    $result = $stmt->execute([$data['id']]);
+    // 查找所有子导航项
+    $stmt = $db->prepare("SELECT id FROM system_permission_template WHERE parent_id = ?");
+    $stmt->execute([$data['id']]);
+    $childTemplates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    foreach ($childTemplates as $child) {
+        $templateIds[] = $child['id'];
+    }
+    
+    // 删除角色关联
+    if (!empty($templateIds)) {
+        $placeholders = str_repeat('?,', count($templateIds) - 1) . '?';
+        $stmt = $db->prepare("DELETE FROM system_role_permission_template WHERE template_id IN ($placeholders)");
+        $stmt->execute($templateIds);
+        
+        // 删除模板
+        $stmt = $db->prepare("DELETE FROM system_permission_template WHERE id IN ($placeholders)");
+        $result = $stmt->execute($templateIds);
+    } else {
+        $result = false;
+    }
     
     if ($result && $stmt->rowCount() > 0) {
         $db->commit();

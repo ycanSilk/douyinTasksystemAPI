@@ -337,12 +337,40 @@ try {
         
         // 13. 记录C端用户钱包流水
         $cRemark = "完成任务获得佣金，任务ID：{$bTaskId}";
+        // 根据任务模板ID确定任务类型
+        $taskType = 0;
+        $taskTypeText = '';
+        if ($template) {
+            $templateId = (int)($template['id'] ?? 0);
+            switch ($templateId) {
+                case 1:
+                    $taskType = 1;
+                    $taskTypeText = '上评评论';
+                    break;
+                case 2:
+                    $taskType = 2;
+                    $taskTypeText = '中评评论';
+                    break;
+                case 3:
+                    $taskType = 3;
+                    $taskTypeText = '放大镜搜索词';
+                    break;
+                case 4:
+                    $taskType = 4;
+                    $taskTypeText = '上中评评论';
+                    break;
+                case 5:
+                    $taskType = 5;
+                    $taskTypeText = '中下评评论';
+                    break;
+            }
+        }
         $stmt = $db->prepare("
             INSERT INTO wallets_log (
                 wallet_id, user_id, username, user_type, type, 
                 amount, before_balance, after_balance, 
-                related_type, related_id, remark
-            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'commission', ?, ?)
+                related_type, related_id, task_types, task_types_text, remark
+            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'commission', ?, ?, ?, ?)
         ");
         $stmt->execute([
             $cUser['wallet_id'],
@@ -352,6 +380,8 @@ try {
             $cBeforeBalance,
             $cAfterBalance,
             $bTaskId,
+            $taskType,
+            $taskTypeText,
             $cRemark
         ]);
         
@@ -411,8 +441,8 @@ try {
                         INSERT INTO wallets_log (
                             wallet_id, user_id, username, user_type, type, 
                             amount, before_balance, after_balance, 
-                            related_type, related_id, remark
-                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?)
+                            related_type, related_id, task_types, task_types_text, remark
+                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?)
                     ");
                     $stmt->execute([
                         $parentUser['wallet_id'],
@@ -422,6 +452,8 @@ try {
                         $agentBeforeBalance,
                         $agentAfterBalance,
                         $bTaskId,
+                        $taskType,
+                        $taskTypeText,
                         $agentRemark
                     ]);
                 }
@@ -471,8 +503,8 @@ try {
                                 INSERT INTO wallets_log (
                                     wallet_id, user_id, username, user_type, type, 
                                     amount, before_balance, after_balance, 
-                                    related_type, related_id, remark
-                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'second_agent_commission', ?, ?)
+                                    related_type, related_id, task_types, task_types_text, remark
+                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?)
                             ");
                             $stmt->execute([
                                 $secondParentUser['wallet_id'],
@@ -482,6 +514,8 @@ try {
                                 $secondAgentBeforeBalance,
                                 $secondAgentAfterBalance,
                                 $bTaskId,
+                                $taskType,
+                                $taskTypeText,
                                 $secondAgentRemark
                             ]);
                         }

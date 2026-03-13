@@ -340,12 +340,40 @@ try {
     
     // 3. 记录钱包流水
     $remark = "发布任务【{$template['title']}】{$taskCountForRemark}个任务，扣除 ¥" . number_format($calculatedTotalPrice, 2);
+    // 根据任务模板ID确定任务类型
+    $taskType = 0;
+    $taskTypeText = '';
+    if ($template) {
+        $templateId = (int)($template['id'] ?? 0);
+        switch ($templateId) {
+            case 1:
+                $taskType = 1;
+                $taskTypeText = '上评评论';
+                break;
+            case 2:
+                $taskType = 2;
+                $taskTypeText = '中评评论';
+                break;
+            case 3:
+                $taskType = 3;
+                $taskTypeText = '放大镜搜索词';
+                break;
+            case 4:
+                $taskType = 4;
+                $taskTypeText = '上中评评论';
+                break;
+            case 5:
+                $taskType = 5;
+                $taskTypeText = '中下评评论';
+                break;
+        }
+    }
     $stmt = $db->prepare("
         INSERT INTO wallets_log (
             wallet_id, user_id, username, user_type, type, 
             amount, before_balance, after_balance, 
-            related_type, related_id, remark
-        ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, 'task', ?, ?)
+            related_type, related_id, task_types, task_types_text, remark
+        ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, 'task', ?, ?, ?, ?)
     ");
     $stmt->execute([
         $bUser['wallet_id'],
@@ -355,6 +383,8 @@ try {
         $beforeBalance,
         $afterBalance,
         $taskId,
+        $taskType,
+        $taskTypeText,
         $remark
     ]);
     

@@ -203,9 +203,9 @@ try {
     // 买方钱包流水
     $insertBuyerLogStmt = $db->prepare("
         INSERT INTO wallets_log 
-        (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at) 
+        (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, task_types, task_types_text, remark, created_at) 
         VALUES 
-        (?, ?, ?, ?, 2, ?, ?, ?, 'rental_order_pay', ?, ?, NOW())
+        (?, ?, ?, ?, 2, ?, ?, ?, 'rental_order_pay', ?, ?, ?, ?, NOW())
     ");
     $insertBuyerLogStmt->execute([
         $buyerWallet['wallet_id'],
@@ -216,15 +216,17 @@ try {
         $currentBalance,
         $newBalance,
         $orderId,
+        6, // 出租订单
+        '出租订单',
         "租赁订单支付：{$offer['title']}（{$days}天）"
     ]);
 
     // 卖方钱包流水（amount=0，冻结状态）
     $insertSellerLogStmt = $db->prepare("
         INSERT INTO wallets_log 
-        (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at) 
+        (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, task_types, task_types_text, remark, created_at) 
         VALUES 
-        (?, ?, ?, ?, 2, 0, 0, 0, 'rental_order_pending', ?, ?, NOW())
+        (?, ?, ?, ?, 2, 0, 0, 0, 'rental_order_pending', ?, ?, ?, ?, NOW())
     ");
     $insertSellerLogStmt->execute([
         $sellerWallet['wallet_id'],
@@ -232,6 +234,8 @@ try {
         $sellerWallet['username'],
         $offer['user_type'],
         $orderId,
+        6, // 出租订单
+        '出租订单',
         "租赁订单已创建，待客服处理：{$offer['title']}（{$days}天，预计收益：{$sellerAmount}）"
     ]);
 

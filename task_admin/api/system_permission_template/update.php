@@ -109,6 +109,16 @@ try {
         $updateValues[] = $data['description'];
     }
     
+    if (isset($data['parent_level'])) {
+        $updateFields[] = 'parent_level = ?';
+        $updateValues[] = $data['parent_level'];
+    }
+    
+    if (isset($data['parent_id'])) {
+        $updateFields[] = 'parent_id = ?';
+        $updateValues[] = $data['parent_id'];
+    }
+    
     if (empty($updateFields)) {
         echo json_encode([
             'code' => 1005,

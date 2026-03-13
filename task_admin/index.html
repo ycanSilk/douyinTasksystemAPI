@@ -18,6 +18,36 @@
 
     <!-- C端用户管理相关脚本 -->
     <script src="assets/js/c-users.js"></script>
+      <!-- B端用户交易流水列表 -->
+    <script src="assets/js/b-user-list.js"></script>
+      <!-- B端用户交易周期数据 -->
+    <script src="assets/js/b-user-statistics.js"></script>
+    
+    <script src="assets/js/apiconfig.js"></script>
+    <script src="assets/js/notifications.js"></script>
+    <script src="assets/js/agent-leap-upgrade.js"></script>
+    <script src="assets/js/agent-review-list.js"></script>
+    <script src="assets/js/b-users.js"></script>
+    <script src="assets/js/c-users.js"></script>
+    <script src="assets/js/customer-ticket.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/detection.js"></script>
+    <script src="assets/js/login_devices_config.js"></script>
+    <script src="assets/js/recharge.js"></script>
+    <script src="assets/js/rental-orders.js"></script>
+    <script src="assets/js/system-permissions.js"></script>
+    <script src="assets/js/system-roles.js"></script>
+    <script src="assets/js/system-users.js"></script>
+    <script src="assets/js/task-magnifying-glass.js"></script>
+    <script src="assets/js/task-market.js"></script>
+    <script src="assets/js/task-review.js"></script>
+    <script src="assets/js/task-templates.js"></script>
+    <script src="assets/js/wallet-logs.js"></script>
+    <script src="assets/js/withdraw.js"></script>
+    <script src="assets/js/web-config.js"></script>
+ 
+
+
     <!-- 检测相关脚本 -->
     <style>
         .module-card { transition: all 0.15s ease; }
@@ -37,6 +67,101 @@
         .config-message { padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 14px; font-weight: 500; }
         .config-message.success { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .config-message.error { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        
+        /* 二级导航样式 */
+        .sub-menu {
+            display: none;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        .sub-menu.active {
+            display: block;
+        }
+        .sub-nav-item {
+            margin-bottom: 5px;
+        }
+        .sub-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .sub-nav-link:hover {
+            background-color: rgba(79, 70, 229, 0.1);
+            color: #4f46e5;
+        }
+        .sub-nav-link.active {
+            background-color: rgba(79, 70, 229, 0.2);
+            color: #4f46e5;
+        }
+        .toggle-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        /* 权限配置页面样式 */
+        .permission-groups {
+            margin-bottom: 20px;
+        }
+        .permission-group {
+            margin-bottom: 15px;
+        }
+        .permission-group h4 {
+            margin-bottom: 10px;
+            color: #374151;
+            font-size: 16px;
+        }
+        .permission-items {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .permission-item:last-child {
+            border-bottom: none;
+        }
+        .permission-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .permission-item label {
+            flex: 1;
+            font-weight: 500;
+            color: #374151;
+        }
+        .permission-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin-left: 10px;
+        }
+        .permission-sub-items {
+            margin-left: 20px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        .permission-sub-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #f8fafc;
+        }
+        .permission-sub-item:last-child {
+            border-bottom: none;
+        }
+        .permission-sub-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .permission-sub-item label {
+            flex: 1;
+            font-weight: 400;
+            color: #4b5563;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +184,7 @@
                     </div>
                     <ul class="nav-menu" id="navMenu">
                         <!-- 动态生成导航栏 -->
-                    
+                        
                     </ul>
                     
                     <div class="user-profile">
@@ -487,6 +612,7 @@
                                     </div>
                                 </div>
                             </div>
+
                             <div style="display: flex; align-items: center; background: #f8fafc; padding: 8px; border-radius: 12px; margin-bottom: 16px;">
                                     <span style="font-size: 14px; color: #64748b; margin-right: 12px;">数据库维度:</span>
                                     <button id="scale100" class="scale-btn" style="padding: 6px 16px; font-size: 12px; font-weight: 500; border-radius: 8px; transition: all 0.2s ease; background: #4f46e5; color: white; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3); margin-right: 8px;" onclick="setDataScale(100)">1-100</button>
@@ -555,6 +681,57 @@
                                     <button class="btn-primary" onclick="loadCUsers()"><i class="ri-search-line"></i> 搜索</button>
                                 </div>
                                 <div id="cUsersTable" class="table-wrapper"></div>
+                            </div>
+                        </section>
+                        
+                        <!-- B端用户交易流水 -->
+                        <section id="b-statisticsSection" class="content-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">B端用户交易流水</div>
+                                </div>
+                                
+                                <!-- 用户交易流水内容 -->
+                                <div id="b-statistics-flows-content">
+                                    <div class="toolbar">
+                                        <form id="bStatisticsForm">
+                                            <input type="number" id="bUserIdSearch" placeholder="搜索用户ID..." class="search-input">
+                                            <input type="text" id="bUsernameSearch" placeholder="搜索用户名..." class="search-input">
+                                            <input type="text" id="relatedIdSearch" placeholder="任务ID/订单ID..." class="search-input">
+                                            <select id="relatedTypeFilter" class="select-input">
+                                                <option value="">全部相关类型</option>
+                                                <option value="task_publish">任务发布</option>
+                                                <option value="recharge">充值</option>
+                                                <option value="account_rental">账号租赁</option>
+                                                <option value="refund">退款</option>
+                                            </select>
+                                            <select id="taskTypesFilter" class="select-input">
+                                                <option value="">全部任务类型</option>
+                                                <option value="1">上评评论</option>
+                                                <option value="2">中评评论</option>
+                                                <option value="3">放大镜搜索词</option>
+                                                <option value="4">上中评评论</option>
+                                                <option value="5">中下评评论</option>
+                                                <option value="6">出租订单</option>
+                                                <option value="7">求租订单</option>
+                                            </select>
+                                            <input type="date" id="startDate" class="date-input">
+                                            <input type="date" id="endDate" class="date-input">
+                                            <button type="submit" class="btn-primary"><i class="ri-search-line"></i> 搜索</button>
+                                            <button type="button" id="resetBStatistics" class="btn-secondary"><i class="ri-refresh-line"></i> 重置</button>
+                                        </form>
+                                    </div>
+                                    <div id="bUsersStatisticsTable" class="table-wrapper"></div>
+                                </div>
+                                <!-- 数据统计内容 -->
+                                <div id="b-statistics-summary-content" style="display: none;">
+                                    <div class="toolbar">
+                                        <input type="date" id="summaryStartDate" class="date-input">
+                                        <input type="date" id="summaryEndDate" class="date-input">
+                                        <button type="button" id="loadSummaryData" class="btn-primary"><i class="ri-refresh-line"></i> 加载统计数据</button>
+                                    </div>
+                                    <div id="bStatisticsSummary" class="table-wrapper"></div>
+                                </div>
                             </div>
                         </section>
 
@@ -703,7 +880,7 @@
                         <section id="agentUpgradeSection" class="content-section">
                             <div class="card">
                                 <div class="card-header">
-                                    <div class="card-title">团长升级</div>
+                                    <div class="card-title">团长迁跃升级</div>
                                 </div>
                                 <div class="toolbar" style="flex-wrap: wrap;">
                                     <input type="text" id="agentUpgradeUsername" placeholder="用户名" class="search-input" style="max-width: 150px;">
@@ -772,6 +949,8 @@
                                         <option value="task">任务配置</option>
                                         <option value="rental">租赁配置</option>
                                         <option value="notification">消息通知配置</option>
+                                        <option value="agent">大团团长相关配置</option>
+                                        <option value="incentive">团长激励配置</option>
                                     </select>
                                 </div>
                                 <div id="configTable" class="table-wrapper"></div>
@@ -1014,6 +1193,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
     <script src="assets/js/app.js?v=2.0"></script>
+    <script src="assets/js/b-user-statistics.js"></script>
     <script src="assets/js/dashboard.js?v=1.0"></script>
     <script src="assets/js/login_devices_config.js?v=1.0"></script>
     <script src="assets/js/detection.js?v=1.2"></script>

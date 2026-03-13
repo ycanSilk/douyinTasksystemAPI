@@ -32,10 +32,10 @@ try {
     // 构建查询语句
     if ($all) {
         // 获取所有模板
-        $stmt = $db->query("SELECT * FROM system_permission_template ORDER BY sort_order ASC, id ASC");
+        $stmt = $db->query("SELECT id, name, code, icon, sort_order, status, description, parent_level, parent_id, section_id, created_at, updated_at FROM system_permission_template ORDER BY sort_order ASC, id ASC");
     } else {
         // 只获取启用的模板
-        $stmt = $db->query("SELECT * FROM system_permission_template WHERE status = 1 ORDER BY sort_order ASC, id ASC");
+        $stmt = $db->query("SELECT id, name, code, icon, sort_order, status, description, parent_level, parent_id, section_id, created_at, updated_at FROM system_permission_template WHERE status = 1 ORDER BY sort_order ASC, id ASC");
     }
     
     $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);

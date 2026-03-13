@@ -183,8 +183,8 @@ try {
         INSERT INTO wallets_log (
             wallet_id, user_id, username, user_type, type, 
             amount, before_balance, after_balance, 
-            related_type, related_id, remark
-        ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, 'task', ?, ?)
+            related_type, related_id, task_types, task_types_text, remark
+        ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, 'task', ?, ?, ?, ?)
     ");
     $executeResult = $stmt->execute([
         $bUser['wallet_id'],
@@ -194,6 +194,8 @@ try {
         $beforeBalance,
         $afterBalance,
         $taskId,
+        3, // 放大镜搜索词
+        '放大镜搜索词',
         $remark
     ]);
     

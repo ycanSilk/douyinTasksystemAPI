@@ -4,9 +4,37 @@
 async function loadCUsers(page = 1) {
     const search = document.getElementById('cUserSearch').value;
     try {
-        const data = await apiRequest(`${API_BASE}/api/c_users/list.php?page=${page}&search=${encodeURIComponent(search)}`);
+        const apiUrl = `/task_admin/api/c_users/list.php?page=${page}&search=${encodeURIComponent(search)}`;
+        const token = sessionStorage.getItem('admin_token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
         
-        if (data.code === 0) {
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+        });
+        
+        if (response.status === 401) {
+            sessionStorage.clear();
+            localStorage.removeItem('admin_current_page');
+            fetch('/task_admin/auth/logout.php', { method: 'POST' }).catch(err => {});
+            window.location.href = '/task_admin/login.html';
+            return;
+        }
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.code === 0) {
             renderCUsersTable(data.data.list, data.data.pagination);
         }
     } catch (err) {
@@ -197,13 +225,38 @@ function editCUser(user) {
         }
         
         try {
-            const result = await apiRequest(`${API_BASE}/api/c_users/update.php`, {
+            const apiUrl = `/task_admin/api/c_users/update.php`;
+            const token = sessionStorage.getItem('admin_token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                headers: headers,
+                body: JSON.stringify(data),
+                credentials: 'include'
             });
             
-            if (result.code === 0) {
+            if (response.status === 401) {
+                sessionStorage.clear();
+                localStorage.removeItem('admin_current_page');
+                fetch('/task_admin/auth/logout.php', { method: 'POST' }).catch(err => {});
+                window.location.href = '/task_admin/login.html';
+                return;
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result && result.code === 0) {
                 showToast('更新成功', 'success');
                 closeModal();
                 loadCUsers();
@@ -257,13 +310,38 @@ function blockUser(user) {
         };
         
         try {
-            const result = await apiRequest(`${API_BASE}/api/c_users/block.php`, {
+            const apiUrl = `/task_admin/api/c_users/block.php`;
+            const token = sessionStorage.getItem('admin_token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                headers: headers,
+                body: JSON.stringify(data),
+                credentials: 'include'
             });
             
-            if (result.code === 0) {
+            if (response.status === 401) {
+                sessionStorage.clear();
+                localStorage.removeItem('admin_current_page');
+                fetch('/task_admin/auth/logout.php', { method: 'POST' }).catch(err => {});
+                window.location.href = '/task_admin/login.html';
+                return;
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result && result.code === 0) {
                 showToast('封禁成功', 'success');
                 closeModal();
                 loadCUsers();
@@ -280,17 +358,42 @@ function blockUser(user) {
 function unblockUser(userId) {
     showConfirm('确定要解禁该用户吗？', async () => {
         try {
-            const result = await apiRequest(`${API_BASE}/api/c_users/block.php`, {
+            const apiUrl = `/task_admin/api/c_users/block.php`;
+            const token = sessionStorage.getItem('admin_token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: headers,
                 body: JSON.stringify({
                     user_id: userId,
                     blocked_status: 0,
                     blocked_duration: 0
-                })
+                }),
+                credentials: 'include'
             });
             
-            if (result.code === 0) {
+            if (response.status === 401) {
+                sessionStorage.clear();
+                localStorage.removeItem('admin_current_page');
+                fetch('/task_admin/auth/logout.php', { method: 'POST' }).catch(err => {});
+                window.location.href = '/task_admin/login.html';
+                return;
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result && result.code === 0) {
                 showToast('解禁成功', 'success');
                 loadCUsers();
             } else {
