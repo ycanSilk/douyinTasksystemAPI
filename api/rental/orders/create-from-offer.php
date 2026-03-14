@@ -201,7 +201,7 @@ try {
     $updateOfferStmt->execute([$offerId]);
 
     // 买方钱包流水
-    $insertBuyerLogStmt = $db->prepare("
+    $insertBuyerLogStmt = $db->prepare(" 
         INSERT INTO wallets_log 
         (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, task_types, task_types_text, remark, created_at) 
         VALUES 
@@ -220,6 +220,54 @@ try {
         '出租订单',
         "租赁订单支付：{$offer['title']}（{$days}天）"
     ]);
+    
+    // 记录C端任务统计（仅当买方是C端用户时）
+    if ($userType == Token::TYPE_C) {
+        try {
+            $stmt = $db->prepare(" 
+                INSERT INTO c_task_statistics (
+                    c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                    related_type, related_id, task_types, task_types_text, remark
+                ) VALUES (?, ?, 2, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+            ");
+            $stmt->execute([
+                $userId,
+                $buyerWallet['username'],
+                $totalAmount,
+                $currentBalance,
+                $newBalance,
+                $orderId,
+                "租赁订单支付：{$offer['title']}（{$days}天）"
+            ]);
+        } catch (Exception $e) {
+            // 记录插入失败时的错误日志，但不影响主流程
+            error_log('插入c_task_statistics失败: ' . $e->getMessage());
+        }
+    }
+    
+    // 仅当买方是B端用户时，插入B端任务统计记录
+    if ($userType == Token::TYPE_B) {
+        try {
+            $stmt = $db->prepare(" 
+                INSERT INTO b_task_statistics (
+                    b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                    related_type, related_id, task_types, task_types_text, remark
+                ) VALUES (?, ?, 2, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+            ");
+            $stmt->execute([
+                $userId,
+                $buyerWallet['username'],
+                $totalAmount,
+                $currentBalance,
+                $newBalance,
+                $orderId,
+                "租赁订单支付：{$offer['title']}（{$days}天）"
+            ]);
+        } catch (Exception $e) {
+            // 记录插入失败时的错误日志，但不影响主流程
+            error_log('插入b_task_statistics失败: ' . $e->getMessage());
+        }
+    }
 
     // 卖方钱包流水（amount=0，冻结状态）
     $insertSellerLogStmt = $db->prepare("

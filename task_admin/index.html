@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Admin - 管理后台</title>
 
+    <!-- Tailwind CSS -->
+   <script src="https://cdn.tailwindcss.com"></script>
     <!-- Remix Icon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -20,8 +22,15 @@
     <script src="assets/js/c-users.js"></script>
       <!-- B端用户交易流水列表 -->
     <script src="assets/js/b-user-list.js"></script>
+
       <!-- B端用户交易周期数据 -->
-    <script src="assets/js/b-user-statistics.js"></script>
+    <script src="assets/js/b-order-statistics.js"></script>
+    
+      <!-- C端用户交易流水列表 -->
+    <script src="assets/js/c-user-list.js"></script>
+
+      <!-- C端用户交易周期数据 -->
+    <script src="assets/js/c-order-statistics.js"></script>
     
     <script src="assets/js/apiconfig.js"></script>
     <script src="assets/js/notifications.js"></script>
@@ -698,14 +707,14 @@
                                             <input type="number" id="bUserIdSearch" placeholder="搜索用户ID..." class="search-input">
                                             <input type="text" id="bUsernameSearch" placeholder="搜索用户名..." class="search-input">
                                             <input type="text" id="relatedIdSearch" placeholder="任务ID/订单ID..." class="search-input">
-                                            <select id="relatedTypeFilter" class="select-input">
+                                            <select id="relatedTypeFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="">全部相关类型</option>
                                                 <option value="task_publish">任务发布</option>
                                                 <option value="recharge">充值</option>
                                                 <option value="account_rental">账号租赁</option>
-                                                <option value="refund">退款</option>
+                                                <option value="refund">退款</option>                                               
                                             </select>
-                                            <select id="taskTypesFilter" class="select-input">
+                                            <select id="taskTypesFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="">全部任务类型</option>
                                                 <option value="1">上评评论</option>
                                                 <option value="2">中评评论</option>
@@ -726,11 +735,84 @@
                                 <!-- 数据统计内容 -->
                                 <div id="b-statistics-summary-content" style="display: none;">
                                     <div class="toolbar">
-                                        <input type="date" id="summaryStartDate" class="date-input">
-                                        <input type="date" id="summaryEndDate" class="date-input">
-                                        <button type="button" id="loadSummaryData" class="btn-primary"><i class="ri-refresh-line"></i> 加载统计数据</button>
+                                        <form id="orderStatisticsForm">
+                                            <input type="number" id="orderStatisticsUserId" placeholder="搜索用户ID..." class="search-input">
+                                            <input type="text" id="orderStatisticsUsername" placeholder="搜索用户名..." class="search-input">
+                                            <select id="orderStatisticsPeriod" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="today">今日</option>
+                                                <option value="7days" selected>近7天</option>
+                                                <option value="15days">近15天</option>
+                                                <option value="30days">近30天</option>
+                                                <option value="12months">近12个月</option>
+                                            </select>
+                                            <button type="submit" class="btn-primary"><i class="ri-search-line"></i> 搜索</button>
+                                            <button type="button" id="resetOrderStatistics" class="btn-secondary"><i class="ri-refresh-line"></i> 重置</button>
+                                        </form>
                                     </div>
-                                    <div id="bStatisticsSummary" class="table-wrapper"></div>
+                                    <div id="orderStatisticsContainer" class="table-wrapper"></div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- C端用户交易流水 -->
+                        <section id="c-statisticsSection" class="content-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">C端用户交易流水</div>
+                                </div>
+                                
+                                <!-- 用户交易流水内容 -->
+                                <div id="c-statistics-flows-content" style="display: none;">
+                                    <div class="toolbar">
+                                        <form id="cStatisticsForm">
+                                            <input type="number" id="cUserIdSearch" placeholder="搜索用户ID..." class="search-input">
+                                            <input type="text" id="cUsernameSearch" placeholder="搜索用户名..." class="search-input">
+                                            <input type="text" id="cRelatedIdSearch" placeholder="任务ID/订单ID..." class="search-input">
+                                            <select id="cRelatedTypeFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">全部相关类型</option>
+                                                <option value="task_publish">任务发布</option>
+                                                <option value="recharge">充值</option>
+                                                <option value="account_rental">账号租赁</option>
+                                                 <option value="agent_commission">团长佣金</option>
+                                                 <option value="second_agent_commission">二级团长佣金</option>
+                                                <option value="refund">退款</option>
+                                            </select>
+                                            <select id="cTaskTypesFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="">全部任务类型</option>
+                                                <option value="1">上评评论</option>
+                                                <option value="2">中评评论</option>
+                                                <option value="3">放大镜搜索词</option>
+                                                <option value="4">上中评评论</option>
+                                                <option value="5">中下评评论</option>
+                                                <option value="6">出租订单</option>
+                                                <option value="7">求租订单</option>
+                                            </select>
+                                            <input type="date" id="cStartDate" class="date-input">
+                                            <input type="date" id="cEndDate" class="date-input">
+                                            <button type="submit" class="btn-primary"><i class="ri-search-line"></i> 搜索</button>
+                                            <button type="button" id="resetCStatistics" class="btn-secondary"><i class="ri-refresh-line"></i> 重置</button>
+                                        </form>
+                                    </div>
+                                    <div id="cUsersStatisticsTable" class="table-wrapper"></div>
+                                </div>
+                                <!-- 数据统计内容 -->
+                                <div id="c-statistics-summary-content" style="display: none;">
+                                    <div class="toolbar">
+                                        <form id="cOrderStatisticsForm">
+                                            <input type="number" id="cOrderStatisticsUserId" placeholder="搜索用户ID..." class="search-input">
+                                            <input type="text" id="cOrderStatisticsUsername" placeholder="搜索用户名..." class="search-input">
+                                            <select id="cOrderStatisticsPeriod" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="today">今日</option>
+                                                <option value="7days" selected>近7天</option>
+                                                <option value="15days">近15天</option>
+                                                <option value="30days">近30天</option>
+                                                <option value="12months">近12个月</option>
+                                            </select>
+                                            <button type="submit" class="btn-primary"><i class="ri-search-line"></i> 搜索</button>
+                                            <button type="button" id="resetCOrderStatistics" class="btn-secondary"><i class="ri-refresh-line"></i> 重置</button>
+                                        </form>
+                                    </div>
+                                    <div id="cOrderStatisticsContainer" class="table-wrapper"></div>
                                 </div>
                             </div>
                         </section>
@@ -742,7 +824,7 @@
                                     <div class="card-title">充值审核</div>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="rechargeStatus" class="filter-select" onchange="loadRechargeList()">
+                                    <select id="rechargeStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadRechargeList()">
                                         <option value="">全部状态</option>
                                         <option value="0" selected>待审核</option>
                                         <option value="1">已通过</option>
@@ -760,7 +842,7 @@
                                     <div class="card-title">提现审核</div>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="withdrawStatus" class="filter-select" onchange="loadWithdrawList()">
+                                    <select id="withdrawStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadWithdrawList()">
                                         <option value="">全部状态</option>
                                         <option value="0" selected>待审核</option>
                                         <option value="1">已通过</option>
@@ -768,6 +850,31 @@
                                     </select>
                                 </div>
                                 <div id="withdrawTable" class="table-wrapper"></div>
+                            </div>
+                        </section>
+
+                        <!-- 派单数据统计 -->
+                        <section id="orderStatisticsSection" class="content-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">派单数据统计</div>
+                                </div>
+                                <div class="toolbar">
+                                    <form id="orderStatisticsForm">
+                                        <input type="number" id="orderStatisticsUserId" placeholder="搜索用户ID..." class="search-input">
+                                        <input type="text" id="orderStatisticsUsername" placeholder="搜索用户名..." class="search-input">
+                                        <select id="orderStatisticsPeriod" class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="today">今日</option>
+                                            <option value="7days" selected>近7天</option>
+                                            <option value="15days">近15天</option>
+                                            <option value="30days">近30天</option>
+                                            <option value="12months">近12个月</option>
+                                        </select>
+                                        <button type="submit" class="btn-primary"><i class="ri-search-line"></i> 搜索</button>
+                                        <button type="button" id="resetOrderStatistics" class="btn-secondary"><i class="ri-refresh-line"></i> 重置</button>
+                                    </form>
+                                </div>
+                                <div id="orderStatisticsContainer" class="table-wrapper"></div>
                             </div>
                         </section>
 
@@ -779,12 +886,12 @@
                                     <button class="btn-primary" onclick="addTaskTemplate()"><i class="ri-add-line"></i> 新增模板</button>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="templateType" class="filter-select" onchange="loadTaskTemplates()">
+                                    <select id="templateType" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadTaskTemplates()">
                                         <option value="">全部类型</option>
                                         <option value="0">单任务</option>
                                         <option value="1">组合任务</option>
                                     </select>
-                                    <select id="templateStatus" class="filter-select" onchange="loadTaskTemplates()">
+                                    <select id="templateStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadTaskTemplates()">
                                         <option value="">全部状态</option>
                                         <option value="1">已上线</option>
                                         <option value="0">已下线</option>
@@ -802,13 +909,13 @@
                                 </div>
                                 <div class="toolbar">
                                     <input type="text" id="marketBUserId" placeholder="B端用户ID" class="search-input" style="max-width: 150px;">
-                                    <select id="marketStage" class="filter-select">
+                                    <select id="marketStage" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">全部阶段</option>
                                         <option value="0">单任务</option>
                                         <option value="1">组合-阶段1</option>
                                         <option value="2">组合-阶段2</option>
                                     </select>
-                                    <select id="marketStatus" class="filter-select">
+                                    <select id="marketStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">全部状态</option>
                                         <option value="1">进行中</option>
                                         <option value="2">已完成</option>
@@ -830,18 +937,18 @@
                                 <div class="toolbar" style="flex-wrap: wrap;">
                                     <input type="text" id="walletLogId" placeholder="流水ID" class="search-input" style="max-width: 120px;">
                                     <input type="text" id="walletUsername" placeholder="用户名" class="search-input" style="max-width: 150px;">
-                                    <select id="walletUserType" class="filter-select">
+                                    <select id="walletUserType" class="filter-select ">
                                         <option value="">全部端</option>
                                         <option value="1">C端</option>
                                         <option value="2">B端</option>
                                         <option value="3">Admin</option>
                                     </select>
-                                    <select id="walletType" class="filter-select">
+                                    <select id="walletType" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">收入/支出</option>
                                         <option value="1">收入</option>
                                         <option value="2">支出</option>
                                     </select>
-                                    <select id="walletRelatedType" class="filter-select">
+                                    <select id="walletRelatedType" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">全部类型</option>
                                         <option value="task">任务佣金</option>
                                         <option value="recharge">充值</option>
@@ -865,7 +972,7 @@
                                     <div class="card-title">团长申请审核</div>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="agentStatus" class="filter-select" onchange="loadAgentList()">
+                                    <select id="agentStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadAgentList()">
                                         <option value="">全部状态</option>
                                         <option value="0" selected>待审核</option>
                                         <option value="1">已通过</option>
@@ -901,7 +1008,7 @@
                                 <div class="toolbar" style="flex-wrap: wrap;">
                                     <input type="text" id="rentalOrderId" placeholder="订单ID" class="search-input" style="max-width: 120px;">
                                     <input type="text" id="rentalBuyerId" placeholder="买家ID" class="search-input" style="max-width: 120px;">
-                                    <select id="rentalStatus" class="filter-select">
+                                    <select id="rentalStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">全部状态</option>
                                         <option value="1">已支付/待客服</option>
                                         <option value="2">进行中</option>
@@ -923,7 +1030,7 @@
                                     <button class="btn-primary" onclick="loadTickets()"><i class="ri-refresh-line"></i> 刷新</button>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="ticketStatusFilter" class="filter-select" onchange="loadTickets()">
+                                    <select id="ticketStatusFilter" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadTickets()">
                                         <option value="">全部状态</option>
                                         <option value="0">待处理</option>
                                         <option value="1">处理中</option>
@@ -942,7 +1049,7 @@
                                     <button class="btn-primary" onclick="loadSystemConfig()"><i class="ri-refresh-line"></i> 刷新</button>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="configGroupFilter" class="filter-select" onchange="loadSystemConfig()">
+                                    <select id="configGroupFilter" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadSystemConfig()">
                                         <option value="">全部分组</option>
                                         <option value="general">基础配置</option>
                                         <option value="withdraw">提现配置</option>
@@ -1030,7 +1137,7 @@
                                     <button class="btn-primary" onclick="showSendNotificationModal()"><i class="ri-send-plane-fill"></i> 发送通知</button>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="notificationTargetType" class="filter-select" onchange="loadNotificationList()">
+                                    <select id="notificationTargetType" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadNotificationList()">
                                         <option value="">全部类型</option>
                                         <option value="0">全体用户</option>
                                         <option value="1">C端全体</option>
@@ -1055,7 +1162,7 @@
                                 </div>
                                 <div class="toolbar" style="flex-wrap: wrap;">
                                     <input type="text" id="notificationSearch" placeholder="搜索关键词" class="search-input" style="max-width: 200px;">
-                                    <select id="notificationTypeFilter" class="filter-select" onchange="loadNotifications()">
+                                    <select id="notificationTypeFilter" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadNotifications()">
                                         <option value="">全部类型</option>
                                         <option value="recharge">充值审核</option>
                                         <option value="withdraw">提现审核</option>
@@ -1065,7 +1172,7 @@
                                         <option value="ticket">工单管理</option>
                                         <option value="system">系统通知</option>
                                     </select>
-                                    <select id="notificationStatusFilter" class="filter-select" onchange="loadNotifications()">
+                                    <select id="notificationStatusFilter" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadNotifications()">
                                         <option value="">全部状态</option>
                                         <option value="0">未读</option>
                                         <option value="1">已读</option>
@@ -1144,7 +1251,7 @@
                                     <div class="card-title">放大镜任务管理</div>
                                 </div>
                                 <div class="toolbar">
-                                    <select id="magnifierStatus" class="filter-select" onchange="loadMagnifierTasks()">
+                                    <select id="magnifierStatus" class="filter-select px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="loadMagnifierTasks()">
                                         <option value="">全部状态</option>
                                         <option value="0">待发布</option>
                                         <option value="1">发布中</option>
@@ -1193,7 +1300,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
     <script src="assets/js/app.js?v=2.0"></script>
-    <script src="assets/js/b-user-statistics.js"></script>
     <script src="assets/js/dashboard.js?v=1.0"></script>
     <script src="assets/js/login_devices_config.js?v=1.0"></script>
     <script src="assets/js/detection.js?v=1.2"></script>

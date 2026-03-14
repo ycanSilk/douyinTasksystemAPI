@@ -149,7 +149,7 @@ try {
         }
 
         // 记录 Log
-        $logStmt = $db->prepare("
+        $logStmt = $db->prepare(" 
             INSERT INTO wallets_log 
             (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at)
             VALUES (?, ?, ?, ?, 1, ?, ?, ?, 'rental_order_refund', ?, ?, NOW())
@@ -166,6 +166,54 @@ try {
             $orderId,
             "订单取消退款"
         ]);
+        
+        // 记录C端任务统计（仅当买家是C端用户时）
+        if ($order['buyer_user_type'] === 'c' || $order['buyer_user_type'] === '1') {
+            try {
+                $stmt = $db->prepare(" 
+                    INSERT INTO c_task_statistics (
+                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                        related_type, related_id, task_types, task_types_text, remark
+                    ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+                ");
+                $stmt->execute([
+                    $order['buyer_user_id'],
+                    $username,
+                    $totalAmount,
+                    $buyerWalletBalance,
+                    $newBalance,
+                    $orderId,
+                    "订单取消退款"
+                ]);
+            } catch (Exception $e) {
+                // 记录插入失败时的错误日志，但不影响主流程
+                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+            }
+        }
+        
+        // 仅当买家是B端用户时，插入B端任务统计记录
+        if ($order['buyer_user_type'] === 'b' || $order['buyer_user_type'] === '2') {
+            try {
+                $stmt = $db->prepare(" 
+                    INSERT INTO b_task_statistics (
+                        b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                        related_type, related_id, task_types, task_types_text, remark
+                    ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+                ");
+                $stmt->execute([
+                    $order['buyer_user_id'],
+                    $username,
+                    $totalAmount,
+                    $buyerWalletBalance,
+                    $newBalance,
+                    $orderId,
+                    "订单取消退款"
+                ]);
+            } catch (Exception $e) {
+                // 记录插入失败时的错误日志，但不影响主流程
+                error_log('插入b_task_statistics失败: ' . $e->getMessage());
+            }
+        }
 
         // 更新订单状态
         $updateStmt = $db->prepare("UPDATE rental_orders SET status = 4 WHERE id = ?");

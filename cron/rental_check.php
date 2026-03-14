@@ -19,6 +19,7 @@ date_default_timezone_set('Asia/Shanghai');
 // 引入核心文件
 require_once __DIR__ . '/../core/Database.php';
 require_once __DIR__ . '/../core/Notification.php';
+require_once __DIR__ . '/../core/AppConfig.php';
 
 // 日志函数
 function logMessage($message) {
@@ -326,6 +327,231 @@ try {
             $updateOrderStmt->execute([$orderId]);
             
             logMessage("  - 更新订单状态: 进行中(2) -> 已完成(3)");
+            
+            // 5. 插入统计记录
+            // 5.1 为卖方插入统计记录
+            if ($sellerUserType === 1) {
+                // C端用户
+                try {
+                    $stmt = $db->prepare(" 
+                        INSERT INTO c_task_statistics (
+                            c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                            related_type, related_id, task_types, task_types_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?)
+                    ");
+                    $stmt->execute([
+                        $sellerUserId,
+                        $sellerUsername,
+                        $sellerAmount,
+                        $currentBalance,
+                        $newBalance,
+                        $orderId,
+                        "租赁订单结算收益（订单#{$orderId}）"
+                    ]);
+                    logMessage("  - 插入C端统计记录: seller_id={$sellerUserId}");
+                } catch (Exception $e) {
+                    // 记录插入失败时的错误日志，但不影响主流程
+                    error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                }
+            } else {
+                // B端用户
+                try {
+                    $stmt = $db->prepare(" 
+                        INSERT INTO b_task_statistics (
+                            b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                            related_type, related_id, task_types, task_types_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?)
+                    ");
+                    $stmt->execute([
+                        $sellerUserId,
+                        $sellerUsername,
+                        $sellerAmount,
+                        $currentBalance,
+                        $newBalance,
+                        $orderId,
+                        "租赁订单结算收益（订单#{$orderId}）"
+                    ]);
+                    logMessage("  - 插入B端统计记录: seller_id={$sellerUserId}");
+                } catch (Exception $e) {
+                    // 记录插入失败时的错误日志，但不影响主流程
+                    error_log('插入b_task_statistics失败: ' . $e->getMessage());
+                }
+            }
+            
+            // 5.2 为买方插入统计记录（如果是C端用户）
+            if ($buyerUserType === 1) {
+                try {
+                    // 查询买方钱包余额
+                    $buyerWalletStmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                    $buyerWalletStmt->execute([$order['buyer_wallet_id']]);
+                    $buyerBalance = $buyerWalletStmt->fetchColumn();
+                    
+                    if ($buyerBalance !== false) {
+                        $stmt = $db->prepare(" 
+                            INSERT INTO c_task_statistics (
+                                c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                related_type, related_id, task_types, task_types_text, remark
+                            ) VALUES (?, ?, 2, ?, ?, ?, 'rental_order', ?, 7, '求租订单', ?)
+                        ");
+                        $stmt->execute([
+                            $buyerUserId,
+                            $buyerUsername,
+                            $order['total_amount'],
+                            $buyerBalance,
+                            $buyerBalance,
+                            $orderId,
+                            "租赁订单支付（订单#{$orderId}）"
+                        ]);
+                        logMessage("  - 插入C端统计记录: buyer_id={$buyerUserId}");
+                    }
+                } catch (Exception $e) {
+                    // 记录插入失败时的错误日志，但不影响主流程
+                    error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                }
+            } else {
+                try {
+                    // 查询买方钱包余额
+                    $buyerWalletStmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                    $buyerWalletStmt->execute([$order['buyer_wallet_id']]);
+                    $buyerBalance = $buyerWalletStmt->fetchColumn();
+                    
+                    if ($buyerBalance !== false) {
+                        $stmt = $db->prepare(" 
+                            INSERT INTO b_task_statistics (
+                                b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                related_type, related_id, task_types, task_types_text, remark
+                            ) VALUES (?, ?, 2, ?, ?, ?, 'rental_order', ?, 7, '求租订单', ?)
+                        ");
+                        $stmt->execute([
+                            $buyerUserId,
+                            $buyerUsername,
+                            $order['total_amount'],
+                            $buyerBalance,
+                            $buyerBalance,
+                            $orderId,
+                            "租赁订单支付（订单#{$orderId}）"
+                        ]);
+                        logMessage("  - 插入B端统计记录: buyer_id={$buyerUserId}");
+                    }
+                } catch (Exception $e) {
+                    // 记录插入失败时的错误日志，但不影响主流程
+                    error_log('插入b_task_statistics失败: ' . $e->getMessage());
+                }
+            }
+            
+            // 5.3 为团长和二级代理插入佣金统计记录
+            if ($sellerUserType === 1) {
+                // 查询卖方的上级代理
+                $stmt = $db->prepare("SELECT id, username, wallet_id, parent_id, is_agent FROM c_users WHERE id = ?");
+                $stmt->execute([$sellerUserId]);
+                $sellerUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($sellerUser && !empty($sellerUser['parent_id'])) {
+                    // 查询一级上级用户
+                    $stmt = $db->prepare("SELECT id, username, wallet_id, is_agent, parent_id FROM c_users WHERE id = ?");
+                    $stmt->execute([$sellerUser['parent_id']]);
+                    $parentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    $parentAgentLevel = $parentUser ? (int)$parentUser['is_agent'] : 0;
+                    
+                    if ($parentUser && $parentAgentLevel >= 1) {
+                        // 获取代理佣金配置
+                        $agentCommissionAmount = (int)AppConfig::get('rental_agent_commission', 0);
+                        $seniorAgentCommissionAmount = (int)AppConfig::get('rental_senior_agent_commission', 0);
+                        
+                        // 大团团长(3)、高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
+                        if ($parentAgentLevel === 3 || $parentAgentLevel === 2) {
+                            $agentCommission = $seniorAgentCommissionAmount;
+                        } else {
+                            $agentCommission = $agentCommissionAmount;
+                        }
+                        
+                        // 查询团长钱包
+                        $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                        $stmt->execute([$parentUser['wallet_id']]);
+                        $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($agentWallet) {
+                            $agentBeforeBalance = (int)$agentWallet['balance'];
+                            $agentAfterBalance = $agentBeforeBalance + $agentCommission;
+                            
+                            // 记录一级代理C端任务统计
+                            try {
+                                $stmt = $db->prepare(" 
+                                    INSERT INTO c_task_statistics (
+                                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                        related_type, related_id, task_types, task_types_text, remark
+                                    ) VALUES (?, ?, 1, ?, ?, ?, 'agent_commission', ?, 6, '出租订单', ?)
+                                ");
+                                $stmt->execute([
+                                    $parentUser['id'],
+                                    $parentUser['username'],
+                                    $agentCommission,
+                                    $agentBeforeBalance,
+                                    $agentAfterBalance,
+                                    $orderId,
+                                    "租赁订单团长佣金（订单#{$orderId}）"
+                                ]);
+                                logMessage("  - 插入一级代理统计记录: agent_id={$parentUser['id']}");
+                            } catch (Exception $e) {
+                                // 记录插入失败时的错误日志，但不影响主流程
+                                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                            }
+                            
+                            // 查询二级上级用户
+                            if (!empty($parentUser['parent_id'])) {
+                                $stmt = $db->prepare("SELECT id, username, wallet_id, is_agent FROM c_users WHERE id = ?");
+                                $stmt->execute([$parentUser['parent_id']]);
+                                $secondParentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                                
+                                $secondParentAgentLevel = $secondParentUser ? (int)$secondParentUser['is_agent'] : 0;
+                                
+                                if ($secondParentUser && $secondParentAgentLevel >= 1) {
+                                    // 大团团长(3)、高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
+                                    if ($secondParentAgentLevel === 3 || $secondParentAgentLevel === 2) {
+                                        $secondAgentCommission = $seniorAgentCommissionAmount;
+                                    } else {
+                                        $secondAgentCommission = $agentCommissionAmount;
+                                    }
+                                    
+                                    // 查询二级团长钱包
+                                    $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                                    $stmt->execute([$secondParentUser['wallet_id']]);
+                                    $secondAgentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                                    
+                                    if ($secondAgentWallet) {
+                                        $secondAgentBeforeBalance = (int)$secondAgentWallet['balance'];
+                                        $secondAgentAfterBalance = $secondAgentBeforeBalance + $secondAgentCommission;
+                                        
+                                        // 记录二级代理C端任务统计
+                                        try {
+                                            $stmt = $db->prepare(" 
+                                                INSERT INTO c_task_statistics (
+                                                    c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                                    related_type, related_id, task_types, task_types_text, remark
+                                                ) VALUES (?, ?, 1, ?, ?, ?, 'second_agent_commission', ?, 6, '出租订单', ?)
+                                            ");
+                                            $stmt->execute([
+                                                $secondParentUser['id'],
+                                                $secondParentUser['username'],
+                                                $secondAgentCommission,
+                                                $secondAgentBeforeBalance,
+                                                $secondAgentAfterBalance,
+                                                $orderId,
+                                                "租赁订单二级代理佣金（订单#{$orderId}）"
+                                            ]);
+                                            logMessage("  - 插入二级代理统计记录: agent_id={$secondParentUser['id']}");
+                                        } catch (Exception $e) {
+                                            // 记录插入失败时的错误日志，但不影响主流程
+                                            error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             
             $db->commit();
             

@@ -87,7 +87,7 @@ try {
         $stmt->execute([$afterBalance, $walletId]);
         
         // 3. 插入新的wallet_log记录（真实变动）
-        $stmt = $db->prepare("
+        $stmt = $db->prepare(" 
             INSERT INTO wallets_log (
                 wallet_id, user_id, username, user_type, type, 
                 amount, before_balance, after_balance, 
@@ -105,6 +105,28 @@ try {
             $id,
             "充值到账：¥" . number_format($amount / 100, 2)
         ]);
+        
+        // 插入B端任务统计记录
+        try {
+            $stmt = $db->prepare(" 
+                INSERT INTO b_task_statistics (
+                    b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                    related_type, related_id, task_types, task_types_text, remark
+                ) VALUES (?, ?, 1, ?, ?, ?, 'recharge', ?, NULL, NULL, ?)
+            ");
+            $stmt->execute([
+                (int)$request['user_id'],
+                $request['username'],
+                $amount,
+                $beforeBalance,
+                $afterBalance,
+                $id,
+                "充值到账：¥" . number_format($amount / 100, 2)
+            ]);
+        } catch (Exception $e) {
+            // 记录插入失败时的错误日志，但不影响主流程
+            error_log('插入b_task_statistics失败: ' . $e->getMessage());
+        }
         
         // 4. 更新申请记录
         $stmt = $db->prepare("

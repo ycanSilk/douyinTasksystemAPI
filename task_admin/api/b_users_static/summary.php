@@ -2,11 +2,11 @@
 /**
  * B端周期统计接口
  * 
- * GET /task_admin/api/b/v1/statistics/summary.php
+ * GET /task_admin/api/b_users_static/summary.php
  * 
  * 请求参数：
- * - b_user_id: B端用户ID（必填）
- * - period: 统计周期：today, 7days, 15days, 30days, 12months
+ * - b_user_id: B端用户ID或用户名（可选）
+ * - period: 统计周期：today, 7days, 15days, 30days, 12months（默认：7days）
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -47,13 +47,11 @@ $urlBUserId = isset($_GET['b_user_id']) ? $_GET['b_user_id'] : '';
 // 测试模式下，如果URL中有b_user_id，则使用它；否则使用默认值1
 $bUserId = $urlBUserId ? $urlBUserId : 0;
 
-// 获取请求参数
-$period = isset($_GET['period']) ? $_GET['period'] : '';
-
-// 验证参数
-if (empty($period)) {
-    Response::error('统计周期不能为空', $errorCodes['INVALID_PARAMS']);
-}
+// 获取请求参数，默认7天
+$period = isset($_GET['period']) ? $_GET['period'] : '7days';
+// 获取分页参数
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 100;
 
 // 验证周期参数
 $validPeriods = ['today', '7days', '15days', '30days', '12months'];
@@ -103,7 +101,19 @@ try {
         $params = [$startDate, $endDate];
     }
     
-    // 查询每日数据
+    // 计算偏移量
+    $offset = ($page - 1) * $limit;
+    
+    // 查询每日数据总数
+    $countStmt = $db->prepare("
+        SELECT COUNT(DISTINCT DATE(created_at)) as total
+        FROM b_task_statistics 
+        $whereClause
+    ");
+    $countStmt->execute($params);
+    $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // 查询每日数据（带分页）
     $stmt = $db->prepare("
         SELECT 
             DATE(created_at) as date,
@@ -113,11 +123,16 @@ try {
         $whereClause
         GROUP BY DATE(created_at)
         ORDER BY date
+        LIMIT ? OFFSET ?
     ");
+    // 添加分页参数
+    $params[] = $limit;
+    $params[] = $offset;
     $stmt->execute($params);
     $dailyData = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // 计算汇总数据
+    // 计算汇总数据（使用不包含分页参数的原始参数）
+    $summaryParams = array_slice($params, 0, -2); // 移除分页参数
     $stmt = $db->prepare("
         SELECT 
             SUM(CASE WHEN flow_type = 1 THEN amount ELSE 0 END) as total_income,
@@ -125,44 +140,49 @@ try {
         FROM b_task_statistics 
         $whereClause
     ");
-    $stmt->execute($params);
+    $stmt->execute($summaryParams);
     $summary = $stmt->fetch(PDO::FETCH_ASSOC);
     
     // 格式化每日数据
     $formattedDailyData = [];
     foreach ($dailyData as $item) {
-        $netChange = $item['income'] - $item['expenditure'];
+        $income = ($item['income'] ?? 0) / 100;
+        $expenditure = ($item['expenditure'] ?? 0) / 100;
+        $netChange = $income - $expenditure;
         $formattedDailyData[] = [
             'date' => $item['date'],
-            'income' => $item['income'],
-            'income_yuan' => number_format($item['income'] / 100, 2),
-            'expenditure' => $item['expenditure'],
-            'expenditure_yuan' => number_format($item['expenditure'] / 100, 2),
-            'net_change' => $netChange,
-            'net_change_yuan' => number_format($netChange / 100, 2)
+            'income' => $income,
+            'expenditure' => $expenditure,
+            'net_change' => $netChange
         ];
     }
     
     // 计算净变动
-    $totalIncome = $summary['total_income'] ?? 0;
-    $totalExpenditure = $summary['total_expenditure'] ?? 0;
+    $totalIncome = ($summary['total_income'] ?? 0) / 100;
+    $totalExpenditure = ($summary['total_expenditure'] ?? 0) / 100;
     $netChange = $totalIncome - $totalExpenditure;
     
     // 构建汇总数据
     $formattedSummary = [
         'total_income' => $totalIncome,
-        'total_income_yuan' => number_format($totalIncome / 100, 2),
         'total_expenditure' => $totalExpenditure,
-        'total_expenditure_yuan' => number_format($totalExpenditure / 100, 2),
-        'net_change' => $netChange,
-        'net_change_yuan' => number_format($netChange / 100, 2)
+        'net_change' => $netChange
     ];
+    
+    // 计算总页数
+    $totalPages = ceil($total / $limit);
     
     // 返回结果
     Response::success([
         'period' => $period,
         'summary' => $formattedSummary,
-        'daily_data' => $formattedDailyData
+        'daily_data' => $formattedDailyData,
+        'pagination' => [
+            'page' => $page,
+            'limit' => $limit,
+            'total' => $total,
+            'total_pages' => $totalPages
+        ]
     ], '获取周期统计成功');
     
 } catch (PDOException $e) {

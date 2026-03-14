@@ -102,6 +102,29 @@ try {
             "提现审核通过：¥" . number_format($amount / 100, 2)
         ]);
         
+        // 3. 记录C端任务统计（仅当用户类型为C端时）
+        if ((int)$request['user_type'] === 1) {
+            try {
+                $stmt = $db->prepare(" 
+                    INSERT INTO c_task_statistics (
+                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                        related_type, related_id, task_types, task_types_text, remark
+                    ) VALUES (?, ?, 2, 0, ?, ?, 'withdraw', ?, NULL, NULL, ?)
+                ");
+                $stmt->execute([
+                    (int)$request['user_id'],
+                    $request['username'],
+                    $currentBalance,
+                    $currentBalance,
+                    $id,
+                    "提现审核通过：¥" . number_format($amount / 100, 2)
+                ]);
+            } catch (Exception $e) {
+                // 记录插入失败时的错误日志，但不影响主流程
+                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+            }
+        }
+        
         // 3. 更新申请记录（包含图片）
         $stmt = $db->prepare("
             UPDATE withdraw_requests 
@@ -292,6 +315,30 @@ try {
             $id,
             "提现申请被拒绝，退款：¥" . number_format($amount / 100, 2)
         ]);
+        
+        // 4. 记录C端任务统计（仅当用户类型为C端时）
+        if ((int)$request['user_type'] === 1) {
+            try {
+                $stmt = $db->prepare(" 
+                    INSERT INTO c_task_statistics (
+                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                        related_type, related_id, task_types, task_types_text, remark
+                    ) VALUES (?, ?, 1, ?, ?, ?, 'withdraw', ?, NULL, NULL, ?)
+                ");
+                $stmt->execute([
+                    (int)$request['user_id'],
+                    $request['username'],
+                    $amount,
+                    $beforeBalance,
+                    $afterBalance,
+                    $id,
+                    "提现申请被拒绝，退款：¥" . number_format($amount / 100, 2)
+                ]);
+            } catch (Exception $e) {
+                // 记录插入失败时的错误日志，但不影响主流程
+                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+            }
+        }
         
         // 4. 更新申请记录
         $stmt = $db->prepare("

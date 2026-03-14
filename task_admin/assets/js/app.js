@@ -128,12 +128,8 @@ function init() {
     initNavigation();
     initModal();
     // 初始化B端用户交易流水搜索表单
-    console.log('检查initBStatisticsForm函数是否存在:', typeof initBStatisticsForm === 'function');
     if (typeof initBStatisticsForm === 'function') {
-        console.log('调用initBStatisticsForm函数');
         initBStatisticsForm();
-    } else {
-        console.log('initBStatisticsForm函数不存在，可能b-user-list.js未正确加载');
     }
 }
 
@@ -173,16 +169,12 @@ function showMainPage() {
 
 // 加载导航栏
 async function loadNavigation() {
-    console.log('开始加载导航栏');
     try {
         const url = `/task_admin/api/system_permission_template/list.php`;
-        console.log('导航栏API URL:', url);
         
         // 使用传统的fetch方法
         const token = sessionStorage.getItem('admin_token');
-        console.log('获取到的token:', token ? '存在' : '不存在');
         
-        console.log('开始发送API请求');
         const response = await fetch(url + `?t=${Date.now()}`, {
             method: 'GET',
             headers: {
@@ -191,88 +183,60 @@ async function loadNavigation() {
             }
         });
         
-        console.log('API请求完成，状态码:', response.status, '状态文本:', response.statusText);
-        
         // 检查响应状态码
         if (!response.ok) {
-            console.error('加载导航栏失败: 状态码', response.status, response.statusText);
             showToast(`加载导航栏失败: ${response.status} ${response.statusText}`, 'error');
             return;
         }
         
         // 尝试解析JSON
         try {
-            console.log('开始解析响应JSON');
             const data = await response.json();
-            console.log('响应JSON解析完成:', data);
             
             if (data && data.code === 0) {
-                console.log('导航栏面板响应成功，数据数量:', data.data ? data.data.length : 0);
                 renderNavigation(data.data);
             } else if (data) {
-                console.error('加载导航栏失败:', data.message);
                 showToast('加载导航栏失败: ' + (data.message || '未知错误'), 'error');
             } else {
-                console.error('加载导航栏失败: 响应数据为undefined');
                 showToast('加载导航栏失败', 'error');
             }
         } catch (e) {
-            console.error('响应格式错误:', e);
             showToast('响应格式错误', 'error');
         }
     } catch (err) {
-        console.error('加载导航栏失败:', err);
         showToast('网络请求失败，请检查网络连接', 'error');
-    } finally {
-        console.log('导航栏加载过程完成');
     }
 }
 
 // 渲染导航栏
 function renderNavigation(templates) {
-    console.log('开始渲染导航栏，模板数量:', templates.length);
-    
     const navMenu = document.getElementById('navMenu');
-    console.log('导航菜单元素:', navMenu);
     
     if (!navMenu) {
-        console.error('导航菜单元素不存在');
         return;
     }
     
     navMenu.innerHTML = '';
-    console.log('清空导航菜单');
     
     // 按 parent_id 分组导航项
     const menuMap = {};
-    console.log('开始构建菜单映射');
     
     templates.forEach((template, index) => {
-        console.log(`处理模板 ${index}:`, template);
         // 确保parent_id是数字类型，NULL或undefined时设为0
         const parentId = template.parent_id ? parseInt(template.parent_id) : 0;
-        console.log(`  父ID: ${parentId}`);
         
         if (!menuMap[parentId]) {
             menuMap[parentId] = [];
-            console.log(`  创建新的父ID组: ${parentId}`);
         }
         menuMap[parentId].push(template);
-        console.log(`  添加到父ID组 ${parentId}，当前数量:`, menuMap[parentId].length);
     });
-    
-    console.log('菜单映射构建完成:', menuMap);
     
     // 渲染一级导航项（parent_id = 0）
     const level1Items = menuMap[0] || [];
-    console.log('一级导航项数量:', level1Items.length);
     
     level1Items.forEach((item, index) => {
-        console.log(`渲染一级导航项 ${index}:`, item);
-        
         const li = document.createElement('li');
         li.className = 'nav-item';
-        console.log(`  创建导航项元素:`, li);
         
         const a = document.createElement('a');
         a.href = '#';
@@ -281,16 +245,10 @@ function renderNavigation(templates) {
         if (item.section_id) {
             a.dataset.sectionId = item.section_id;
         }
-        console.log(`  创建链接元素:`, a);
         
         // 检查是否有子导航项
         const itemId = parseInt(item.id);
         const hasChildren = menuMap[itemId] && menuMap[itemId].length > 0;
-        console.log(`  导航项ID: ${itemId}, 是否有子导航项:`, hasChildren);
-        if (hasChildren) {
-            console.log(`  子导航项数量:`, menuMap[itemId].length);
-            console.log(`  子导航项列表:`, menuMap[itemId]);
-        }
         
         // 为所有一级导航项创建带折叠图标的结构
         // 创建容器div
@@ -324,46 +282,37 @@ function renderNavigation(templates) {
         
         // 添加到链接
         a.appendChild(div);
-        console.log(`  设置带折叠图标的链接内容`);
         
         // 添加点击事件用于折叠/展开
         a.addEventListener('click', (e) => {
             e.preventDefault();
             const subMenu = li.querySelector('.sub-menu');
             const toggleIcon = a.querySelector('.toggle-icon');
-            console.log(`  点击折叠/展开，子菜单:`, subMenu, '图标:', toggleIcon);
             
             if (subMenu) {
                 subMenu.classList.toggle('active');
                 toggleIcon.classList.toggle('ri-arrow-down-s-line');
                 toggleIcon.classList.toggle('ri-arrow-up-s-line');
-                console.log(`  切换子菜单显示状态:`, subMenu.classList.contains('active'));
             }
             
             // 如果没有子导航项，直接跳转到对应页面
             if (!hasChildren) {
                 const page = a.dataset.page;
-                console.log(`  没有子导航项，直接跳转到页面:`, page);
                 switchToPage(page);
             }
         });
         
         li.appendChild(a);
-        console.log(`  添加链接到导航项`);
         
         // 为所有一级导航项创建二级导航面板
         const subMenu = document.createElement('ul');
         subMenu.className = 'sub-menu';
-        console.log(`  创建子菜单元素:`, subMenu);
         
         // 如果有子导航项，渲染它们
         if (hasChildren) {
             menuMap[itemId].forEach((child, childIndex) => {
-                console.log(`  渲染二级导航项 ${childIndex}:`, child);
-                
                 const subLi = document.createElement('li');
                 subLi.className = 'sub-nav-item';
-                console.log(`    创建子导航项元素:`, subLi);
                 
                 const subA = document.createElement('a');
                 subA.href = '#';
@@ -384,31 +333,22 @@ function renderNavigation(templates) {
                 subA.appendChild(icon);
                 subA.appendChild(text);
                 
-                console.log(`    创建子链接元素:`, subA);
-                
                 subA.addEventListener('click', (e) => {
                     e.preventDefault();
                     const page = subA.dataset.page;
-                    console.log(`    点击子导航项，页面:`, page);
                     switchToPage(page);
                 });
                 
                 subLi.appendChild(subA);
-                console.log(`    添加子链接到子导航项`);
                 
                 subMenu.appendChild(subLi);
-                console.log(`    添加子导航项到子菜单`);
             });
         }
         
         li.appendChild(subMenu);
-        console.log(`  添加子菜单到导航项`);
         
         navMenu.appendChild(li);
-        console.log(`  添加导航项到导航菜单`);
     });
-    
-    console.log('导航栏渲染完成');
 }
 
 // 登出
@@ -455,15 +395,19 @@ function switchToPage(page) {
     // 获取section ID - 优先使用data-sectionId属性，然后使用默认规则
     let sectionId = `${page}Section`;
     if (targetLink && targetLink.dataset.sectionId) {
-        sectionId = targetLink.dataset.sectionId;
-        console.log(`使用数据集中的section_id: ${sectionId}`);
+        // 特殊处理bStatisticsSummary、cStatisticsSummary和cUsersStatisticsTable，因为它们实际上属于对应的statisticsSection
+        if (targetLink.dataset.sectionId === 'bStatisticsSummary') {
+            sectionId = 'b-statisticsSection';
+        } else if (targetLink.dataset.sectionId === 'cStatisticsSummary' || targetLink.dataset.sectionId === 'cUsersStatisticsTable') {
+            sectionId = 'c-statisticsSection';
+        } else {
+            sectionId = targetLink.dataset.sectionId;
+        }
     }
     
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
-    } else {
-        console.warn(`未找到section元素: ${sectionId}`);
     }
     
     // 保存当前页面到localStorage
@@ -474,6 +418,24 @@ function switchToPage(page) {
         case 'dashboard': loadDashboard(); break;
         case 'b-users': loadBUsers(); break;
         case 'b-statistics-flows': loadBStatistics(); break;
+        case 'b-statistics-summary': 
+            // 派单数据统计页面，调用loadOrderStatistics函数
+            if (typeof loadOrderStatistics === 'function') {
+                loadOrderStatistics();
+            }
+            break;
+        case 'c-statistics-flows':
+            // C端用户交易流水页面
+            if (typeof loadCStatistics === 'function') {
+                loadCStatistics();
+            }
+            break;
+        case 'c-statistics-summary':
+            // C端用户交易流水统计页面
+            if (typeof loadCOrderStatistics === 'function') {
+                loadCOrderStatistics();
+            }
+            break;
         case 'c-users': loadCUsers(); break;
         case 'system-users': loadSystemUsers(); break;
         case 'system-roles': loadSystemRoles(); break;
@@ -495,6 +457,11 @@ function switchToPage(page) {
             loadNotificationLogs();
             break;
         case 'magnifier': loadMagnifierTasks(); break;
+        case 'order-statistics': 
+            if (typeof loadOrderStatistics === 'function') {
+                loadOrderStatistics();
+            }
+            break;
     }
     
     // 处理B端和C端交易流水页面的内容显示
@@ -505,15 +472,15 @@ function switchToPage(page) {
         
         // 当切换到B端交易流水页面时，重新初始化搜索表单
         if (page === 'b-statistics-flows') {
-            console.log('切换到b-statistics-flows页面，检查bStatisticsForm元素');
             setTimeout(() => {
-                const form = document.getElementById('bStatisticsForm');
-                console.log(`bStatisticsForm元素: ${form ? '存在' : '不存在'}`);
                 if (typeof initBStatisticsForm === 'function') {
-                    console.log('重新调用initBStatisticsForm函数');
                     initBStatisticsForm();
-                } else {
-                    console.log('initBStatisticsForm函数不存在');
+                }
+            }, 100);
+        } else if (page === 'b-statistics-summary') {
+            setTimeout(() => {
+                if (typeof initOrderStatisticsForm === 'function') {
+                    initOrderStatisticsForm();
                 }
             }, 100);
         }
@@ -521,6 +488,36 @@ function switchToPage(page) {
         // 显示C端交易流水内容，隐藏统计内容
         document.getElementById('c-statistics-flows-content').style.display = page === 'c-statistics-flows' ? 'block' : 'none';
         document.getElementById('c-statistics-summary-content').style.display = page === 'c-statistics-summary' ? 'block' : 'none';
+        
+        // 当切换到C端交易流水页面时，重新初始化搜索表单并加载数据
+        if (page === 'c-statistics-flows') {
+            setTimeout(() => {
+                if (typeof initCStatisticsForm === 'function') {
+                    initCStatisticsForm();
+                }
+                // 调用loadCStatistics加载数据
+                if (typeof loadCStatistics === 'function') {
+                    loadCStatistics();
+                }
+            }, 100);
+        } else if (page === 'c-statistics-summary') {
+            setTimeout(() => {
+                if (typeof initCOrderStatisticsForm === 'function') {
+                    initCOrderStatisticsForm();
+                }
+                // 调用loadCOrderStatistics加载数据
+                if (typeof loadCOrderStatistics === 'function') {
+                    loadCOrderStatistics();
+                }
+            }, 100);
+        }
+    } else if (page === 'order-statistics') {
+        // 当切换到派单数据统计页面时，初始化搜索表单
+        setTimeout(() => {
+            if (typeof initOrderStatisticsForm === 'function') {
+                initOrderStatisticsForm();
+            }
+        }, 100);
     }
 }
 

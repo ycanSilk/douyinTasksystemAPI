@@ -12,7 +12,8 @@ if (typeof window.WebSocketManager === 'undefined') {
                 'recharge': 'recharge',
                 'withdraw': 'withdraw',
                 'agent': 'agent',
-                'magnifier': 'magnifier'
+                'magnifier': 'magnifier',
+                'rental': 'rental-orders'
             };
             this.soundPlayDebounceTimer = null;
             this.SOUND_DEBOUNCE_TIME = 5000; // 5秒防抖时间窗口
@@ -187,6 +188,7 @@ if (typeof window.WebSocketManager === 'undefined') {
             
             // 如果有新任务，先模拟用户点击获取权限，然后播放提示音
             if (hasNewTasks) {
+                // 立即播放提示音，确保一次轮询只播放一次
                 this.simulateUserInteraction(() => {
                     this.playNotificationSound();
                 });
@@ -200,7 +202,8 @@ if (typeof window.WebSocketManager === 'undefined') {
             'recharge': '充值审核任务',
             'withdraw': '提现审核任务', 
             'agent': '代理审核任务',
-            'magnifier': '放大镜审核任务'
+            'magnifier': '放大镜审核任务',
+            'rental': '租赁订单任务'
         };
         return descriptions[key] || '未知类型';
     }
@@ -260,7 +263,18 @@ if (typeof window.WebSocketManager === 'undefined') {
         if (!badge) {
             badge = document.createElement('span');
             badge.className = 'badge-notification';
+            // 为租赁订单添加红色角标样式
+            if (panelType === 'rental-orders') {
+                badge.classList.add('badge-red');
+            }
             navLink.appendChild(badge);
+        } else {
+            // 如果是租赁订单，确保添加红色角标样式
+            if (panelType === 'rental-orders') {
+                badge.classList.add('badge-red');
+            } else {
+                badge.classList.remove('badge-red');
+            }
         }
         
         // 更新角标数量

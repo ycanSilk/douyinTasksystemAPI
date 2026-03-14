@@ -166,13 +166,18 @@ function showWithdrawApproveModal(id) {
         
         try {
             const token = sessionStorage.getItem('admin_token');
+            console.log('Upload token:', token ? 'Exists' : 'Not found');
+            
             const formData = new FormData();
             formData.append('image', file);
             
             const headers = {};
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
+                console.log('Authorization header set');
             }
+            
+            console.log('Starting upload request');
             const response = await fetch('/task_admin/api/upload.php', {
                 method: 'POST',
                 headers: headers,
@@ -180,29 +185,48 @@ function showWithdrawApproveModal(id) {
                 body: formData
             });
             
+            console.log('Upload response status:', response.status);
+            
+            // 读取响应体文本，以便多次使用
+            const responseText = await response.text();
+            console.log('Upload response text:', responseText);
+            
             if (!response.ok) {
-                throw new Error('网络响应错误');
+                console.error('Upload error response:', responseText);
+                throw new Error(`网络响应错误: ${response.status} - ${responseText}`);
             }
             
-            const result = await response.json();
-            
-            if (result && result.code === 0) {
-                document.getElementById('uploadedImageUrl').value = result.data.url;
-                uploadArea.classList.remove('uploading');
-                uploadArea.innerHTML = `
-                    <p><i class="ri-check-circle-line" style="color: var(--success-color);"></i> 上传成功</p>
-                    <img src="${result.data.url}" class="upload-preview" style="max-height: 150px; margin-top: 10px; border-radius: 4px;">
-                `;
-                showToast('图片上传成功', 'success');
-            } else {
+            try {
+                const result = JSON.parse(responseText);
+                console.log('Upload result:', result);
+                
+                if (result && result.code === 0) {
+                    document.getElementById('uploadedImageUrl').value = result.data.url;
+                    uploadArea.classList.remove('uploading');
+                    uploadArea.innerHTML = `
+                        <p><i class="ri-check-circle-line" style="color: var(--success-color);"></i> 上传成功</p>
+                        <img src="${result.data.url}" class="upload-preview" style="max-height: 150px; margin-top: 10px; border-radius: 4px; display: block; width: auto;">
+                    `;
+                    console.log('Image URL:', result.data.url);
+                    showToast('图片上传成功', 'success');
+                } else {
+                    console.error('Upload failed:', result);
+                    uploadArea.classList.remove('uploading');
+                    uploadArea.innerHTML = '<p><i class="ri-close-circle-line" style="color: var(--danger-color);"></i> 上传失败，请重试</p>';
+                    showToast(result ? result.message : '上传失败', 'error');
+                }
+            } catch (jsonError) {
+                console.error('JSON parsing error:', jsonError);
+                console.error('Response text:', responseText);
                 uploadArea.classList.remove('uploading');
                 uploadArea.innerHTML = '<p><i class="ri-close-circle-line" style="color: var(--danger-color);"></i> 上传失败，请重试</p>';
-                showToast(result ? result.message : '上传失败', 'error');
+                showToast('上传失败: 服务器返回无效响应', 'error');
             }
         } catch (err) {
+            console.error('Upload error:', err);
             uploadArea.classList.remove('uploading');
             uploadArea.innerHTML = '<p><i class="ri-close-circle-line" style="color: var(--danger-color);"></i> 上传失败，请重试</p>';
-            showToast('图片上传失败', 'error');
+            showToast('图片上传失败: ' + err.message, 'error');
         }
     };
     

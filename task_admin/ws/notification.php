@@ -240,7 +240,7 @@ class WebSocketServer {
                     
                     // 检查是否有审核任务（使用英文key）
                     $hasTasks = false;
-                    $checkFields = ['recharge', 'withdraw', 'agent', 'magnifier'];
+                    $checkFields = ['recharge', 'withdraw', 'agent', 'magnifier', 'rental'];
                     
                     echo "开始检查审核任务...\n";
                     echo "检测字段列表: " . implode(', ', $checkFields) . "\n";

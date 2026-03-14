@@ -38,7 +38,7 @@ try {
     $notification_count = 0;
 
     // 需要检测的项目类型配置
-    // 只保留：团长审核、充值提醒、提现提醒、放大镜任务
+    // 只保留：团长审核、充值提醒、提现提醒、放大镜任务、租赁订单
     $auditTypes = [
         'recharge' => [
             'name' => '充值审核',
@@ -57,11 +57,17 @@ try {
             'path' => __DIR__ . '/../agent/list.php',
             'status' => 0,
             'message' => '新增了N条团长审核任务待处理'
+        ],
+        'rental' => [
+            'name' => '租赁订单',
+            'path' => __DIR__ . '/../rental_orders/list.php',
+            'status' => 1,
+            'message' => '新增了N条租赁订单待处理'
         ]
     ];
 
     // 定义需要排除的检测类型
-    $excludedCodes = ['ticket', 'rental', 'notification_list', 'system_message'];
+    $excludedCodes = ['ticket', 'notification_list', 'system_message'];
 
     // 遍历配置，执行检测
     foreach ($configs as $config) {
@@ -123,6 +129,11 @@ try {
                     break;
                 case 'agent':
                     $stmt = $db->prepare("SELECT COUNT(*) as count FROM agent_applications WHERE status = ?");
+                    $stmt->execute([$config['status']]);
+                    $count = (int)$stmt->fetchColumn();
+                    break;
+                case 'rental':
+                    $stmt = $db->prepare("SELECT COUNT(*) as count FROM rental_orders WHERE status = ?");
                     $stmt->execute([$config['status']]);
                     $count = (int)$stmt->fetchColumn();
                     break;

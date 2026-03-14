@@ -11,7 +11,7 @@
  Target Server Version : 80406 (8.4.6)
  File Encoding         : 65001
 
- Date: 14/03/2026 00:42:47
+ Date: 14/03/2026 14:43:48
 */
 
 SET NAMES utf8mb4;
@@ -65,11 +65,11 @@ INSERT INTO `system_permission_template` VALUES (18, '系统通知', 'notificati
 INSERT INTO `system_permission_template` VALUES (19, '团长迁跃升级', 'agent-upgrade', 'C端用户代理等级跃迁管理', NULL, 'ri-arrow-up-circle-line', 'agent', 22, 1, '2026-03-08 14:01:49', '2026-03-14 00:36:42', 1, 'agentUpgradeSection');
 INSERT INTO `system_permission_template` VALUES (20, '提示通知列表', 'notification-logs', '系统通知检测日志', NULL, 'ri-file-list-line', 'notification-logs', 19, 1, '2026-03-08 14:01:49', '2026-03-14 00:40:43', 1, 'notification-logsSection');
 INSERT INTO `system_permission_template` VALUES (21, '登录设备配置', 'login-devices-config', '用户登录设备数量配置', NULL, 'ri-lock-unlock-line', 'login-devices-config', 20, 1, '2026-03-10 12:55:46', '2026-03-14 00:39:26', 1, 'login-devices-configSection');
-INSERT INTO `system_permission_template` VALUES (22, 'B端用户交易流水', 'b-statistics', 'B端用户交易流水管理', NULL, 'ri-wallet-2-line', 'b-statistics', 12, 1, '2026-03-10 12:00:00', '2026-03-14 00:42:19', 1, 'b-statisticsSection');
-INSERT INTO `system_permission_template` VALUES (23, 'C端用户交易流水', 'c-statistics', 'C端用户交易流水管理', NULL, 'ri-wallet-2-line', 'c-statistics', 21, 1, '2026-03-13 19:01:24', '2026-03-14 00:42:25', 1, 'c-statisticsSection');
-INSERT INTO `system_permission_template` VALUES (30, '用户交易流水', 'b-statistics-flows', 'B端用户交易流水记录', 22, 'ri-list-check', 'b-statistics-flows', 1, 1, '2026-03-13 17:36:18', '2026-03-13 22:48:53', 2, 'b-statisticsSection');
-INSERT INTO `system_permission_template` VALUES (31, '数据统计', 'b-statistics-summary', 'B端用户交易数据统计', 22, 'ri-bar-chart-line', 'b-statistics-summary', 2, 1, '2026-03-13 17:36:18', '2026-03-13 22:48:55', 2, 'b-statisticsSection');
-INSERT INTO `system_permission_template` VALUES (32, 'C端交易流水', 'c-statistics-flows', 'C端用户交易流水记录', 23, 'ri-list-check', 'c-statistics-flows', 1, 1, '2026-03-13 19:05:00', '2026-03-13 22:48:57', 2, 'c-statisticsSection');
-INSERT INTO `system_permission_template` VALUES (33, 'C端数据统计', 'c-statistics-summary', 'C端数据统计管理', 23, 'ri-wallet-2-line', 'c-statistics-summary', 2, 1, '2026-03-13 19:05:56', '2026-03-13 22:49:00', 2, 'c-statisticsSection');
+INSERT INTO `system_permission_template` VALUES (22, '派单用户交易流水', 'b-statisticsSection', 'B端用户交易流水管理', NULL, 'ri-wallet-2-line', 'b-statistics', 3, 1, '2026-03-10 12:00:00', '2026-03-14 01:08:13', 1, 'b-statisticsSection');
+INSERT INTO `system_permission_template` VALUES (23, '接单用户交易流水', 'c-statisticsSection', 'C端用户交易流水管理', NULL, 'ri-wallet-2-line', 'c-statistics', 3, 1, '2026-03-13 19:01:24', '2026-03-14 01:08:17', 1, 'c-statisticsSection');
+INSERT INTO `system_permission_template` VALUES (30, '派单交易流水', 'b-statistics-flows', 'B端用户交易流水记录', 22, 'ri-list-check', 'b-statistics-flows', 1, 1, '2026-03-13 17:36:18', '2026-03-14 01:06:06', 2, 'b-statisticsSection');
+INSERT INTO `system_permission_template` VALUES (31, '派单数据统计', 'b-statistics-summary', 'B端用户交易数据统计', 22, 'ri-bar-chart-line', 'b-statistics-summary', 2, 1, '2026-03-13 17:36:18', '2026-03-14 00:48:30', 2, 'bStatisticsSummary');
+INSERT INTO `system_permission_template` VALUES (32, '接单交易流水', 'c-statistics-flows', 'C端用户交易流水记录', 23, 'ri-list-check', 'c-statistics-flows', 1, 1, '2026-03-13 19:05:00', '2026-03-14 00:48:35', 2, 'cUsersStatisticsTable');
+INSERT INTO `system_permission_template` VALUES (33, '接单数据统计', 'c-statistics-summary', 'C端数据统计管理', 23, 'ri-wallet-2-line', 'c-statistics-summary', 2, 1, '2026-03-13 19:05:56', '2026-03-14 00:48:38', 2, 'cStatisticsSummary');
 
 SET FOREIGN_KEY_CHECKS = 1;

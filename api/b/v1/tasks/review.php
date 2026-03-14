@@ -53,6 +53,31 @@ require_once __DIR__ . '/../../../../core/AppConfig.php';
 
 $errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
 
+// 检查用户的上级代理中是否有大团团长
+function hasLargeGroupAgent($db, $userId, $maxLevel = 2) {
+    $currentUserId = $userId;
+    $level = 0;
+    
+    while ($level < $maxLevel) {
+        $stmt = $db->prepare("SELECT parent_id, is_agent FROM c_users WHERE id = ?");
+        $stmt->execute([$currentUserId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$user || !$user['parent_id']) {
+            break;
+        }
+        
+        if ($user['is_agent'] == 3) {
+            return true;
+        }
+        
+        $currentUserId = $user['parent_id'];
+        $level++;
+    }
+    
+    return false;
+}
+
 // 数据库连接
 $db = Database::connect();
 
@@ -249,30 +274,7 @@ try {
         // 获取派单单价
         $taskUnitPrice = (float)($bTaskInfo['unit_price'] ?? 0);
 
-        // 检查用户的上级代理中是否有大团团长
-        function hasLargeGroupAgent($db, $userId, $maxLevel = 2) {
-            $currentUserId = $userId;
-            $level = 0;
-            
-            while ($level < $maxLevel) {
-                $stmt = $db->prepare("SELECT parent_id, is_agent FROM c_users WHERE id = ?");
-                $stmt->execute([$currentUserId]);
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$user || !$user['parent_id']) {
-                    break;
-                }
-                
-                if ($user['is_agent'] == 3) {
-                    return true;
-                }
-                
-                $currentUserId = $user['parent_id'];
-                $level++;
-            }
-            
-            return false;
-        }
+        
 
         // 查询模板佣金配置
         $stmt = $db->prepare("SELECT * FROM task_templates WHERE id = ?");
@@ -385,6 +387,30 @@ try {
             $cRemark
         ]);
         
+        // 13.1 记录C端任务统计
+        try {
+            $stmt = $db->prepare(" 
+                INSERT INTO c_task_statistics (
+                    c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                    related_type, related_id, task_types, task_types_text, remark
+                ) VALUES (?, ?, 1, ?, ?, ?, 'commission', ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $cUser['id'],
+                $cUser['username'],
+                $cUserCommission,
+                $cBeforeBalance,
+                $cAfterBalance,
+                $bTaskId,
+                $taskType,
+                $taskTypeText,
+                $cRemark
+            ]);
+        } catch (Exception $e) {
+            // 记录插入失败时的错误日志，但不影响主流程
+            error_log('插入c_task_statistics失败: ' . $e->getMessage());
+        }
+        
         // 14. 检查是否有团长上级
         $agentCommission = 0;
         $agentUserId = null;
@@ -456,6 +482,30 @@ try {
                         $taskTypeText,
                         $agentRemark
                     ]);
+                    
+                    // 记录一级代理C端任务统计
+                    try {
+                        $stmt = $db->prepare(" 
+                            INSERT INTO c_task_statistics (
+                                c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                related_type, related_id, task_types, task_types_text, remark
+                            ) VALUES (?, ?, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?)
+                        ");
+                        $stmt->execute([
+                            $parentUser['id'],
+                            $parentUser['username'],
+                            $agentCommission,
+                            $agentBeforeBalance,
+                            $agentAfterBalance,
+                            $bTaskId,
+                            $taskType,
+                            $taskTypeText,
+                            $agentRemark
+                        ]);
+                    } catch (Exception $e) {
+                        // 记录插入失败时的错误日志，但不影响主流程
+                        error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                    }
                 }
                 
                 // 新增：查询二级上级用户
@@ -518,6 +568,30 @@ try {
                                 $taskTypeText,
                                 $secondAgentRemark
                             ]);
+                            
+                            // 记录二级代理C端任务统计
+                            try {
+                                $stmt = $db->prepare(" 
+                                    INSERT INTO c_task_statistics (
+                                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                        related_type, related_id, task_types, task_types_text, remark
+                                    ) VALUES (?, ?, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?)
+                                ");
+                                $stmt->execute([
+                                    $secondParentUser['id'],
+                                    $secondParentUser['username'],
+                                    $secondAgentCommission,
+                                    $secondAgentBeforeBalance,
+                                    $secondAgentAfterBalance,
+                                    $bTaskId,
+                                    $taskType,
+                                    $taskTypeText,
+                                    $secondAgentRemark
+                                ]);
+                            } catch (Exception $e) {
+                                // 记录插入失败时的错误日志，但不影响主流程
+                                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                            }
                         }
                     }
                 }

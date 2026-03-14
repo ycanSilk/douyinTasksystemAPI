@@ -203,6 +203,28 @@ try {
         throw new Exception('记录流水失败: ' . implode(', ', $stmt->errorInfo()));
     }
     
+    // 插入B端任务统计记录
+    try {
+        $stmt = $db->prepare(" 
+            INSERT INTO b_task_statistics (
+                b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                related_type, related_id, task_types, task_types_text, remark
+            ) VALUES (?, ?, 2, ?, ?, ?, 'task_publish', ?, 3, '放大镜搜索词', ?)
+        ");
+        $stmt->execute([
+            $currentUser['user_id'],
+            $bUser['username'],
+            $totalPriceInCents,
+            $beforeBalance,
+            $afterBalance,
+            $taskId,
+            $remark
+        ]);
+    } catch (Exception $e) {
+        // 记录插入失败时的错误日志，但不影响主流程
+        error_log('插入b_task_statistics失败: ' . $e->getMessage());
+    }
+    
     $db->commit();
     
     $stmt = $db->prepare(" 

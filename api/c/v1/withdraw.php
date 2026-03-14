@@ -277,6 +277,27 @@ try {
         $newBalance, // 扣款后的余额
         $remark
     ]);
+    
+    // 3. 记录C端任务统计
+    try {
+        $stmt = $db->prepare(" 
+            INSERT INTO c_task_statistics (
+                c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                related_type, related_id, task_types, task_types_text, remark
+            ) VALUES (?, ?, 2, ?, ?, ?, 'withdraw', 0, NULL, NULL, ?)
+        ");
+        $stmt->execute([
+            $currentUser['user_id'],
+            $cUser['username'],
+            $amountInCents,
+            $currentBalance,
+            $newBalance,
+            $remark
+        ]);
+    } catch (Exception $e) {
+        // 记录插入失败时的错误日志，但不影响主流程
+        error_log('插入c_task_statistics失败: ' . $e->getMessage());
+    }
     $logId = $db->lastInsertId();
     
     // 3. 创建提现申请记录（保存流水ID和手续费信息）

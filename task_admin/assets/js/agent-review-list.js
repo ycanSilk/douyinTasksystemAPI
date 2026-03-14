@@ -42,8 +42,7 @@ function renderAgentTable(list) {
                     <th>申请类型</th>
                     <th>邀请码</th>
                     <th>有效邀请</th>
-                    <th>总邀请</th>
-                    <th>迁跃等级</th>
+                    <th>总邀请</th>                   
                     <th>状态</th>
                     <th>申请时间</th>
                     <th>操作</th>
@@ -73,7 +72,6 @@ function renderAgentTable(list) {
                 <td>${a.invite_code}</td>
                 <td>${a.valid_invites}</td>
                 <td>${a.total_invites}</td>
-                <td>${a.from_level && a.to_level ? `${a.from_level} → ${a.to_level}` : '-'}</td>
                 <td>${statusBadge}</td>
                 <td>${a.created_at}</td>
                 <td>${actions}</td>

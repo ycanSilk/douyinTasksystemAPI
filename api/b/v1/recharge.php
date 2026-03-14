@@ -97,7 +97,7 @@ try {
     
     // 1. 先创建钱包流水记录（related_id暂时为0）
     $remark = "充值 ¥" . number_format($amount, 2) . "（{$paymentMethod}），审核中";
-    $stmt = $db->prepare("
+    $stmt = $db->prepare(" 
         INSERT INTO wallets_log (
             wallet_id, user_id, username, user_type, type, 
             amount, before_balance, after_balance, 
@@ -113,6 +113,27 @@ try {
         $remark
     ]);
     $logId = $db->lastInsertId();
+    
+    // 2. 插入B端任务统计记录
+    try {
+        $stmt = $db->prepare(" 
+            INSERT INTO b_task_statistics (
+                b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                related_type, related_id, task_types, task_types_text, remark
+            ) VALUES (?, ?, 1, ?, ?, ?, 'recharge', 0, NULL, NULL, ?)
+        ");
+        $stmt->execute([
+            $currentUser['user_id'],
+            $bUser['username'],
+            $amountInCents,
+            $currentBalance,
+            $currentBalance,  // 审核中，余额不变
+            $remark
+        ]);
+    } catch (Exception $e) {
+        // 记录插入失败时的错误日志，但不影响主流程
+        error_log('插入b_task_statistics失败: ' . $e->getMessage());
+    }
     
     // 2. 创建充值申请记录（保存流水ID）
     $stmt = $db->prepare("

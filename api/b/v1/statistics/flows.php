@@ -2,24 +2,23 @@
 /**
  * B端流水列表接口
  * 
- * GET /api/b/v1/statistics/flows
+ * GET /api/b_users_static/flows
  * 
  * 请求参数：
- * - b_user_id: B端用户ID（必填）
  * - page: 页码，默认1
- * - limit: 每页数量，默认20
- * - flow_type: 流水类型：1=收入，2=支出
+ * - limit: 每页数量，默认100
+ * - b_user_id: B端用户ID
+ * - related_id: 关联ID（任务ID、订单ID等）
  * - related_type: 关联类型：task_publish, recharge, account_rental, refund
+ * - task_types: 任务类型：1=上评评论，2=中评评论，3=放大镜搜索词，4=上中评评论，5=中下评评论，6=出租订单，7=求租订单
  * - start_date: 开始日期，格式：YYYY-MM-DD
  * - end_date: 结束日期，格式：YYYY-MM-DD
- * - min_amount: 最小金额（分）
- * - max_amount: 最大金额（分）
  */
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: X-Token, Content-Type');
+header('Access-Control-Allow-Headers: X-Token, Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -36,70 +35,47 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 require_once __DIR__ . '/../../../../core/Database.php';
-require_once __DIR__ . '/../../../../core/AuthMiddleware.php';
 require_once __DIR__ . '/../../../../core/Response.php';
+require_once __DIR__ . '/../../../../core/AuthMiddleware.php';
 
 $errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
 
+// 连接数据库
 $db = Database::connect();
 
-// 测试模式：如果传入test参数，则使用默认用户ID
-$testMode = isset($_GET['test']) && $_GET['test'] === '1';
-
-// 获取URL参数中的b_user_id
-$urlBUserId = isset($_GET['b_user_id']) ? (int)$_GET['b_user_id'] : 0;
-
-if ($testMode) {
-    // 测试模式下，如果URL中有b_user_id，则使用它；否则使用默认值1
-    $bUserId = $urlBUserId > 0 ? $urlBUserId : 1;
-} else {
-    $auth = new AuthMiddleware($db);
-    $currentUser = $auth->authenticateB();
-    
-    // 如果URL中有b_user_id，则使用它；否则使用token中的user_id
-    $bUserId = $urlBUserId > 0 ? $urlBUserId : $currentUser['user_id'];
-}
+// 验证B端用户身份
+$auth = new AuthMiddleware($db);
+$userInfo = $auth->authenticateB();
+$bUserId = $userInfo['user_id'];
 
 // 获取请求参数
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
-$flowType = isset($_GET['flow_type']) ? (int)$_GET['flow_type'] : 0;
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 100;
+$relatedId = isset($_GET['related_id']) ? (int)$_GET['related_id'] : 0;
 $relatedType = isset($_GET['related_type']) ? $_GET['related_type'] : '';
+$taskTypes = isset($_GET['task_types']) ? (int)$_GET['task_types'] : 0;
 $startDate = isset($_GET['start_date']) ? $_GET['start_date'] : '';
 $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : '';
-$minAmount = isset($_GET['min_amount']) ? (int)$_GET['min_amount'] : 0;
-$maxAmount = isset($_GET['max_amount']) ? (int)$_GET['max_amount'] : 0;
-
-// 验证参数 - 后台管理页面可以不传入b_user_id，查询所有用户数据
-if (empty($bUserId) && !$testMode) {
-    // 从token中获取用户信息，检查是否为管理员
-    $auth = new AuthMiddleware($db);
-    $currentUser = $auth->authenticateAdmin();
-    if (!$currentUser) {
-        Response::error('B端用户ID不能为空', $errorCodes['INVALID_PARAMS']);
-    }
-    // 管理员可以查询所有用户数据，设置bUserId为0表示查询所有
-    $bUserId = 0;
-}
 
 // 构建查询条件
-$where = "1=1";
-$params = [];
+$where = "b_user_id = ?";
+$params = [$bUserId];
 
-// 如果bUserId不为0，则添加用户ID过滤条件
-if (!empty($bUserId)) {
-    $where .= " AND b_user_id = ?";
-    $params[] = $bUserId;
-}
+// 这里不再接受b_user_id参数，因为我们使用当前认证用户的ID
 
-if (!empty($flowType)) {
-    $where .= " AND flow_type = ?";
-    $params[] = $flowType;
+if (!empty($relatedId)) {
+    $where .= " AND related_id = ?";
+    $params[] = $relatedId;
 }
 
 if (!empty($relatedType)) {
     $where .= " AND related_type = ?";
     $params[] = $relatedType;
+}
+
+if (!empty($taskTypes)) {
+    $where .= " AND task_types = ?";
+    $params[] = $taskTypes;
 }
 
 if (!empty($startDate)) {
@@ -110,16 +86,6 @@ if (!empty($startDate)) {
 if (!empty($endDate)) {
     $where .= " AND DATE(created_at) <= ?";
     $params[] = $endDate;
-}
-
-if (!empty($minAmount)) {
-    $where .= " AND amount >= ?";
-    $params[] = $minAmount;
-}
-
-if (!empty($maxAmount)) {
-    $where .= " AND amount <= ?";
-    $params[] = $maxAmount;
 }
 
 // 计算分页
@@ -156,15 +122,14 @@ try {
             'username' => $item['username'],
             'flow_type' => $item['flow_type'],
             'flow_type_text' => $item['flow_type'] === 1 ? '收入' : '支出',
-            'amount' => $item['amount'],
-            'amount_yuan' => number_format($item['amount'] / 100, 2),
-            'before_balance' => $item['before_balance'],
-            'after_balance' => $item['after_balance'],
+            'amount' => $item['amount'] / 100,
+            'before_balance' => $item['before_balance'] / 100,
+            'after_balance' => $item['after_balance'] / 100,
             'related_type' => $item['related_type'],
             'related_type_text' => getRelatedTypeText($item['related_type']),
             'related_id' => $item['related_id'],
             'task_types' => $item['task_types'],
-            'task_types_text' => $item['task_types_text'],
+            'task_types_text' => getTaskTypesText($item['task_types']),
             'remark' => $item['remark'],
             'created_at' => $item['created_at']
         ];
@@ -198,6 +163,20 @@ function getRelatedTypeText($relatedType) {
         'account_rental' => '账号租赁',
         'refund' => '退款'
     ];
-    return $map[$relatedType] ?? $relatedType;
+    return $map[(string)$relatedType] ?? $relatedType;
+}
+
+// 获取任务类型文本
+function getTaskTypesText($taskTypes) {
+    $map = [
+        1 => '上评评论',
+        2 => '中评评论',
+        3 => '放大镜搜索词',
+        4 => '上中评评论',
+        5 => '中下评评论',
+        6 => '出租订单',
+        7 => '求租订单'
+    ];
+    return $map[(int)$taskTypes] ?? '';
 }
 ?>
