@@ -105,7 +105,7 @@ class AppConfig {
                 return json_decode($value, true);
             case 'array':
                 // 数组用逗号分隔
-                return array_filter(array_map('trim', explode(',', $value)));
+                return array_map('trim', explode('-', $value));
             default:
                 return $value;
         }

@@ -115,12 +115,17 @@ if (empty($amount) || !is_numeric($amount) || $amount <= 0) {
     Response::error('提现金额必须大于0', $errorCodes['WITHDRAW_AMOUNT_INVALID']);
 }
 
+// 清除配置缓存，确保读取最新的配置值
+AppConfig::clearCache();
+
 // 获取提现限制配置
 $minAmount = AppConfig::get('c_withdraw_min_amount', 100);
 $maxAmount = AppConfig::get('c_withdraw_max_amount', 500);
 $amountMultiple = AppConfig::get('c_withdraw_amount_multiple', 100);
 $dailyLimit = AppConfig::get('c_withdraw_daily_limit', 1000);
 $allowedWeekdays = AppConfig::get('c_withdraw_allowed_weekdays', ['4']);
+
+
 
 // 限制1：金额必须是整数倍
 if ($amount != floor($amount / $amountMultiple) * $amountMultiple) {
@@ -136,17 +141,6 @@ if ($amount > $maxAmount) {
     Response::error("单次提现金额不能超过{$maxAmount}元", $errorCodes['WITHDRAW_AMOUNT_INVALID']);
 }
 
-// 限制3：星期几限制
-$currentWeekday = date('w'); // 0=周日, 1-6=周一至周六
-if (!in_array($currentWeekday, $allowedWeekdays)) {
-    $weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    $allowedNames = array_map(function($day) use ($weekdayNames) {
-        return $weekdayNames[intval($day)];
-    }, $allowedWeekdays);
-    $allowedStr = implode('、', $allowedNames);
-    Response::error("只能在{$allowedStr}提现", $errorCodes['WITHDRAW_TIME_NOT_ALLOWED']);
-}
-
 if (empty($withdrawMethod)) {
     Response::error('收款方式不能为空', $errorCodes['WITHDRAW_METHOD_INVALID']);
 }
@@ -160,6 +154,23 @@ if (empty($accountName)) {
 }
 
 try {
+    // 限制3：星期几限制
+    $currentWeekday = date('w'); // 0=周日, 1-6=周一至周六
+    $currentWeekdayStr = strval($currentWeekday); // 转换为字符串，与配置值类型匹配
+
+    
+    if (!in_array($currentWeekdayStr, $allowedWeekdays)) {
+        $weekdayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        $allowedNames = array_map(function($day) use ($weekdayNames) {
+            return $weekdayNames[intval($day)];
+        }, $allowedWeekdays);
+        $allowedStr = implode('、', $allowedNames);
+        error_log("星期几检查失败，返回错误: 只能在{$allowedStr}提现");
+        Response::error("只能在{$allowedStr}提现", $errorCodes['WITHDRAW_TIME_NOT_ALLOWED']);
+    }
+    
+    error_log("星期几检查通过，继续检查大团团长");
+    
     // 查询C端用户信息
     $stmt = $db->prepare("SELECT wallet_id, username, is_agent FROM c_users WHERE id = ?");
     $stmt->execute([$currentUser['user_id']]);
@@ -177,11 +188,7 @@ try {
     // 4. 三级及以上邀请用户（其一级和二级邀请人都不是大团团长）可以正常提现
     $userAgentLevel = (int)($cUser['is_agent'] ?? 0);
     
-    // 添加调试日志
-    error_log("=== 提现权限检查开始 ===");
-    error_log("用户ID: " . $currentUser['user_id']);
-    error_log("用户名: " . $cUser['username']);
-    error_log("用户代理等级: " . $userAgentLevel);
+
     
     // 判断用户是否是大团团长
     $isLargeGroupAgent = ($userAgentLevel == 3);
