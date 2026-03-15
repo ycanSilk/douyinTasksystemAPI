@@ -119,8 +119,8 @@ try {
         $stmt = $db->prepare(" 
             INSERT INTO b_task_statistics (
                 b_user_id, username, flow_type, amount, before_balance, after_balance, 
-                related_type, related_id, task_types, task_types_text, remark
-            ) VALUES (?, ?, 1, ?, ?, ?, 'recharge', 0, NULL, NULL, ?)
+                related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+            ) VALUES (?, ?, 1, ?, ?, ?, 'recharge', 0, NULL, NULL, 2, '充值申请记录，当前状态待审核', ?)
         ");
         $stmt->execute([
             $currentUser['user_id'],

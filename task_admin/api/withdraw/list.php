@@ -82,11 +82,8 @@ $total = (int)$stmt->fetchColumn();
 $offset = ($page - 1) * $pageSize;
 
 // 查询数据
-$sql = "SELECT w.*, 
-               COALESCE(b.username, c.username, CONCAT('用户ID:', w.user_id)) as username
+$sql = "SELECT w.*
         FROM withdraw_requests w
-        LEFT JOIN b_users b ON w.user_id = b.id
-        LEFT JOIN c_users c ON w.user_id = c.id
         $whereClause
         ORDER BY w.created_at DESC
         LIMIT ? OFFSET ?";

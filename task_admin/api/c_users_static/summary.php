@@ -88,16 +88,16 @@ try {
     if (!empty($cUserId)) {
         if (is_numeric($cUserId)) {
             // 如果是数字，按用户ID搜索
-            $whereClause = "WHERE c_user_id = ? AND DATE(created_at) BETWEEN ? AND ?";
+            $whereClause = "WHERE c_user_id = ? AND DATE(created_at) BETWEEN ? AND ? AND NOT (related_type = 'withdraw' AND record_status != 3)";
             $params = [(int)$cUserId, $startDate, $endDate];
         } else {
             // 如果是字符串，按用户名搜索
-            $whereClause = "WHERE username LIKE ? AND DATE(created_at) BETWEEN ? AND ?";
+            $whereClause = "WHERE username LIKE ? AND DATE(created_at) BETWEEN ? AND ? AND NOT (related_type = 'withdraw' AND record_status != 3)";
             $params = ['%' . $cUserId . '%', $startDate, $endDate];
         }
     } else {
         // 没有指定c_user_id，统计整个表的数据
-        $whereClause = "WHERE DATE(created_at) BETWEEN ? AND ?";
+        $whereClause = "WHERE DATE(created_at) BETWEEN ? AND ? AND NOT (related_type = 'withdraw' AND record_status != 3)";
         $params = [$startDate, $endDate];
     }
     

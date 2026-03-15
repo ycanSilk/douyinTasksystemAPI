@@ -64,7 +64,7 @@ function renderWithdrawTable(list) {
             <tr>
                 <td>${w.id}</td>
                 <td><strong>${w.username}</strong></td>
-                <td>¥${w.amount}</td>
+                <td>¥${(w.amount / 100).toFixed(2)}</td>
                 <td>${w.withdraw_method}</td>
                 <td>${w.withdraw_account}</td>
                 <td>${w.account_name || '-'}</td>

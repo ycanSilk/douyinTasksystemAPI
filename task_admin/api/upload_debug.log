@@ -1,0 +1,246 @@
+[2026-03-16 00:19:08] ===== 开始处理上传请求 =====
+[2026-03-16 00:19:08] 请求方法: POST
+[2026-03-16 00:19:08] 请求头: Array
+(
+    [Host] => localhost:8000
+    [Connection] => keep-alive
+    [Content-Length] => 44257
+    [sec-ch-ua-platform] => "Windows"
+    [Authorization] => Bearer eyJ1c2VyX2lkIjoxLCJ0eXBlIjozLCJleHAiOjE3NzQxOTU1NTJ9
+    [User-Agent] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    [sec-ch-ua] => "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    [Content-Type] => multipart/form-data; boundary=----WebKitFormBoundaryi6nMOFnT4rpKje0a
+    [sec-ch-ua-mobile] => ?0
+    [Accept] => */*
+    [Origin] => http://localhost:8000
+    [Sec-Fetch-Site] => same-origin
+    [Sec-Fetch-Mode] => cors
+    [Sec-Fetch-Dest] => empty
+    [Referer] => http://localhost:8000/task_admin/index.html
+    [Accept-Encoding] => gzip, deflate, br, zstd
+    [Accept-Language] => zh-CN,zh;q=0.9
+)
+
+[2026-03-16 00:19:08] 文件上传: Array
+(
+    [image] => Array
+        (
+            [name] => D2F7FBFB41224378ECA305B5C8E18B8E.jpg
+            [full_path] => D2F7FBFB41224378ECA305B5C8E18B8E.jpg
+            [type] => image/jpeg
+            [tmp_name] => C:\Users\22356\AppData\Local\Temp\phpD542.tmp
+            [error] => 0
+            [size] => 44046
+        )
+
+)
+
+[2026-03-16 00:19:08] POST数据: Array
+(
+)
+
+[2026-03-16 00:19:08] 加载 AuthMiddleware
+[2026-03-16 00:19:08] 开始验证 Admin 登录
+[2026-03-16 00:19:08] Admin 登录验证成功
+[2026-03-16 00:19:08] 加载配置文件
+[2026-03-16 00:19:08] 配置文件加载成功: Array
+(
+    [website] => https://api.kktaskpaas.com/
+    [upload_path] => ./img
+    [platform_fee_rate] => 0.25
+    [task_submit_timeout] => 600
+    [c_withdraw_min_amount] => 1
+    [c_withdraw_max_amount] => 500
+    [c_withdraw_amount_multiple] => 1
+    [c_withdraw_daily_limit] => 1000
+    [c_withdraw_allowed_weekdays] => Array
+        (
+            [0] => 1
+            [1] => 2
+            [2] => 3
+            [3] => 4
+            [4] => 5
+            [5] => 6
+            [6] => 0
+        )
+
+    [b_withdraw_min_amount] => 100
+    [b_withdraw_max_amount] => 5000
+    [b_withdraw_daily_limit] => 10000
+    [rental_platform_rate] => 25
+    [rental_platform_fee_rate] => 0.25
+    [c_withdraw_fee_rate] => 0.03
+    [senior_agent_required_active_users] => 15
+    [senior_agent_active_user_task_count] => 100
+    [senior_agent_active_user_hours] => 24
+    [senior_agent_max_count] => 100
+    [agent_required_active_users] => 5
+    [agent_active_user_task_count] => 30
+    [agent_active_user_hours] => 24
+    [agent_incentive_enabled] => 0
+    [agent_incentive_end_time] => 2099-12-31 23:59:59
+    [agent_incentive_amount] => 1000
+    [agent_incentive_min_withdraw] => 10000
+    [agent_incentive_limit_enabled] => 1
+    [agent_incentive_limit_count] => 5
+    [rental_seller_rate] => 70
+    [rental_agent_rate] => 5
+    [rental_senior_agent_rate] => 5
+    [commission_c_user] => 0
+    [commission_agent] => 0
+    [notification_enabled] => 1
+    [notification_sound_enabled] => 1
+    [notification_check_interval] => 60
+    [notification_max_unread] => 50
+    [notification_types] => Array
+        (
+            [0] => recharge,withdraw,agent,magnifier,rental,ticket,system
+        )
+
+    [large_group_agent] => 0.8
+)
+
+[2026-03-16 00:19:08] 使用 image 字段上传文件
+[2026-03-16 00:19:08] 文件上传信息: Array
+(
+    [name] => D2F7FBFB41224378ECA305B5C8E18B8E.jpg
+    [full_path] => D2F7FBFB41224378ECA305B5C8E18B8E.jpg
+    [type] => image/jpeg
+    [tmp_name] => C:\Users\22356\AppData\Local\Temp\phpD542.tmp
+    [error] => 0
+    [size] => 44046
+)
+
+[2026-03-16 00:19:08] 文件大小: 44046 字节
+[2026-03-16 00:19:08] 文件 MIME 类型: image/jpeg
+[2026-03-16 00:19:08] 文件扩展名: jpg
+[2026-03-16 00:19:08] 生成的文件名哈希: 8f643a6c057903fcc783fb35c3b37f8d
+[2026-03-16 00:19:08] 上传目录: D:\github\douyinTasksystemAPI\task_admin\api/../../img
+[2026-03-16 00:19:08] 目标文件路径: D:\github\douyinTasksystemAPI\task_admin\api/../../img/8f643a6c057903fcc783fb35c3b37f8d.jpg
+[2026-03-16 00:19:08] 文件保存成功: D:\github\douyinTasksystemAPI\task_admin\api/../../img/8f643a6c057903fcc783fb35c3b37f8d.jpg
+[2026-03-16 00:19:08] 生成的图片 URL: https://api.kktaskpaas.com/img/8f643a6c057903fcc783fb35c3b37f8d.jpg
+[2026-03-16 00:19:08] 返回成功响应
+[2026-03-16 00:19:08] ===== 上传请求处理完成 =====
+[2026-03-16 00:19:13] ===== 开始处理上传请求 =====
+[2026-03-16 00:19:13] 请求方法: POST
+[2026-03-16 00:19:13] 请求头: Array
+(
+    [Host] => localhost:8000
+    [Connection] => keep-alive
+    [Content-Length] => 1398881
+    [sec-ch-ua-platform] => "Windows"
+    [Authorization] => Bearer eyJ1c2VyX2lkIjoxLCJ0eXBlIjozLCJleHAiOjE3NzQxOTU1NTJ9
+    [User-Agent] => Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    [sec-ch-ua] => "Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"
+    [Content-Type] => multipart/form-data; boundary=----WebKitFormBoundary74BqAlj3kKdYO0Qg
+    [sec-ch-ua-mobile] => ?0
+    [Accept] => */*
+    [Origin] => http://localhost:8000
+    [Sec-Fetch-Site] => same-origin
+    [Sec-Fetch-Mode] => cors
+    [Sec-Fetch-Dest] => empty
+    [Referer] => http://localhost:8000/task_admin/index.html
+    [Accept-Encoding] => gzip, deflate, br, zstd
+    [Accept-Language] => zh-CN,zh;q=0.9
+)
+
+[2026-03-16 00:19:13] 文件上传: Array
+(
+    [image] => Array
+        (
+            [name] => 4BE6AF8C7DBCC2087D0538BCBE31AC73.png
+            [full_path] => 4BE6AF8C7DBCC2087D0538BCBE31AC73.png
+            [type] => image/png
+            [tmp_name] => C:\Users\22356\AppData\Local\Temp\phpEA23.tmp
+            [error] => 0
+            [size] => 1398671
+        )
+
+)
+
+[2026-03-16 00:19:13] POST数据: Array
+(
+)
+
+[2026-03-16 00:19:13] 加载 AuthMiddleware
+[2026-03-16 00:19:13] 开始验证 Admin 登录
+[2026-03-16 00:19:13] Admin 登录验证成功
+[2026-03-16 00:19:13] 加载配置文件
+[2026-03-16 00:19:13] 配置文件加载成功: Array
+(
+    [website] => https://api.kktaskpaas.com/
+    [upload_path] => ./img
+    [platform_fee_rate] => 0.25
+    [task_submit_timeout] => 600
+    [c_withdraw_min_amount] => 1
+    [c_withdraw_max_amount] => 500
+    [c_withdraw_amount_multiple] => 1
+    [c_withdraw_daily_limit] => 1000
+    [c_withdraw_allowed_weekdays] => Array
+        (
+            [0] => 1
+            [1] => 2
+            [2] => 3
+            [3] => 4
+            [4] => 5
+            [5] => 6
+            [6] => 0
+        )
+
+    [b_withdraw_min_amount] => 100
+    [b_withdraw_max_amount] => 5000
+    [b_withdraw_daily_limit] => 10000
+    [rental_platform_rate] => 25
+    [rental_platform_fee_rate] => 0.25
+    [c_withdraw_fee_rate] => 0.03
+    [senior_agent_required_active_users] => 15
+    [senior_agent_active_user_task_count] => 100
+    [senior_agent_active_user_hours] => 24
+    [senior_agent_max_count] => 100
+    [agent_required_active_users] => 5
+    [agent_active_user_task_count] => 30
+    [agent_active_user_hours] => 24
+    [agent_incentive_enabled] => 0
+    [agent_incentive_end_time] => 2099-12-31 23:59:59
+    [agent_incentive_amount] => 1000
+    [agent_incentive_min_withdraw] => 10000
+    [agent_incentive_limit_enabled] => 1
+    [agent_incentive_limit_count] => 5
+    [rental_seller_rate] => 70
+    [rental_agent_rate] => 5
+    [rental_senior_agent_rate] => 5
+    [commission_c_user] => 0
+    [commission_agent] => 0
+    [notification_enabled] => 1
+    [notification_sound_enabled] => 1
+    [notification_check_interval] => 60
+    [notification_max_unread] => 50
+    [notification_types] => Array
+        (
+            [0] => recharge,withdraw,agent,magnifier,rental,ticket,system
+        )
+
+    [large_group_agent] => 0.8
+)
+
+[2026-03-16 00:19:13] 使用 image 字段上传文件
+[2026-03-16 00:19:13] 文件上传信息: Array
+(
+    [name] => 4BE6AF8C7DBCC2087D0538BCBE31AC73.png
+    [full_path] => 4BE6AF8C7DBCC2087D0538BCBE31AC73.png
+    [type] => image/png
+    [tmp_name] => C:\Users\22356\AppData\Local\Temp\phpEA23.tmp
+    [error] => 0
+    [size] => 1398671
+)
+
+[2026-03-16 00:19:13] 文件大小: 1398671 字节
+[2026-03-16 00:19:13] 文件 MIME 类型: image/png
+[2026-03-16 00:19:13] 文件扩展名: png
+[2026-03-16 00:19:13] 生成的文件名哈希: 624564f77a0f8f587161e1601fd38980
+[2026-03-16 00:19:13] 上传目录: D:\github\douyinTasksystemAPI\task_admin\api/../../img
+[2026-03-16 00:19:13] 目标文件路径: D:\github\douyinTasksystemAPI\task_admin\api/../../img/624564f77a0f8f587161e1601fd38980.png
+[2026-03-16 00:19:13] 文件保存成功: D:\github\douyinTasksystemAPI\task_admin\api/../../img/624564f77a0f8f587161e1601fd38980.png
+[2026-03-16 00:19:13] 生成的图片 URL: https://api.kktaskpaas.com/img/624564f77a0f8f587161e1601fd38980.png
+[2026-03-16 00:19:13] 返回成功响应
+[2026-03-16 00:19:13] ===== 上传请求处理完成 =====

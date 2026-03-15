@@ -94,14 +94,129 @@ try {
                 log_message("任务 #{$taskId} 已过期并下架，但仍有 {$taskDoing} 个进行中、{$taskReviewing} 个待审核的记录");
             }
             
-            // 3. 准备通知B端用户
+            // 3. 计算未完成任务数量和退款金额
+            $unfinishedCount = $taskCount - $taskDone;
+            log_message("任务 #{$taskId} 未完成数量：{$unfinishedCount}");
+            if ($unfinishedCount > 0) {
+                // 查询任务的单位价格
+                $priceStmt = $db->prepare("SELECT unit_price FROM b_tasks WHERE id = ?");
+                $priceStmt->execute([$taskId]);
+                $priceInfo = $priceStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($priceInfo && isset($priceInfo['unit_price'])) {
+                    $unitPrice = (float)$priceInfo['unit_price'];
+                    log_message("任务 #{$taskId} 单价：¥" . number_format($unitPrice, 2));
+                    $refundAmount = $unfinishedCount * $unitPrice;
+                    $refundAmountInCents = (int)round($refundAmount * 100);
+                    log_message("任务 #{$taskId} 退款金额：¥" . number_format($refundAmount, 2) . " (" . $refundAmountInCents . "分)");
+                    
+                    // 查询B端用户的钱包ID
+                    $walletStmt = $db->prepare("SELECT wallet_id, username FROM b_users WHERE id = ?");
+                    $walletStmt->execute([$bUserId]);
+                    $bUserInfo = $walletStmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($bUserInfo && isset($bUserInfo['wallet_id'])) {
+                        $walletId = $bUserInfo['wallet_id'];
+                        $username = $bUserInfo['username'];
+                        log_message("用户 #{$bUserId} ({$username}) 钱包ID：{$walletId}");
+                        
+                        // 查询当前钱包余额
+                        $balanceStmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                        $balanceStmt->execute([$walletId]);
+                        $balanceInfo = $balanceStmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($balanceInfo) {
+                            $beforeBalance = (int)$balanceInfo['balance'];
+                            $afterBalance = $beforeBalance + $refundAmountInCents;
+                            log_message("钱包余额：¥" . number_format($beforeBalance / 100, 2) . " -> ¥" . number_format($afterBalance / 100, 2));
+                            
+                            // 更新钱包余额
+                            $updateBalanceStmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+                            $updateBalanceStmt->execute([$afterBalance, $walletId]);
+                            log_message("钱包余额更新成功");
+                            
+                            // 记录钱包流水
+                            $remark = "任务过期退款【{$templateTitle}】，未完成 {$unfinishedCount} 个任务，退款 ¥" . number_format($refundAmount, 2);
+                            $flowStmt = $db->prepare(" 
+                                INSERT INTO wallets_log (
+                                    wallet_id, user_id, username, user_type, type, 
+                                    amount, before_balance, after_balance, 
+                                    related_type, related_id, task_types, task_types_text, remark
+                                ) VALUES (?, ?, ?, 2, 1, ?, ?, ?, 'refund', ?, 0, '', ?)
+                            ");
+                            $flowStmt->execute([
+                                $walletId,
+                                $bUserId,
+                                $username,
+                                $refundAmountInCents,
+                                $beforeBalance,
+                                $afterBalance,
+                                $taskId,
+                                $remark
+                            ]);
+                            log_message("钱包流水记录成功");
+                            
+                            // 插入任务统计记录
+                            try {
+                                $statStmt = $db->prepare(" 
+                                    INSERT INTO b_task_statistics (
+                                        b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                        related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                                    ) VALUES (?, ?, 1, ?, ?, ?, 'refund', ?, 0, '', 9, '任务过期退款记录，已完成', ?)
+                                ");
+                                $statStmt->execute([
+                                    $bUserId,
+                                    $username,
+                                    $refundAmountInCents,
+                                    $beforeBalance,
+                                    $afterBalance,
+                                    $taskId,
+                                    $remark
+                                ]);
+                                log_message("任务统计记录成功");
+                            } catch (Exception $e) {
+                                // 记录插入失败时的错误日志，但不影响主流程
+                                error_log('插入b_task_statistics失败: ' . $e->getMessage());
+                                log_message("任务统计记录失败: " . $e->getMessage());
+                            }
+                            
+                            log_message("退款成功：任务 #{$taskId}，退款金额 ¥" . number_format($refundAmount, 2));
+                        } else {
+                            log_message("未找到钱包信息");
+                        }
+                    } else {
+                        log_message("未找到用户信息");
+                    }
+                } else {
+                    log_message("未找到任务单价信息");
+                }
+            }
+            
+            // 4. 准备通知B端用户
             $completionRate = $taskCount > 0 ? round(($taskDone / $taskCount) * 100, 2) : 0;
             $notificationContent = "您发布的任务「{$templateTitle}」已到期自动下架。\n";
             $notificationContent .= "任务进度：{$taskDone}/{$taskCount}（{$completionRate}%）\n";
             $notificationContent .= "截止时间：{$deadlineText}\n";
             
+            // 如果有未完成任务且已退款，添加退款信息
+            if ($unfinishedCount > 0) {
+                $priceStmt = $db->prepare("SELECT unit_price FROM b_tasks WHERE id = ?");
+                $priceStmt->execute([$taskId]);
+                $priceInfo = $priceStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($priceInfo && isset($priceInfo['unit_price'])) {
+                    $unitPrice = (float)$priceInfo['unit_price'];
+                    $refundAmount = $unfinishedCount * $unitPrice;
+                    $notificationContent .= "\n退款信息：\n";
+                    $notificationContent .= "未完成任务数量：{$unfinishedCount}个\n";
+                    $notificationContent .= "退款金额：¥" . number_format($refundAmount, 2) . "\n";
+                    $notificationContent .= "退款时间：" . date('Y-m-d H:i:s') . "\n";
+                    $notificationContent .= "\n提示：退款已自动原路退回您的账户余额。";
+                }
+            }
+            
             if ($hasActiveRecords) {
-                $notificationContent .= "\n提示：仍有 {$taskDoing} 个进行中、{$taskReviewing} 个待审核的记录，请及时处理。";
+                $notificationContent .= "\n\n提示：仍有 {$taskDoing} 个进行中、{$taskReviewing} 个待审核的记录，请及时处理。";
             }
             
             $notifications[] = [

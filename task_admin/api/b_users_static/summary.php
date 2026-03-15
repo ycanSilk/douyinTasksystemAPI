@@ -88,16 +88,16 @@ try {
     if (!empty($bUserId)) {
         if (is_numeric($bUserId)) {
             // 如果是数字，按用户ID搜索
-            $whereClause = "WHERE b_user_id = ? AND DATE(created_at) BETWEEN ? AND ?";
+            $whereClause = "WHERE b_user_id = ? AND DATE(created_at) BETWEEN ? AND ? AND NOT (related_type = 'recharge' AND record_status != 3)";
             $params = [(int)$bUserId, $startDate, $endDate];
         } else {
             // 如果是字符串，按用户名搜索
-            $whereClause = "WHERE username LIKE ? AND DATE(created_at) BETWEEN ? AND ?";
+            $whereClause = "WHERE username LIKE ? AND DATE(created_at) BETWEEN ? AND ? AND NOT (related_type = 'recharge' AND record_status != 3)";
             $params = ['%' . $bUserId . '%', $startDate, $endDate];
         }
     } else {
         // 没有指定b_user_id，统计整个表的数据
-        $whereClause = "WHERE DATE(created_at) BETWEEN ? AND ?";
+        $whereClause = "WHERE DATE(created_at) BETWEEN ? AND ? AND NOT (related_type = 'recharge' AND record_status != 3)";
         $params = [$startDate, $endDate];
     }
     

@@ -41,9 +41,11 @@ async function loadOrderStatistics() {
         
         // 根据输入类型添加用户搜索参数
         if (userId) {
-            params.append('b_user_id', userId);
+            // 用户ID转换为bigint类型
+            params.append('b_user_id', BigInt(userId));
         } else if (username) {
-            params.append('b_user_id', username);
+            // 用户名强制转换为字符串类型
+            params.append('b_user_id', String(username));
         }
         
         const apiUrl = `/task_admin/api/b_users_static/summary.php?${params.toString()}`;

@@ -40,9 +40,11 @@ async function loadCStatistics() {
         
         // 根据输入类型添加用户搜索参数
         if (cUserIdSearch) {
-            params.append('c_user_id', cUserIdSearch);
+            // 用户ID转换为bigint类型
+            params.append('c_user_id', BigInt(cUserIdSearch));
         } else if (cUsernameSearch) {
-            params.append('c_user_id', cUsernameSearch);
+            // 用户名强制转换为字符串类型
+            params.append('c_user_id', String(cUsernameSearch));
         }
         
         const apiUrl = `/task_admin/api/c_users_static/flows.php?${params.toString()}`;
