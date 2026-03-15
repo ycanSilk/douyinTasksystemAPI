@@ -128,9 +128,9 @@ try {
     // 格式化每日数据
     $formattedDailyData = [];
     foreach ($dailyData as $item) {
-        $income = ($item['income'] ?? 0) / 100;
-        $expenditure = ($item['expenditure'] ?? 0) / 100;
-        $netChange = $income - $expenditure;
+        $income = round(($item['income'] ?? 0) / 100, 2);
+        $expenditure = round(($item['expenditure'] ?? 0) / 100, 2);
+        $netChange = round($income - $expenditure, 2);
         $formattedDailyData[] = [
             'date' => $item['date'],
             'income' => $income,
@@ -140,9 +140,9 @@ try {
     }
     
     // 计算净变动
-    $totalIncome = ($summary['total_income'] ?? 0) / 100;
-    $totalExpenditure = ($summary['total_expenditure'] ?? 0) / 100;
-    $netChange = $totalIncome - $totalExpenditure;
+    $totalIncome = round(($summary['total_income'] ?? 0) / 100, 2);
+    $totalExpenditure = round(($summary['total_expenditure'] ?? 0) / 100, 2);
+    $netChange = round($totalIncome - $totalExpenditure, 2);
     
     // 构建汇总数据
     $formattedSummary = [
