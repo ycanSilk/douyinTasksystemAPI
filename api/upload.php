@@ -58,7 +58,7 @@ if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
     // 通过文件内容检测 MIME 类型
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_buffer($finfo, $fileContent);
-    finfo_close($finfo);
+    // finfo_close($finfo); // 在 PHP 8.5+ 中已废弃，finfo 对象会自动释放
 }
 // 方式2：binary（二进制直接上传）
 else if (strpos($contentType, 'image/') === 0 || strpos($contentType, 'application/octet-stream') === 0) {
@@ -72,7 +72,7 @@ else if (strpos($contentType, 'image/') === 0 || strpos($contentType, 'applicati
     // 通过文件内容检测 MIME 类型
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_buffer($finfo, $fileContent);
-    finfo_close($finfo);
+    // finfo_close($finfo); // 在 PHP 8.5+ 中已废弃，finfo 对象会自动释放
 }
 else {
     Response::error('请上传图片文件（支持 multipart/form-data 或 binary 格式）', $errorCodes['INVALID_PARAMS']);
