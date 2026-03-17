@@ -1243,3 +1243,79 @@ input:focus, select:focus, textarea:focus {
     color: #999;
     font-size: 14px;
 }
+
+/* 代理信息样式 */
+.agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    background: rgba(0,0,0,0.02);
+    border: 1px solid var(--border-color);
+    min-width: 120px;
+}
+
+.agent-level-1 {
+    border-left: 3px solid var(--primary-color);
+}
+
+.agent-level-2 {
+    border-left: 3px solid var(--info-color);
+}
+
+.agent-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agent-role {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.agent-role .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+}
+
+/* 表格单元格中的代理信息调整 */
+td .agent-info {
+    margin: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+    .agent-info {
+        min-width: 100px;
+    }
+    
+    .agent-name {
+        font-size: 12px;
+    }
+    
+    .agent-role .badge {
+        font-size: 10px;
+        padding: 1px 6px;
+    }
+}
+
+/* 悬停效果 */
+.agent-info:hover {
+    background: rgba(0, 113, 227, 0.05);
+    border-color: var(--primary-color);
+    transition: all var(--transition-fast);
+}
+
+.agent-level-1:hover {
+    box-shadow: 0 2px 8px rgba(0, 113, 227, 0.15);
+}
+
+.agent-level-2:hover {
+    box-shadow: 0 2px 8px rgba(90, 200, 250, 0.15);
+}

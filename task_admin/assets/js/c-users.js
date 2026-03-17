@@ -54,8 +54,10 @@ function renderCUsersTable(list, pagination) {
                     <th>手机号</th>
                     <th>邀请码</th>
                     <th>上级ID</th>
-                    <th>上级用户名</th>
-                    <th>团长</th>
+                <th>上级用户名</th>
+                <th>一级代理</th>
+                <th>二级代理</th>
+                    <th>当前用户角色</th>
                     <th>迁跃状态</th>
                     <th>迁跃等级</th>
                     <th>封禁状态</th>
@@ -99,6 +101,60 @@ function renderCUsersTable(list, pagination) {
             blockedStatusClass = 'badge-danger';
         }
         
+        // 处理一级代理信息
+        let firstAgentText = '<div class="agent-info agent-level-1"><span class="badge badge-neutral">无</span></div>';
+        if (u.parent_username) {
+            let parentRole = '普通用户';
+            let roleClass = 'badge-neutral';
+            let roleIcon = '';
+            if (u.parent_is_agent === 3) {
+                parentRole = '大团团长';
+                roleClass = 'badge-danger';
+                roleIcon = '<i class="ri-vip-crown-fill"></i> ';
+            } else if (u.parent_is_agent === 2) {
+                parentRole = '高级团长';
+                roleClass = 'badge-warning';
+                roleIcon = '<i class="ri-vip-diamond-fill"></i> ';
+            } else if (u.parent_is_agent === 1) {
+                parentRole = '普通团长';
+                roleClass = 'badge-success';
+                roleIcon = '<i class="ri-vip-crown-fill"></i> ';
+            }
+            firstAgentText = `
+                <div class="agent-info agent-level-1">
+                    <div class="agent-name">${u.parent_username}</div>
+                    <div class="agent-role"><span class="badge ${roleClass}">${roleIcon}${parentRole}</span></div>
+                </div>
+            `;
+        }
+        
+        // 处理二级代理信息
+        let secondAgentText = '<div class="agent-info agent-level-2"><span class="badge badge-neutral">无</span></div>';
+        if (u.grandparent_username) {
+            let grandparentRole = '普通用户';
+            let roleClass = 'badge-neutral';
+            let roleIcon = '';
+            if (u.grandparent_is_agent === 3) {
+                grandparentRole = '大团团长';
+                roleClass = 'badge-danger';
+                roleIcon = '<i class="ri-vip-crown-fill"></i> ';
+            } else if (u.grandparent_is_agent === 2) {
+                grandparentRole = '高级团长';
+                roleClass = 'badge-warning';
+                roleIcon = '<i class="ri-vip-diamond-fill"></i> ';
+            } else if (u.grandparent_is_agent === 1) {
+                grandparentRole = '普通团长';
+                roleClass = 'badge-success';
+                roleIcon = '<i class="ri-vip-crown-fill"></i> ';
+            }
+            secondAgentText = `
+                <div class="agent-info agent-level-2">
+                    <div class="agent-name">${u.grandparent_username}</div>
+                    <div class="agent-role"><span class="badge ${roleClass}">${roleIcon}${grandparentRole}</span></div>
+                </div>
+            `;
+        }
+        
         html += `
             <tr>
                 <td>${u.id}</td>
@@ -108,6 +164,8 @@ function renderCUsersTable(list, pagination) {
                 <td>${u.invite_code}</td>
                 <td>${u.parent_id || '-'}</td>
                 <td>${u.parent_username || '-'}</td>
+                <td>${firstAgentText}</td>
+                <td>${secondAgentText}</td>
                 <td>${agentBadge}</td>
                 <td>${u.jump_agent_status || '不是'}</td>
                 <td>${u.jump_level || 0}</td>

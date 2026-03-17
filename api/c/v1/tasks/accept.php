@@ -235,12 +235,50 @@ try {
         $rewardAmount = (int)($template['c_user_commission'] ?? 0);
     }
 
+    // 计算任务阶段和阶段文本
+    $taskStage = (int)$bTask['stage'];
+    $taskStageText = '';
+    
+    $templateId = (int)$bTask['template_id'];
+    
+    // 如果是单任务（stage为0），使用模板标题作为task_stage_text
+    if ($taskStage === 0) {
+        $taskStageText = $template['title'] ?? '';
+    } else {
+        // 多阶段任务
+        switch ($templateId) {
+            case 1:
+                $taskStageText = '上评评论';
+                break;
+            case 2:
+                $taskStageText = '中评评论';
+                break;
+            case 3:
+                $taskStageText = '放大镜搜索词';
+                break;
+            case 4:
+                if ($taskStage === 1) {
+                    $taskStageText = '上评评论';
+                } elseif ($taskStage === 2) {
+                    $taskStageText = '中评评论';
+                }
+                break;
+            case 5:
+                if ($taskStage === 1) {
+                    $taskStageText = '中评评论';
+                } elseif ($taskStage === 2) {
+                    $taskStageText = '下评评论';
+                }
+                break;
+        }
+    }
+    
     // 12. 插入C端任务记录
     $stmt = $db->prepare("
         INSERT INTO c_task_records (
             c_user_id, b_task_id, b_user_id, template_id,
-            video_url, recommend_mark, reward_amount, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            video_url, recommend_mark, reward_amount, status, task_stage, task_stage_text
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
     ");
     $stmt->execute([
         $currentUser['user_id'],
@@ -249,7 +287,9 @@ try {
         $bTask['template_id'],
         $bTask['video_url'],
         json_encode($recommendMark, JSON_UNESCAPED_UNICODE),
-        $rewardAmount
+        $rewardAmount,
+        $taskStage,
+        $taskStageText
     ]);
     $recordId = $db->lastInsertId();
     
@@ -281,7 +321,9 @@ try {
         'reward_amount' => number_format($rewardAmount / 100, 2),
         'deadline' => (int)$bTask['deadline'],
         'status' => 1,
-        'status_text' => '进行中'
+        'status_text' => '进行中',
+        'task_stage' => $taskStage,
+        'task_stage_text' => $taskStageText
     ], '接单成功');
     
 } catch (PDOException $e) {

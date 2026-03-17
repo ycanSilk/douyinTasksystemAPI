@@ -222,6 +222,28 @@ try {
     $stmt->execute([$tokenData['token'], $tokenData['expired_at'], $userId]);
     error_log('Token更新成功');
     
+    // 7. 创建团队关系
+    if ($parentId) {
+        error_log('创建团队关系，用户ID: ' . $userId . ', 上级ID: ' . $parentId);
+        // 插入一级代理关系
+        $stmt = $db->prepare("INSERT INTO c_user_relations (user_id, agent_id, level) VALUES (?, ?, 1)");
+        $stmt->execute([$userId, $parentId]);
+        error_log('一级代理关系创建成功');
+        
+        // 查询祖父ID
+        $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
+        $stmt->execute([$parentId]);
+        $grandparentId = $stmt->fetchColumn();
+        
+        // 插入二级代理关系
+        if ($grandparentId) {
+            error_log('创建二级代理关系，用户ID: ' . $userId . ', 祖父ID: ' . $grandparentId);
+            $stmt = $db->prepare("INSERT INTO c_user_relations (user_id, agent_id, level) VALUES (?, ?, 2)");
+            $stmt->execute([$userId, $grandparentId]);
+            error_log('二级代理关系创建成功');
+        }
+    }
+    
     // 提交事务
     error_log('提交事务');
     $db->commit();

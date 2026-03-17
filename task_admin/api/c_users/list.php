@@ -40,10 +40,15 @@ try {
     $stmt = $db->prepare("
         SELECT 
             c.*,
-            w.balance, p.username as parent_username
+            w.balance, 
+            p.username as parent_username,
+            p.is_agent as parent_is_agent,
+            p2.username as grandparent_username,
+            p2.is_agent as grandparent_is_agent
         FROM c_users c
         LEFT JOIN wallets w ON c.wallet_id = w.id
         LEFT JOIN c_users p ON c.parent_id = p.id
+        LEFT JOIN c_users p2 ON p.parent_id = p2.id
         $whereClause
         ORDER BY c.created_at DESC
         LIMIT ? OFFSET ?
@@ -104,6 +109,8 @@ try {
         $item['wallet_id'] = (int)$item['wallet_id'];
         $item['parent_id'] = $item['parent_id'] ? (int)$item['parent_id'] : null;
         $item['is_agent'] = (int)$item['is_agent'];
+        $item['parent_is_agent'] = $item['parent_is_agent'] ? (int)$item['parent_is_agent'] : 0;
+        $item['grandparent_is_agent'] = $item['grandparent_is_agent'] ? (int)$item['grandparent_is_agent'] : 0;
         $item['status'] = (int)$item['status'];
         $item['balance'] = number_format((int)$item['balance'] / 100, 2);
         

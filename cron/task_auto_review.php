@@ -55,11 +55,12 @@ try {
     $stmt = $db->prepare("
         SELECT 
             c.id, c.c_user_id, c.b_user_id, c.b_task_id, 
-            c.status, c.reward_amount, c.comment_url, c.submitted_at
+            c.status, c.reward_amount, c.comment_url, c.submitted_at, c.task_stage, c.task_stage_text
         FROM c_task_records c
         WHERE c.status = 2 -- 待审核状态
           AND UNIX_TIMESTAMP(c.submitted_at) < ?
     ");
+    
     echo "开始执行查询\n";
     $stmt->execute([$thresholdTime]);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -341,11 +342,22 @@ function autoApproveTask($db, $record, $errorCodes)
         
         // 12.1 记录C端任务统计
         try {
+            // 优化remark字段
+            $userAgentType = '普通用户';
+            if ($userAgentLevel === 1) {
+                $userAgentType = '普通团长';
+            } elseif ($userAgentLevel === 2) {
+                $userAgentType = '高级团长';
+            } elseif ($userAgentLevel === 3) {
+                $userAgentType = '大团团长';
+            }
+            $cRemark = "用户 {$cUser['username']} 完成任务，{$userAgentType}获得佣金，任务ID：{$record['b_task_id']}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，获得奖励：" . ($cUserCommission / 100) . "元";
+            
             $stmt = $db->prepare(" 
                 INSERT INTO c_task_statistics (
                     c_user_id, username, flow_type, amount, before_balance, after_balance, 
-                    related_type, related_id, task_types, task_types_text, remark
-                ) VALUES (?, ?, 1, ?, ?, ?, 'commission', ?, ?, ?, ?)
+                    related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, remark
+                ) VALUES (?, ?, 1, ?, ?, ?, 'commission', ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $cUser['id'],
@@ -356,6 +368,8 @@ function autoApproveTask($db, $record, $errorCodes)
                 $record['b_task_id'],
                 $taskType,
                 $taskTypeText,
+                $record['task_stage'],
+                $record['task_stage_text'],
                 $cRemark
             ]);
         } catch (Exception $e) {
@@ -363,89 +377,82 @@ function autoApproveTask($db, $record, $errorCodes)
             error_log('插入c_task_statistics失败: ' . $e->getMessage());
         }
 
-        // 13. 检查是否有团长上级
-        if (!empty($cUser['parent_id'])) {
-            // 查询一级上级用户
+        // 13. 检查是否有团长上级，向上查找直到找到大团团长或达到最大层级
+        $currentUserId = $cUser['parent_id'];
+        $level = 0;
+        $maxLevel = 2; // 最多查找两级
+        $parentUser = null;
+        $secondParentUser = null;
+        $agentCommission = 0;
+        $secondAgentCommission = 0;
+        $parentAgentLevel = 0;
+        $secondParentAgentLevel = 0;
+        
+        while (!empty($currentUserId) && $level < $maxLevel) {
             $stmt = $db->prepare("
                 SELECT id, username, wallet_id, is_agent, parent_id
                 FROM c_users
                 WHERE id = ?
             ");
-            $stmt->execute([$cUser['parent_id']]);
-            $parentUser = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $parentAgentLevel = $parentUser ? (int)$parentUser['is_agent'] : 0;
-
-            if ($parentUser && $parentAgentLevel >= 1) {
-                // 大团团长(3)用大团佣金比例，高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
-                if ($parentAgentLevel === 3) {
-                    // 一级上级是大团团长，使用大团佣金比例
-                    $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
-                    $agentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
-                } elseif ($parentAgentLevel === 2) {
-                    $agentCommission = $seniorAgentCommissionAmount;
-                } else {
-                    $agentCommission = $agentCommissionAmount;
-                }
-
-                // 查询团长钱包
-                $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
-                $stmt->execute([$parentUser['wallet_id']]);
-                $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($agentWallet) {
-                    $agentBeforeBalance = (int)$agentWallet['balance'];
-                    $agentAfterBalance = $agentBeforeBalance + $agentCommission;
-
-                    // 更新团长钱包
-                    $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
-                    $stmt->execute([$agentAfterBalance, $parentUser['wallet_id']]);
-                    // 记录团长钱包流水
-                    if ($parentAgentLevel === 3) {
-                        // 大团团长佣金记录
-                        $agentRemark = "下级用户 {$cUser['username']}是大团团长 完成任务，获得一级团长佣金，任务ID：{$record['b_task_id']}";
-                    } elseif ($parentAgentLevel === 2) {
-                        // 高级团长佣金记录
-                        $agentRemark = "下级用户 {$cUser['username']}是高级团长 完成任务，获得高级团长佣金，任务ID：{$record['b_task_id']}";
-                    } elseif ($parentAgentLevel === 1) {
-                        // 普通团长佣金记录
-                        $agentRemark = "下级用户 {$cUser['username']}是普通团长 完成任务，获得普通团长佣金，任务ID：{$record['b_task_id']}";
-                    }else{
-                        $agentRemark = "下级用户 {$cUser['username']}是未知等级团长 完成任务，获得未知等级团长佣金，任务ID：{$record['b_task_id']}";
+            $stmt->execute([$currentUserId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$user) {
+                break;
+            }
+            
+            $agentLevel = (int)$user['is_agent'];
+            
+            if ($agentLevel >= 1) {
+                if ($level === 0) {
+                    // 一级代理
+                    $parentUser = $user;
+                    $parentAgentLevel = $agentLevel;
+                    // 大团团长(3)用大团佣金比例，高级团长(2)用senior_agent佣金，普通团长(1)用agent佣金
+                    if ($agentLevel === 3) {
+                        // 一级上级是大团团长，使用大团佣金比例
+                        $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+                        $agentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+                    } elseif ($agentLevel === 2) {
+                        $agentCommission = $seniorAgentCommissionAmount;
+                    } else {
+                        $agentCommission = $agentCommissionAmount;
                     }
-                    // 记录团长钱包流水
-                   // $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得一级团长佣金，任务ID：{$record['b_task_id']}";
-                    $stmt = $db->prepare("
-                        INSERT INTO wallets_log (
-                            wallet_id, user_id, username, user_type, type, 
-                            amount, before_balance, after_balance, 
-                            related_type, related_id, task_types, task_types_text, remark
-                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?)
-                    ");
-                    $stmt->execute([
-                        $parentUser['wallet_id'],
-                        $parentUser['id'],
-                        $parentUser['username'],
-                        $agentCommission,
-                        $agentBeforeBalance,
-                        $agentAfterBalance,
-                        $record['b_task_id'],
-                        $taskType,
-                        $taskTypeText,
-                        $agentRemark
-                    ]);
                     
-                    // 记录一级代理C端任务统计
-                    try {
-                        $stmt = $db->prepare(" 
-                            INSERT INTO c_task_statistics (
-                                c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                    // 查询团长钱包
+                    $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                    $stmt->execute([$user['wallet_id']]);
+                    $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($agentWallet) {
+                        $agentBeforeBalance = (int)$agentWallet['balance'];
+                        $agentAfterBalance = $agentBeforeBalance + $agentCommission;
+                        
+                        // 更新团长钱包
+                        $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+                        $stmt->execute([$agentAfterBalance, $user['wallet_id']]);
+                        // 记录团长钱包流水
+                        if ($agentLevel === 3) {
+                            // 大团团长佣金记录
+                            $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得大团团长佣金，任务ID：{$record['b_task_id']}";
+                        } elseif ($agentLevel === 2) {
+                            // 高级团长佣金记录
+                            $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得高级团长佣金，任务ID：{$record['b_task_id']}";
+                        } else {
+                            // 普通团长佣金记录
+                            $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得普通团长佣金，任务ID：{$record['b_task_id']}";
+                        }
+                        $stmt = $db->prepare("
+                            INSERT INTO wallets_log (
+                                wallet_id, user_id, username, user_type, type, 
+                                amount, before_balance, after_balance, 
                                 related_type, related_id, task_types, task_types_text, remark
-                            ) VALUES (?, ?, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?)
+                            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?)
                         ");
                         $stmt->execute([
-                            $parentUser['id'],
-                            $parentUser['username'],
+                            $user['wallet_id'],
+                            $user['id'],
+                            $user['username'],
                             $agentCommission,
                             $agentBeforeBalance,
                             $agentAfterBalance,
@@ -454,98 +461,252 @@ function autoApproveTask($db, $record, $errorCodes)
                             $taskTypeText,
                             $agentRemark
                         ]);
-                    } catch (Exception $e) {
-                        // 记录插入失败时的错误日志，但不影响主流程
-                        error_log('插入c_task_statistics失败: ' . $e->getMessage());
-                    }
-                }
-
-                // 查询二级上级用户
-                if (!empty($parentUser['parent_id'])) {
-                    $stmt = $db->prepare("
-                        SELECT id, username, wallet_id, is_agent
-                        FROM c_users
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$parentUser['parent_id']]);
-                    $secondParentUser = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                    $secondParentAgentLevel = $secondParentUser ? (int)$secondParentUser['is_agent'] : 0;
-
-                    if ($secondParentUser && $secondParentAgentLevel >= 1) {
-                        // 大团团长(3)用大团佣金比例，高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
-                        if ($secondParentAgentLevel === 3) {
-                            // 二级上级是大团团长，使用大团佣金比例
-                            $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
-                            $secondAgentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
-                        } elseif ($secondParentAgentLevel === 2) {
-                            $secondAgentCommission = $secondSeniorAgentCommissionAmount;
-                        } else {
-                            $secondAgentCommission = $secondAgentCommissionAmount;
+                        
+                        // 优化remark字段
+                        $agentType = '普通用户';
+                        if ($agentLevel === 1) {
+                            $agentType = '普通团长';
+                        } elseif ($agentLevel === 2) {
+                            $agentType = '高级团长';
+                        } elseif ($agentLevel === 3) {
+                            $agentType = '大团团长';
                         }
-
-                        // 查询二级团长钱包
-                        $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
-                        $stmt->execute([$secondParentUser['wallet_id']]);
-                        $secondAgentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                        if ($secondAgentWallet) {
-                            $secondAgentBeforeBalance = (int)$secondAgentWallet['balance'];
-                            $secondAgentAfterBalance = $secondAgentBeforeBalance + $secondAgentCommission;
-
-                            // 更新二级团长钱包
-                            $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
-                            $stmt->execute([$secondAgentAfterBalance, $secondParentUser['wallet_id']]);
-
-                            // 记录二级团长钱包流水
-                            $secondAgentRemark = "下级用户 {$parentUser['username']} 的团队成员完成任务，获得二级团长佣金，任务ID：{$record['b_task_id']}";
-                            $stmt = $db->prepare("
-                                INSERT INTO wallets_log (
-                                    wallet_id, user_id, username, user_type, type, 
-                                    amount, before_balance, after_balance, 
-                                    related_type, related_id, task_types, task_types_text, remark
-                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?)
+                        $agentRemark = "当前用户 {$user['username']} 的邀请用户完成任务，{$agentType}获得一级团长佣金，任务ID：{$record['b_task_id']}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
+                        
+                        // 记录一级代理C端任务统计
+                        try {
+                            $stmt = $db->prepare(" 
+                                INSERT INTO c_task_statistics (
+                                    c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                    related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, remark
+                                ) VALUES (?, ?, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?, ?, ?)
                             ");
                             $stmt->execute([
-                                $secondParentUser['wallet_id'],
-                                $secondParentUser['id'],
-                                $secondParentUser['username'],
+                                $user['id'],
+                                $user['username'],
+                                $agentCommission,
+                                $agentBeforeBalance,
+                                $agentAfterBalance,
+                                $record['b_task_id'],
+                                $taskType,
+                                $taskTypeText,
+                                $record['task_stage'],
+                                $record['task_stage_text'],
+                                $agentRemark
+                            ]);
+                        } catch (Exception $e) {
+                            // 记录插入失败时的错误日志，但不影响主流程
+                            error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                        }
+                    }
+                } elseif ($level === 1) {
+                    // 二级代理
+                    $secondParentUser = $user;
+                    $secondParentAgentLevel = $agentLevel;
+                    // 大团团长(3)用大团佣金比例，高级团长(2)用second_senior_agent佣金，普通团长(1)用second_agent佣金
+                    if ($agentLevel === 3) {
+                        // 二级上级是大团团长，使用大团佣金比例
+                        $largeGroupAgentRatio = (float)AppConfig::get('large_group_agent', 0.8);
+                        $secondAgentCommission = (int)($taskUnitPrice * $largeGroupAgentRatio * 100); // 转换为分
+                    } elseif ($agentLevel === 2) {
+                        $secondAgentCommission = $secondSeniorAgentCommissionAmount;
+                    } else {
+                        $secondAgentCommission = $secondAgentCommissionAmount;
+                    }
+                    
+                    // 查询二级团长钱包
+                    $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                    $stmt->execute([$user['wallet_id']]);
+                    $secondAgentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($secondAgentWallet) {
+                        $secondAgentBeforeBalance = (int)$secondAgentWallet['balance'];
+                        $secondAgentAfterBalance = $secondAgentBeforeBalance + $secondAgentCommission;
+                        
+                        // 更新二级团长钱包
+                        $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+                        $stmt->execute([$secondAgentAfterBalance, $user['wallet_id']]);
+                        
+                        // 记录二级团长钱包流水
+                        $secondAgentRemark = "团队成员 {$cUser['username']} 完成任务，获得二级团长佣金，任务ID：{$record['b_task_id']}";
+                        $stmt = $db->prepare("
+                            INSERT INTO wallets_log (
+                                wallet_id, user_id, username, user_type, type, 
+                                amount, before_balance, after_balance, 
+                                related_type, related_id, task_types, task_types_text, remark
+                            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?)
+                        ");
+                        $stmt->execute([
+                            $user['wallet_id'],
+                            $user['id'],
+                            $user['username'],
+                            $secondAgentCommission,
+                            $secondAgentBeforeBalance,
+                            $secondAgentAfterBalance,
+                            $record['b_task_id'],
+                            $taskType,
+                            $taskTypeText,
+                            $secondAgentRemark
+                        ]);
+                        
+                        // 优化remark字段
+                        $secondAgentType = '普通用户';
+                        if ($agentLevel === 1) {
+                            $secondAgentType = '普通团长';
+                        } elseif ($agentLevel === 2) {
+                            $secondAgentType = '高级团长';
+                        } elseif ($agentLevel === 3) {
+                            $secondAgentType = '大团团长';
+                        }
+                        $secondAgentRemark = "当前用户 {$user['username']} 的邀请用户的团队成员完成任务，{$secondAgentType}获得二级团长佣金，任务ID：{$record['b_task_id']}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
+                        
+                        // 记录二级代理C端任务统计
+                        try {
+                            $stmt = $db->prepare(" 
+                                INSERT INTO c_task_statistics (
+                                    c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                    related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, remark
+                                ) VALUES (?, ?, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?, ?, ?)
+                            ");
+                            $stmt->execute([
+                                $user['id'],
+                                $user['username'],
                                 $secondAgentCommission,
                                 $secondAgentBeforeBalance,
                                 $secondAgentAfterBalance,
                                 $record['b_task_id'],
                                 $taskType,
                                 $taskTypeText,
+                                $record['task_stage'],
+                                $record['task_stage_text'],
                                 $secondAgentRemark
                             ]);
-                            
-                            // 记录二级代理C端任务统计
-                            try {
-                                $stmt = $db->prepare(" 
-                                    INSERT INTO c_task_statistics (
-                                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
-                                        related_type, related_id, task_types, task_types_text, remark
-                                    ) VALUES (?, ?, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?)
-                                ");
-                                $stmt->execute([
-                                    $secondParentUser['id'],
-                                    $secondParentUser['username'],
-                                    $secondAgentCommission,
-                                    $secondAgentBeforeBalance,
-                                    $secondAgentAfterBalance,
-                                    $record['b_task_id'],
-                                    $taskType,
-                                    $taskTypeText,
-                                    $secondAgentRemark
-                                ]);
-                            } catch (Exception $e) {
-                                // 记录插入失败时的错误日志，但不影响主流程
-                                error_log('插入c_task_statistics失败: ' . $e->getMessage());
-                            }
+                        } catch (Exception $e) {
+                            // 记录插入失败时的错误日志，但不影响主流程
+                            error_log('插入c_task_statistics失败: ' . $e->getMessage());
                         }
                     }
                 }
             }
+            
+            // 继续向上查找
+            $currentUserId = $user['parent_id'];
+            $level++;
+        }
+
+        // 14. 记录团队收益统计
+        try {
+            // 查询完成任务用户的一级和二级代理
+            $currentUserId = $cUser['parent_id'];
+            $level = 0;
+            $maxLevel = 2; // 最多查找两级
+            
+            while (!empty($currentUserId) && $level < $maxLevel) {
+                $stmt = $db->prepare("SELECT id, username FROM c_users WHERE id = ?");
+                $stmt->execute([$currentUserId]);
+                $agentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$agentUser) {
+                    break;
+                }
+                
+                // 获取代理的佣金金额
+                $agentCommAmount = 0;
+                $agentBeforeAmount = 0;
+                $agentAfterAmount = 0;
+                
+                if ($level === 0) {
+                    $agentCommAmount = $agentCommission;
+                    $agentBeforeAmount = $agentBeforeBalance ?? 0;
+                    $agentAfterAmount = $agentAfterBalance ?? 0;
+                } elseif ($level === 1) {
+                    $agentCommAmount = $secondAgentCommission;
+                    $agentBeforeAmount = $secondAgentBeforeBalance ?? 0;
+                    $agentAfterAmount = $secondAgentAfterBalance ?? 0;
+                }
+                
+                // 插入团队收益记录
+                $stmt = $db->prepare("INSERT INTO team_revenue_statistics_breakdown (
+                    agent_id, agent_username, agent_level, 
+                    downline_user_id, downline_username, downline_user_amount, 
+                    team_revenue_amount, agent_before_amount, agent_after_amount, 
+                    related_id, revenue_source, revenue_source_text, 
+                    task_type, task_type_text, task_stage, task_stage_text
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                
+                $stmt->execute([
+                    $agentUser['id'],
+                    $agentUser['username'],
+                    $level + 1, // 代理层级：1=一级代理，2=二级代理
+                    $cUser['id'],
+                    $cUser['username'],
+                    $cUserCommission, // 下线用户获得的金额
+                    $agentCommAmount, // 代理获得的团队收益金额
+                    $agentBeforeAmount,
+                    $agentAfterAmount,
+                    $record['b_task_id'],
+                    1, // 收益来源：1=任务收益
+                    '任务收益',
+                    $taskType,
+                    $taskTypeText,
+                    $record['task_stage'],
+                    $record['task_stage_text']
+                ]);
+                
+                // 更新团队收益汇总表
+                $stmt = $db->prepare("INSERT INTO team_revenue_statistics_summary (
+                    user_id, username, total_team_revenue, level1_team_revenue, level2_team_revenue,
+                    level1_downline_count, level2_downline_count, task_revenue_count, order_revenue_count,
+                    task_revenue_amount, order_revenue_amount, last_revenue_time
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    total_team_revenue = total_team_revenue + ?,
+                    level1_team_revenue = level1_team_revenue + CASE WHEN ? = 1 THEN ? ELSE 0 END,
+                    level2_team_revenue = level2_team_revenue + CASE WHEN ? = 2 THEN ? ELSE 0 END,
+                    task_revenue_count = task_revenue_count + CASE WHEN ? = 1 THEN 1 ELSE 0 END,
+                    order_revenue_count = order_revenue_count + CASE WHEN ? = 2 THEN 1 ELSE 0 END,
+                    task_revenue_amount = task_revenue_amount + CASE WHEN ? = 1 THEN ? ELSE 0 END,
+                    order_revenue_amount = order_revenue_amount + CASE WHEN ? = 2 THEN ? ELSE 0 END,
+                    last_revenue_time = ?");
+                
+                $revenueSource = 1; // 任务收益
+                $agentLevel = $level + 1;
+                $currentTime = date('Y-m-d H:i:s');
+                
+                $stmt->execute([
+                    $agentUser['id'],
+                    $agentUser['username'],
+                    $agentCommAmount,
+                    $agentLevel == 1 ? $agentCommAmount : 0,
+                    $agentLevel == 2 ? $agentCommAmount : 0,
+                    0, // 暂时不更新下线人数
+                    0, // 暂时不更新下线人数
+                    $revenueSource == 1 ? 1 : 0,
+                    $revenueSource == 2 ? 1 : 0,
+                    $revenueSource == 1 ? $agentCommAmount : 0,
+                    $revenueSource == 2 ? $agentCommAmount : 0,
+                    $currentTime,
+                    // 更新部分
+                    $agentCommAmount,
+                    $agentLevel, $agentCommAmount,
+                    $agentLevel, $agentCommAmount,
+                    $revenueSource,
+                    $revenueSource,
+                    $revenueSource, $agentCommAmount,
+                    $revenueSource, $agentCommAmount,
+                    $currentTime
+                ]);
+                
+                // 继续向上查找
+                $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
+                $stmt->execute([$currentUserId]);
+                $nextParent = $stmt->fetch(PDO::FETCH_ASSOC);
+                $currentUserId = $nextParent['parent_id'] ?? null;
+                $level++;
+            }
+        } catch (Exception $e) {
+            // 记录插入失败时的错误日志，但不影响主流程
+            error_log('插入team_revenue_statistics_breakdown失败: ' . $e->getMessage());
         }
 
         // 14. 提交事务

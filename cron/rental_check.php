@@ -553,6 +553,111 @@ try {
                 }
             }
             
+            // 5.4 记录团队收益统计
+            try {
+                // 查询卖方用户的一级和二级代理
+                if ($sellerUserType === 1) {
+                    $currentUserId = $sellerUser['parent_id'] ?? null;
+                    $level = 0;
+                    $maxLevel = 2; // 最多查找两级
+                    
+                    while (!empty($currentUserId) && $level < $maxLevel) {
+                        $stmt = $db->prepare("SELECT id, username FROM c_users WHERE id = ?");
+                        $stmt->execute([$currentUserId]);
+                        $agentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if (!$agentUser) {
+                            break;
+                        }
+                        
+                        // 获取代理的佣金金额（这里使用卖方的收益金额作为团队收益）
+                        $agentCommAmount = $sellerAmount;
+                        $agentBeforeAmount = 0;
+                        $agentAfterAmount = 0;
+                        
+                        // 插入团队收益记录
+                        $stmt = $db->prepare("INSERT INTO team_revenue_statistics_breakdown (
+                            agent_id, agent_username, agent_level, 
+                            downline_user_id, downline_username, downline_user_amount, 
+                            team_revenue_amount, agent_before_amount, agent_after_amount, 
+                            related_id, revenue_source, revenue_source_text, 
+                            order_type, order_type_text
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        
+                        $stmt->execute([
+                            $agentUser['id'],
+                            $agentUser['username'],
+                            $level + 1, // 代理层级：1=一级代理，2=二级代理
+                            $sellerUserId,
+                            $sellerUsername,
+                            $sellerAmount, // 下线用户获得的金额
+                            $agentCommAmount, // 代理获得的团队收益金额
+                            $agentBeforeAmount,
+                            $agentAfterAmount,
+                            $orderId,
+                            2, // 收益来源：2=账号出租收益
+                            '账号出租收益',
+                            1, // 订单类型：1=出租订单
+                            '出租订单'
+                        ]);
+                        
+                        // 更新团队收益汇总表
+                        $stmt = $db->prepare("INSERT INTO team_revenue_statistics_summary (
+                            user_id, username, total_team_revenue, level1_team_revenue, level2_team_revenue,
+                            level1_downline_count, level2_downline_count, task_revenue_count, order_revenue_count,
+                            task_revenue_amount, order_revenue_amount, last_revenue_time
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE
+                            total_team_revenue = total_team_revenue + ?,
+                            level1_team_revenue = level1_team_revenue + CASE WHEN ? = 1 THEN ? ELSE 0 END,
+                            level2_team_revenue = level2_team_revenue + CASE WHEN ? = 2 THEN ? ELSE 0 END,
+                            task_revenue_count = task_revenue_count + CASE WHEN ? = 1 THEN 1 ELSE 0 END,
+                            order_revenue_count = order_revenue_count + CASE WHEN ? = 2 THEN 1 ELSE 0 END,
+                            task_revenue_amount = task_revenue_amount + CASE WHEN ? = 1 THEN ? ELSE 0 END,
+                            order_revenue_amount = order_revenue_amount + CASE WHEN ? = 2 THEN ? ELSE 0 END,
+                            last_revenue_time = ?");
+                        
+                        $revenueSource = 2; // 账号出租收益
+                        $agentLevel = $level + 1;
+                        $currentTime = date('Y-m-d H:i:s');
+                        
+                        $stmt->execute([
+                            $agentUser['id'],
+                            $agentUser['username'],
+                            $agentCommAmount,
+                            $agentLevel == 1 ? $agentCommAmount : 0,
+                            $agentLevel == 2 ? $agentCommAmount : 0,
+                            0, // 暂时不更新下线人数
+                            0, // 暂时不更新下线人数
+                            $revenueSource == 1 ? 1 : 0,
+                            $revenueSource == 2 ? 1 : 0,
+                            $revenueSource == 1 ? $agentCommAmount : 0,
+                            $revenueSource == 2 ? $agentCommAmount : 0,
+                            $currentTime,
+                            // 更新部分
+                            $agentCommAmount,
+                            $agentLevel, $agentCommAmount,
+                            $agentLevel, $agentCommAmount,
+                            $revenueSource,
+                            $revenueSource,
+                            $revenueSource, $agentCommAmount,
+                            $revenueSource, $agentCommAmount,
+                            $currentTime
+                        ]);
+                        
+                        // 继续向上查找
+                        $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
+                        $stmt->execute([$currentUserId]);
+                        $nextParent = $stmt->fetch(PDO::FETCH_ASSOC);
+                        $currentUserId = $nextParent['parent_id'] ?? null;
+                        $level++;
+                    }
+                }
+            } catch (Exception $e) {
+                // 记录插入失败时的错误日志，但不影响主流程
+                error_log('插入team_revenue_statistics_breakdown失败: ' . $e->getMessage());
+            }
+            
             $db->commit();
             
             // 5. 发送通知（在事务外）

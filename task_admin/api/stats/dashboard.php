@@ -1443,19 +1443,7 @@ try {
     
     // 利润和利润率已经在前面计算完成，这里仅输出调试信息
     
-    // 调试：输出财务数据汇总
-    error_log('查询到的钱包流水记录数量: ' . count($walletLogs));
-    error_log('=== 财务数据汇总 ===');
-    error_log('Total recharge: ' . $totalRecharge);
-    error_log('Total withdraw: ' . $totalWithdraw);
-    error_log('Task reward expense: ' . $taskRewardExpense);
-    error_log('普通团长佣金支出: ' . $normalAgentCommission);
-    error_log('高级团长佣金支出: ' . $seniorAgentCommission);
-    error_log('Account rental reward: ' . $accountRentalReward);
-    error_log('Account purchase expense: ' . $accountPurchaseExpense);
-    error_log('Total expenses: ' . $totalExpenses);
-    error_log('Total profit: ' . $totalProfit);
-    error_log('Profit margin: ' . $profitMargin);
+
     
     // 构建响应数据
     $responseData = [

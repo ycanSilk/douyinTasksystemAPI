@@ -142,7 +142,8 @@ function renderRentalOrdersTable(list, pagination) {
             } else if (order.status === 2) {
                 // 进行中：终止
                 actions = `
-                    <button class="btn-danger btn-small" onclick="dispatchOrder(${order.id}, 'terminate')" style="margin: 2px;">终止</button>
+                    <button class="btn-danger btn-small" onclick="dispatchOrder(${order.id}, 'terminate')" style="margin: 2px;">终止租赁不退款</button>
+                    <button class="btn-warning btn-small" onclick="dispatchOrder(${order.id}, 'terminate_refund')" style="margin: 2px;">终止租赁并退款</button>
                 `;
             }
 
@@ -203,6 +204,8 @@ function dispatchOrder(orderId, action) {
         confirmMsg = '确认全额退款吗？订单将取消，金额将退回买家钱包。';
     } else if (action === 'terminate') {
         confirmMsg = '确认强行终止此订单吗？订单将立即结束，不退还金额。';
+    } else if (action === 'terminate_refund') {
+        confirmMsg = '确认终止此订单并退款吗？系统将计算剩余天数并原路退款。';
     }
 
     showConfirm(confirmMsg, async () => {

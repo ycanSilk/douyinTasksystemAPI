@@ -11,7 +11,7 @@
  Target Server Version : 80406 (8.4.6)
  File Encoding         : 65001
 
- Date: 14/03/2026 14:43:48
+ Date: 16/03/2026 23:04:46
 */
 
 SET NAMES utf8mb4;
@@ -39,7 +39,7 @@ CREATE TABLE `system_permission_template`  (
   UNIQUE INDEX `uk_code`(`code` ASC) USING BTREE,
   INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统权限模板表（导航栏面板）' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 37 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统权限模板表（导航栏面板）' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of system_permission_template
@@ -47,22 +47,22 @@ CREATE TABLE `system_permission_template`  (
 INSERT INTO `system_permission_template` VALUES (1, '统计面板', 'dashboard', '系统运营概览', NULL, 'ri-dashboard-3-line', 'dashboard', 1, 1, '2026-03-06 16:44:05', '2026-03-14 00:37:36', 1, 'dashboardSection');
 INSERT INTO `system_permission_template` VALUES (2, 'B端用户', 'b-users', 'B端用户管理', NULL, 'ri-building-4-line', 'b-users', 2, 1, '2026-03-06 16:44:05', '2026-03-14 00:38:06', 1, 'b-usersSection');
 INSERT INTO `system_permission_template` VALUES (3, 'C端用户', 'c-users', 'C端用户管理', NULL, 'ri-user-3-line', 'c-users', 3, 1, '2026-03-06 16:44:05', '2026-03-14 00:38:11', 1, 'c-usersSection');
-INSERT INTO `system_permission_template` VALUES (4, '系统用户', 'system-users', '系统用户管理', NULL, 'ri-admin-line', 'system-users', 4, 1, '2026-03-06 16:44:05', '2026-03-14 00:41:23', 1, 'system-usersSection');
-INSERT INTO `system_permission_template` VALUES (5, '角色管理', 'system-roles', '角色权限管理', NULL, 'ri-shield-keyhole-line', 'system-roles', 5, 1, '2026-03-06 16:44:05', '2026-03-14 00:41:30', 1, 'system-rolesSection');
+INSERT INTO `system_permission_template` VALUES (4, '系统用户', 'system-users', '系统用户管理', NULL, 'ri-admin-line', 'system-users', 3, 1, '2026-03-06 16:44:05', '2026-03-14 16:50:44', 1, 'system-usersSection');
+INSERT INTO `system_permission_template` VALUES (5, '角色管理', 'system-roles', '角色权限管理', NULL, 'ri-shield-keyhole-line', 'system-roles', 6, 1, '2026-03-06 16:44:05', '2026-03-14 16:51:22', 1, 'system-rolesSection');
 INSERT INTO `system_permission_template` VALUES (6, '权限管理', 'system-permissions', '权限模板管理', NULL, 'ri-lock-line', 'system-permissions', 6, 1, '2026-03-06 16:44:05', '2026-03-14 00:41:36', 1, 'system-permissionsSection');
 INSERT INTO `system_permission_template` VALUES (7, '任务模板', 'templates', '任务模板管理', NULL, 'ri-file-list-3-line', 'templates', 7, 1, '2026-03-06 16:44:05', '2026-03-14 00:38:31', 1, 'templatesSection');
 INSERT INTO `system_permission_template` VALUES (8, '任务市场', 'market', '任务市场监控', NULL, 'ri-store-2-line', 'market', 8, 1, '2026-03-06 16:44:05', '2026-03-14 00:38:34', 1, 'marketSection');
-INSERT INTO `system_permission_template` VALUES (9, '任务审核', 'task-review', '任务审核管理', NULL, 'ri-check-double-line', 'task-review', 9, 1, '2026-03-06 16:44:05', '2026-03-14 00:40:22', 1, 'task-reviewSection');
+INSERT INTO `system_permission_template` VALUES (9, '任务审核', 'task-review', '任务审核管理', NULL, 'ri-check-double-line', 'task-review', 4, 1, '2026-03-06 16:44:05', '2026-03-14 16:49:52', 1, 'task-reviewSection');
 INSERT INTO `system_permission_template` VALUES (10, '放大镜任务', 'magnifier', '放大镜任务管理', NULL, 'ri-search-line', 'magnifier', 10, 1, '2026-03-06 16:44:05', '2026-03-14 00:41:45', 1, 'magnifierSection');
-INSERT INTO `system_permission_template` VALUES (11, '钱包记录', 'wallet-logs', '钱包资金记录', NULL, 'ri-wallet-3-line', 'wallet-logs', 11, 1, '2026-03-06 16:44:05', '2026-03-14 00:40:07', 1, 'wallet-logsSection');
-INSERT INTO `system_permission_template` VALUES (12, '充值审核', 'recharge', '充值审核管理', NULL, 'ri-money-dollar-circle-line', 'recharge', 12, 1, '2026-03-06 16:44:05', '2026-03-14 00:41:54', 1, 'rechargeSection');
-INSERT INTO `system_permission_template` VALUES (13, '提现审核', 'withdraw', '提现审核管理', NULL, 'ri-hand-coin-line', 'withdraw', 13, 1, '2026-03-06 16:44:05', '2026-03-14 00:41:59', 1, 'withdrawSection');
-INSERT INTO `system_permission_template` VALUES (14, '团长审核', 'agent', '团长申请审核', NULL, 'ri-vip-crown-line', 'agent', 14, 1, '2026-03-06 16:44:05', '2026-03-14 00:38:48', 1, 'agentSection');
+INSERT INTO `system_permission_template` VALUES (11, '钱包记录', 'wallet-logs', '钱包资金记录', NULL, 'ri-wallet-3-line', 'wallet-logs', 3, 1, '2026-03-06 16:44:05', '2026-03-14 16:30:04', 1, 'wallet-logsSection');
+INSERT INTO `system_permission_template` VALUES (12, '充值审核', 'recharge', '充值审核管理', NULL, 'ri-money-dollar-circle-line', 'recharge', 4, 1, '2026-03-06 16:44:05', '2026-03-14 16:49:58', 1, 'rechargeSection');
+INSERT INTO `system_permission_template` VALUES (13, '提现审核', 'withdraw', '提现审核管理', NULL, 'ri-hand-coin-line', 'withdraw', 4, 1, '2026-03-06 16:44:05', '2026-03-14 16:50:00', 1, 'withdrawSection');
+INSERT INTO `system_permission_template` VALUES (14, '团长审核', 'agent', '团长申请审核', NULL, 'ri-vip-crown-line', 'agent', 5, 1, '2026-03-06 16:44:05', '2026-03-14 16:50:10', 1, 'agentSection');
 INSERT INTO `system_permission_template` VALUES (15, '租赁处理', 'rental-orders', '租赁订单处理', NULL, 'ri-home-smile-2-line', 'rental-orders', 15, 1, '2026-03-06 16:44:05', '2026-03-14 00:39:02', 1, 'rental-ordersSection');
 INSERT INTO `system_permission_template` VALUES (16, '工单管理', 'rental-tickets', '租赁工单管理', NULL, 'ri-customer-service-2-line', 'rental-tickets', 16, 1, '2026-03-06 16:44:05', '2026-03-14 00:39:09', 1, 'rental-ticketsSection');
 INSERT INTO `system_permission_template` VALUES (17, '网站配置', 'system-config', '网站系统配置', NULL, 'ri-settings-4-line', 'system-config', 17, 1, '2026-03-06 16:44:05', '2026-03-14 00:39:15', 1, 'system-configSection');
 INSERT INTO `system_permission_template` VALUES (18, '系统通知', 'notifications', '系统通知管理', NULL, 'ri-notification-3-line', 'notifications', 18, 1, '2026-03-06 16:44:05', '2026-03-14 00:40:29', 1, 'notificationsSection');
-INSERT INTO `system_permission_template` VALUES (19, '团长迁跃升级', 'agent-upgrade', 'C端用户代理等级跃迁管理', NULL, 'ri-arrow-up-circle-line', 'agent', 22, 1, '2026-03-08 14:01:49', '2026-03-14 00:36:42', 1, 'agentUpgradeSection');
+INSERT INTO `system_permission_template` VALUES (19, '团长迁跃升级', 'agent-upgrade', 'C端用户代理等级跃迁管理', NULL, 'ri-arrow-up-circle-line', 'agent', 5, 1, '2026-03-08 14:01:49', '2026-03-14 16:50:07', 1, 'agentUpgradeSection');
 INSERT INTO `system_permission_template` VALUES (20, '提示通知列表', 'notification-logs', '系统通知检测日志', NULL, 'ri-file-list-line', 'notification-logs', 19, 1, '2026-03-08 14:01:49', '2026-03-14 00:40:43', 1, 'notification-logsSection');
 INSERT INTO `system_permission_template` VALUES (21, '登录设备配置', 'login-devices-config', '用户登录设备数量配置', NULL, 'ri-lock-unlock-line', 'login-devices-config', 20, 1, '2026-03-10 12:55:46', '2026-03-14 00:39:26', 1, 'login-devices-configSection');
 INSERT INTO `system_permission_template` VALUES (22, '派单用户交易流水', 'b-statisticsSection', 'B端用户交易流水管理', NULL, 'ri-wallet-2-line', 'b-statistics', 3, 1, '2026-03-10 12:00:00', '2026-03-14 01:08:13', 1, 'b-statisticsSection');
@@ -71,5 +71,8 @@ INSERT INTO `system_permission_template` VALUES (30, '派单交易流水', 'b-st
 INSERT INTO `system_permission_template` VALUES (31, '派单数据统计', 'b-statistics-summary', 'B端用户交易数据统计', 22, 'ri-bar-chart-line', 'b-statistics-summary', 2, 1, '2026-03-13 17:36:18', '2026-03-14 00:48:30', 2, 'bStatisticsSummary');
 INSERT INTO `system_permission_template` VALUES (32, '接单交易流水', 'c-statistics-flows', 'C端用户交易流水记录', 23, 'ri-list-check', 'c-statistics-flows', 1, 1, '2026-03-13 19:05:00', '2026-03-14 00:48:35', 2, 'cUsersStatisticsTable');
 INSERT INTO `system_permission_template` VALUES (33, '接单数据统计', 'c-statistics-summary', 'C端数据统计管理', 23, 'ri-wallet-2-line', 'c-statistics-summary', 2, 1, '2026-03-13 19:05:56', '2026-03-14 00:48:38', 2, 'cStatisticsSummary');
+INSERT INTO `system_permission_template` VALUES (34, '团队收益统计', 'team-revenue', '团队收益统计管理', NULL, 'ri-team-line', 'team-revenue', 6, 1, '2026-03-16 21:35:18', '2026-03-16 21:44:40', 1, 'team-revenueSection');
+INSERT INTO `system_permission_template` VALUES (35, '团队收益概览', 'team-revenue-overview', '团队收益统计概览', 34, 'ri-pie-chart-line', 'team-revenue-overview', 1, 1, '2026-03-16 21:35:18', '2026-03-16 21:35:18', 2, 'teamRevenueContainer');
+INSERT INTO `system_permission_template` VALUES (36, '团队收益明细', 'team-revenue-details', '团队收益详细记录', 34, 'ri-list-check', 'team-revenue-details', 2, 1, '2026-03-16 21:35:18', '2026-03-16 21:35:18', 2, 'teamRevenueDetailsContainer');
 
 SET FOREIGN_KEY_CHECKS = 1;

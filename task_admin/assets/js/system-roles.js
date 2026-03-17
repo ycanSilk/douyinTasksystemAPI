@@ -308,7 +308,7 @@ function configureRolePermissions(roleId, roleName) {
         e.preventDefault();
         const formData = new FormData(e.target);
         const data = {
-            role_id: formData.get('role_id'),
+            role_id: parseInt(formData.get('role_id')),
             template_ids: []
         };
         
@@ -317,6 +317,8 @@ function configureRolePermissions(roleId, roleName) {
         checkboxes.forEach(checkbox => {
             data.template_ids.push(parseInt(checkbox.value));
         });
+        
+        console.log('权限配置数据:', data);
         
         try {
             const token = sessionStorage.getItem('admin_token');
@@ -328,6 +330,8 @@ function configureRolePermissions(roleId, roleName) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
             
+            console.log('请求头:', headers);
+            
             const response = await fetch('/task_admin/api/system_permission_template/role_permissions.php', {
                 method: 'POST',
                 headers: headers,
@@ -335,11 +339,14 @@ function configureRolePermissions(roleId, roleName) {
                 body: JSON.stringify(data)
             });
             
+            console.log('API响应状态:', response.status);
+            
             if (!response.ok) {
-                throw new Error('网络响应错误');
+                throw new Error(`网络响应错误: ${response.status}`);
             }
             
             const result = await response.json();
+            console.log('API返回数据:', result);
             
             if (result && result.code === 0) {
                 showToast('权限配置成功', 'success');
@@ -348,6 +355,7 @@ function configureRolePermissions(roleId, roleName) {
                 showToast(result ? result.message : '权限配置失败', 'error');
             }
         } catch (err) {
+            console.error('权限配置失败:', err);
             showToast('权限配置失败', 'error');
         }
     });

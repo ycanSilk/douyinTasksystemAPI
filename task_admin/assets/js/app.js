@@ -121,6 +121,9 @@ function showToast(message, type = 'info') {
 // 引入API配置和请求方法
 // 注意：实际项目中需要在HTML中添加<script src="assets/js/apiconfig.js"></script>引用
 
+// 引入页面配置
+import { getPageConfig, getPageContentConfig, hasPageConfig, hasPageContentConfig, pageContentConfig } from './page-config.js';
+
 // 初始化
 function init() {
     checkLoginStatus();
@@ -130,6 +133,14 @@ function init() {
     // 初始化B端用户交易流水搜索表单
     if (typeof initBStatisticsForm === 'function') {
         initBStatisticsForm();
+    }
+    // 初始化团队收益统计表单
+    if (typeof initTeamRevenueForm === 'function') {
+        initTeamRevenueForm();
+    }
+    // 初始化团队收益明细表单
+    if (typeof initTeamRevenueDetailsForm === 'function') {
+        initTeamRevenueDetailsForm();
     }
 }
 
@@ -170,7 +181,7 @@ function showMainPage() {
 // 加载导航栏
 async function loadNavigation() {
     try {
-        const url = `/task_admin/api/system_permission_template/list.php`;
+        const url = `/task_admin/api/system_permission_template/user_permissions.php`;
         
         // 使用传统的fetch方法
         const token = sessionStorage.getItem('admin_token');
@@ -182,6 +193,7 @@ async function loadNavigation() {
                 ...(token && { 'Authorization': `Bearer ${token}` })
             }
         });
+        
         
         // 检查响应状态码
         if (!response.ok) {
@@ -221,16 +233,17 @@ function renderNavigation(templates) {
     // 按 parent_id 分组导航项
     const menuMap = {};
     
+    
     templates.forEach((template, index) => {
         // 确保parent_id是数字类型，NULL或undefined时设为0
         const parentId = template.parent_id ? parseInt(template.parent_id) : 0;
-        
         if (!menuMap[parentId]) {
             menuMap[parentId] = [];
         }
         menuMap[parentId].push(template);
     });
     
+  
     // 渲染一级导航项（parent_id = 0）
     const level1Items = menuMap[0] || [];
     
@@ -380,6 +393,8 @@ function initNavigation() {
 
 // 切换到指定页面
 function switchToPage(page) {
+    console.log('切换到页面:', page);
+    
     // 更新导航高亮
     document.querySelectorAll('.nav-link, .sub-nav-link').forEach(l => l.classList.remove('active'));
     const targetLink = document.querySelector(`.nav-link[data-page="${page}"]`) || document.querySelector(`.sub-nav-link[data-page="${page}"]`);
@@ -392,132 +407,71 @@ function switchToPage(page) {
         section.classList.remove('active');
     });
     
-    // 获取section ID - 优先使用data-sectionId属性，然后使用默认规则
+    // 使用配置文件获取section ID
     let sectionId = `${page}Section`;
-    if (targetLink && targetLink.dataset.sectionId) {
-        // 特殊处理bStatisticsSummary、cStatisticsSummary和cUsersStatisticsTable，因为它们实际上属于对应的statisticsSection
-        if (targetLink.dataset.sectionId === 'bStatisticsSummary') {
-            sectionId = 'b-statisticsSection';
-        } else if (targetLink.dataset.sectionId === 'cStatisticsSummary' || targetLink.dataset.sectionId === 'cUsersStatisticsTable') {
-            sectionId = 'c-statisticsSection';
-        } else {
-            sectionId = targetLink.dataset.sectionId;
+    if (hasPageConfig(page)) {
+        const config = getPageConfig(page);
+        if (config.sectionId) {
+            sectionId = config.sectionId;
         }
+    } else if (targetLink && targetLink.dataset.sectionId) {
+        // 兼容旧的方式
+        sectionId = targetLink.dataset.sectionId;
     }
     
+    console.log('使用的sectionId:', sectionId);
     const targetSection = document.getElementById(sectionId);
     if (targetSection) {
         targetSection.classList.add('active');
+    } else {
+        console.warn('未找到对应的section:', sectionId);
     }
     
     // 保存当前页面到localStorage
     localStorage.setItem('admin_current_page', page);
     
-    // 加载对应数据
-    switch(page) {
-        case 'dashboard': loadDashboard(); break;
-        case 'b-users': loadBUsers(); break;
-        case 'b-statistics-flows': loadBStatistics(); break;
-        case 'b-statistics-summary': 
-            // 派单数据统计页面，调用loadOrderStatistics函数
-            if (typeof loadOrderStatistics === 'function') {
-                loadOrderStatistics();
+    // 处理页面内容显示
+    if (hasPageContentConfig(page)) {
+        const contentConfig = getPageContentConfig(page);
+        
+        // 隐藏同组的其他内容
+        Object.keys(pageContentConfig).forEach(key => {
+            const config = pageContentConfig[key];
+            if (config.contentId) {
+                const contentElement = document.getElementById(config.contentId);
+                if (contentElement) {
+                    contentElement.style.display = (key === page) ? 'block' : 'none';
+                }
             }
-            break;
-        case 'c-statistics-flows':
-            // C端用户交易流水页面
-            if (typeof loadCStatistics === 'function') {
-                loadCStatistics();
-            }
-            break;
-        case 'c-statistics-summary':
-            // C端用户交易流水统计页面
-            if (typeof loadCOrderStatistics === 'function') {
-                loadCOrderStatistics();
-            }
-            break;
-        case 'c-users': loadCUsers(); break;
-        case 'system-users': loadSystemUsers(); break;
-        case 'system-roles': loadSystemRoles(); break;
-        case 'system-permissions': loadSystemPermissions(); break;
-        case 'templates': loadTaskTemplates(); break;
-        case 'market': loadMarketTasks(); break;
-        case 'wallet-logs': loadWalletLogs(); break;
-        case 'recharge': loadRechargeList(); break;
-        case 'withdraw': loadWithdrawList(); break;
-        case 'agent': loadAgentList(); break;
-        case 'agent-upgrade': loadCUsersForUpgrade(); break;
-        case 'rental-orders': loadRentalOrders(); break;
-        case 'rental-tickets': loadTickets(); break;
-        case 'system-config': loadSystemConfig(); break;
-        case 'task-review': loadTaskReviewList(); break;
-        case 'notifications': loadNotificationList(); break;
-        case 'notification-logs': 
-            loadNotifications(1, '', '0'); // 默认加载未读消息
-            loadNotificationLogs();
-            break;
-        case 'magnifier': loadMagnifierTasks(); break;
-        case 'order-statistics': 
-            if (typeof loadOrderStatistics === 'function') {
-                loadOrderStatistics();
-            }
-            break;
+        });
+        
+        // 初始化表单
+        if (contentConfig.initFunction) {
+            setTimeout(() => {
+                if (typeof window[contentConfig.initFunction] === 'function') {
+                    console.log('初始化表单:', contentConfig.initFunction);
+                    window[contentConfig.initFunction]();
+                }
+            }, 100);
+        }
     }
     
-    // 处理B端和C端交易流水页面的内容显示
-    if (page === 'b-statistics-flows' || page === 'b-statistics-summary') {
-        // 显示交易流水内容，隐藏统计内容
-        document.getElementById('b-statistics-flows-content').style.display = page === 'b-statistics-flows' ? 'block' : 'none';
-        document.getElementById('b-statistics-summary-content').style.display = page === 'b-statistics-summary' ? 'block' : 'none';
-        
-        // 当切换到B端交易流水页面时，重新初始化搜索表单
-        if (page === 'b-statistics-flows') {
+    // 加载对应数据
+    if (hasPageConfig(page)) {
+        const config = getPageConfig(page);
+        if (config.loadFunction) {
             setTimeout(() => {
-                if (typeof initBStatisticsForm === 'function') {
-                    initBStatisticsForm();
-                }
-            }, 100);
-        } else if (page === 'b-statistics-summary') {
-            setTimeout(() => {
-                if (typeof initOrderStatisticsForm === 'function') {
-                    initOrderStatisticsForm();
+                if (typeof config.loadFunction === 'function') {
+                    console.log('执行加载函数(函数对象):', config.loadFunction.name);
+                    config.loadFunction();
+                } else if (typeof window[config.loadFunction] === 'function') {
+                    console.log('执行加载函数(全局函数):', config.loadFunction);
+                    window[config.loadFunction]();
+                } else {
+                    console.warn('加载函数不存在:', config.loadFunction);
                 }
             }, 100);
         }
-    } else if (page === 'c-statistics-flows' || page === 'c-statistics-summary') {
-        // 显示C端交易流水内容，隐藏统计内容
-        document.getElementById('c-statistics-flows-content').style.display = page === 'c-statistics-flows' ? 'block' : 'none';
-        document.getElementById('c-statistics-summary-content').style.display = page === 'c-statistics-summary' ? 'block' : 'none';
-        
-        // 当切换到C端交易流水页面时，重新初始化搜索表单并加载数据
-        if (page === 'c-statistics-flows') {
-            setTimeout(() => {
-                if (typeof initCStatisticsForm === 'function') {
-                    initCStatisticsForm();
-                }
-                // 调用loadCStatistics加载数据
-                if (typeof loadCStatistics === 'function') {
-                    loadCStatistics();
-                }
-            }, 100);
-        } else if (page === 'c-statistics-summary') {
-            setTimeout(() => {
-                if (typeof initCOrderStatisticsForm === 'function') {
-                    initCOrderStatisticsForm();
-                }
-                // 调用loadCOrderStatistics加载数据
-                if (typeof loadCOrderStatistics === 'function') {
-                    loadCOrderStatistics();
-                }
-            }, 100);
-        }
-    } else if (page === 'order-statistics') {
-        // 当切换到派单数据统计页面时，初始化搜索表单
-        setTimeout(() => {
-            if (typeof initOrderStatisticsForm === 'function') {
-                initOrderStatisticsForm();
-            }
-        }, 100);
     }
 }
 

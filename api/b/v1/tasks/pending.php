@@ -105,6 +105,8 @@ try {
             c.screenshot_url,
             c.reward_amount,
             c.submitted_at,
+            c.task_stage,
+            c.task_stage_text,
             cu.username as c_username,
             cu.email as c_email,
             tm.title as template_title
@@ -148,6 +150,8 @@ try {
             'comment_url' => $record['comment_url'],
             'screenshots' => $screenshots,
             'reward_amount' => number_format($record['reward_amount'] / 100, 2),
+            'task_stage' => (int)$record['task_stage'],
+            'task_stage_text' => $record['task_stage_text'],
             'submitted_at' => $record['submitted_at']
         ];
     }

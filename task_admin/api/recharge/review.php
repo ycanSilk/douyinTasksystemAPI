@@ -190,6 +190,27 @@ try {
             "充值申请被拒绝：¥" . number_format($amount / 100, 2)
         ]);
         
+        // 插入B端任务统计记录
+        try {
+            $stmt = $db->prepare(" 
+                INSERT INTO b_task_statistics (
+                    b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                    related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                ) VALUES (?, ?, 1, 0, ?, ?, 'recharge', ?, NULL, NULL, 6, '充值申请驳回记录，当前状态已驳回', ?)
+            ");
+            $stmt->execute([
+                (int)$request['user_id'],
+                $request['username'],
+                $currentBalance,
+                $currentBalance,
+                $id,
+                "充值申请被拒绝：¥" . number_format($amount / 100, 2)
+            ]);
+        } catch (Exception $e) {
+            // 记录插入失败时的错误日志，但不影响主流程
+            error_log('插入b_task_statistics失败: ' . $e->getMessage());
+        }
+        
         // 4. 提交事务（先完成主业务）
         $db->commit();
         
