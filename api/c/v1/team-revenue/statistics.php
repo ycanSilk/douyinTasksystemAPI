@@ -152,7 +152,7 @@ try {
     }
     
     if ($isAgent > 0) {
-        $whereConditions[] = 'u.is_agent = ?';
+        $whereConditions[] = '(u.is_agent = ? OR u.is_agent IS NULL)';
         $params[] = $isAgent;
     }
     
@@ -247,33 +247,180 @@ try {
         ];
     }
     
+    // 获取周期收益统计
+    $periodRevenue = [];
+    $timePeriods = [
+        'today' => [
+            'start' => date('Y-m-d 00:00:00'),
+            'end' => date('Y-m-d 23:59:59')
+        ],
+        '7days' => [
+            'start' => date('Y-m-d 00:00:00', strtotime('-7 days')),
+            'end' => date('Y-m-d 23:59:59')
+        ],
+        '30days' => [
+            'start' => date('Y-m-d 00:00:00', strtotime('-30 days')),
+            'end' => date('Y-m-d 23:59:59')
+        ]
+    ];
+    
+    foreach ($timePeriods as $key => $period) {
+        // 查询直接邀请（一级下线）的收益
+        $level1Stmt = $db->prepare("SELECT
+            COUNT(*) as count,
+            SUM(team_revenue_amount) as amount
+        FROM team_revenue_statistics_breakdown
+        WHERE agent_id = ? AND agent_level = 1 AND created_at BETWEEN ? AND ?");
+        $level1Stmt->execute([$currentUserId, $period['start'], $period['end']]);
+        $level1Data = $level1Stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // 查询间接邀请（二级下线）的收益
+        $level2Stmt = $db->prepare("SELECT
+            COUNT(*) as count,
+            SUM(team_revenue_amount) as amount
+        FROM team_revenue_statistics_breakdown
+        WHERE agent_id = ? AND agent_level = 2 AND created_at BETWEEN ? AND ?");
+        $level2Stmt->execute([$currentUserId, $period['start'], $period['end']]);
+        $level2Data = $level2Stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $periodRevenue[$key] = [
+            'direct' => [
+                'count' => intval($level1Data['count'] ?? 0),
+                'amount' => $level1Data['amount'] ?? '0.00'
+            ],
+            'indirect' => [
+                'count' => intval($level2Data['count'] ?? 0),
+                'amount' => $level2Data['amount'] ?? '0.00'
+            ],
+            'total' => [
+                'count' => intval($level1Data['count'] ?? 0) + intval($level2Data['count'] ?? 0),
+                'amount' => number_format(floatval($level1Data['amount'] ?? 0) + floatval($level2Data['amount'] ?? 0), 2)
+            ]
+        ];
+    }
+    
+    // 获取邀请用户周期收益
+    $inviteUsersRevenue = [];
+    
+    // 查询当前用户的所有一级邀请用户
+    $level1Stmt = $db->prepare("SELECT
+        u.id as user_id,
+        u.username,
+        r.level as agent_level
+    FROM c_users u
+    JOIN c_user_relations r ON u.id = r.user_id
+    WHERE r.agent_id = ?");
+    $level1Stmt->execute([$currentUserId]);
+    $level1Users = $level1Stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 查询当前用户的所有二级邀请用户
+    $level2Stmt = $db->prepare("SELECT
+        u.id as user_id,
+        u.username,
+        2 as agent_level
+    FROM c_users u
+    JOIN c_user_relations r1 ON u.id = r1.user_id
+    JOIN c_user_relations r2 ON r1.agent_id = r2.user_id
+    WHERE r2.agent_id = ?");
+    $level2Stmt->execute([$currentUserId]);
+    $level2Users = $level2Stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 合并一级和二级用户，确保每个用户只出现一次
+    $inviteUsers = array_merge($level1Users, $level2Users);
+    
+    // 去重，保留用户的最高层级（一级优先于二级）
+    $uniqueUsers = [];
+    foreach ($inviteUsers as $user) {
+        if (!isset($uniqueUsers[$user['user_id']]) || $user['agent_level'] < $uniqueUsers[$user['user_id']]['agent_level']) {
+            $uniqueUsers[$user['user_id']] = $user;
+        }
+    }
+    $inviteUsers = array_values($uniqueUsers);
+    
+    // 为每个邀请用户获取周期收益
+    foreach ($inviteUsers as $user) {
+        $userRevenue = [];
+        
+        foreach ($timePeriods as $key => $period) {
+            // 查询该用户作为下线产生的收益
+            $userRevenueStmt = $db->prepare("SELECT
+                COUNT(*) as count,
+                SUM(team_revenue_amount) as amount
+            FROM team_revenue_statistics_breakdown
+            WHERE downline_user_id = ? AND created_at BETWEEN ? AND ?");
+            $userRevenueStmt->execute([$user['user_id'], $period['start'], $period['end']]);
+            $userRevenueData = $userRevenueStmt->fetch(PDO::FETCH_ASSOC);
+            
+            $userRevenue[$key] = [
+                'count' => intval($userRevenueData['count'] ?? 0),
+                'amount' => $userRevenueData['amount'] ?? '0.00'
+            ];
+        }
+        
+        $inviteUsersRevenue[] = [
+            'user_id' => intval($user['user_id']),
+            'username' => $user['username'],
+            'agent_level' => intval($user['agent_level']),
+            'revenue' => $userRevenue
+        ];
+    }
+    
     // 构建返回结果
     $result = [
         'total' => intval($total),
-        'list' => $formattedList
+        'list' => $formattedList,
+        'period_revenue' => $periodRevenue,
+        'invite_users_revenue' => $inviteUsersRevenue
     ];
     
     // 获取团队用户列表（只返回当前token用户的团队数据）
     try {
-        // 查询当前用户的所有下线用户（一级和二级）
-        $downlineStmt = $db->prepare("SELECT DISTINCT
+        // 查询当前用户的所有一级下线用户
+        $level1Stmt = $db->prepare("SELECT
             u.id as user_id,
             u.username,
             u.phone,
             u.is_agent,
             u.created_at,
-            IFNULL(r.agent_id, 0) as parent_id,
-            IFNULL(p.username, '') as parent_username,
-            IFNULL(r.level, 0) as agent_level
+            r.agent_id as parent_id,
+            p.username as parent_username,
+            r.level as agent_level
         FROM c_users u
-        LEFT JOIN c_user_relations r ON u.id = r.user_id
-        LEFT JOIN c_users p ON r.agent_id = p.id
-        WHERE u.id = ? OR r.agent_id = ? OR r.agent_id IN (
-            SELECT user_id FROM c_user_relations WHERE agent_id = ?
-        )
-        ORDER BY u.created_at DESC");
-        $downlineStmt->execute([$currentUserId, $currentUserId, $currentUserId]);
-        $teamUsers = $downlineStmt->fetchAll(PDO::FETCH_ASSOC);
+        JOIN c_user_relations r ON u.id = r.user_id
+        JOIN c_users p ON r.agent_id = p.id
+        WHERE r.agent_id = ?");
+        $level1Stmt->execute([$currentUserId]);
+        $level1Users = $level1Stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // 查询当前用户的所有二级下线用户
+        $level2Stmt = $db->prepare("SELECT
+            u.id as user_id,
+            u.username,
+            u.phone,
+            u.is_agent,
+            u.created_at,
+            r1.agent_id as parent_id,
+            p.username as parent_username,
+            2 as agent_level
+        FROM c_users u
+        JOIN c_user_relations r1 ON u.id = r1.user_id
+        JOIN c_users p ON r1.agent_id = p.id
+        JOIN c_user_relations r2 ON r1.agent_id = r2.user_id
+        WHERE r2.agent_id = ?");
+        $level2Stmt->execute([$currentUserId]);
+        $level2Users = $level2Stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // 合并一级和二级用户，确保每个用户只出现一次
+        $teamUsers = array_merge($level1Users, $level2Users);
+        
+        // 去重，保留用户的最高层级（一级优先于二级）
+        $uniqueUsers = [];
+        foreach ($teamUsers as $user) {
+            if (!isset($uniqueUsers[$user['user_id']]) || $user['agent_level'] < $uniqueUsers[$user['user_id']]['agent_level']) {
+                $uniqueUsers[$user['user_id']] = $user;
+            }
+        }
+        $teamUsers = array_values($uniqueUsers);
         
         // 格式化团队用户列表
         $formattedTeamUsers = [];

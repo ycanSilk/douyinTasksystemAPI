@@ -71,7 +71,15 @@
         <div class="flex-1 overflow-y-auto">
             <!-- 顶部栏 -->
             <div class="bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-                <h2 class="text-lg font-semibold text-gray-800" id="panel-title">收益统计</h2>
+                <div class="flex items-center space-x-4">
+                    <h2 class="text-lg font-semibold text-gray-800" id="panel-title">收益统计</h2>
+                    <!-- 时间周期切换按钮 -->
+                    <div class="flex space-x-2" id="periodSwitcher">
+                        <button class="period-btn px-3 py-1 text-sm rounded-md bg-blue-600 text-white" data-period="today">今天</button>
+                        <button class="period-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300" data-period="7days">7天</button>
+                        <button class="period-btn px-3 py-1 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300" data-period="30days">30天</button>
+                    </div>
+                </div>
                 <div class="flex items-center space-x-4">
                     <div class="relative">
                         <input type="text" id="tokenInput" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="输入C端token" value="">
@@ -151,7 +159,7 @@
                 </div>
 
                 <!-- 统计列表 -->
-                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
                     <h3 class="text-md font-semibold text-gray-800 mb-4">收益统计列表</h3>
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[800px] divide-y divide-gray-200">
@@ -171,6 +179,94 @@
                             <tbody class="bg-white divide-y divide-gray-200" id="statisticsTableBody">
                                 <tr>
                                     <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fa fa-spinner fa-spin mr-2"></i>
+                                        加载中...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 周期收益统计 -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+                    <h3 class="text-md font-semibold text-gray-800 mb-4">周期收益统计</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- 今天 -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">今天</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">直接邀请</span>
+                                    <span class="text-sm font-medium text-blue-600" id="todayDirectAmount">¥0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">间接邀请</span>
+                                    <span class="text-sm font-medium text-purple-600" id="todayIndirectAmount">¥0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
+                                    <span class="text-sm font-medium text-gray-800">总计</span>
+                                    <span class="text-sm font-bold text-green-600" id="todayTotalAmount">¥0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 7天 -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">7天</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">直接邀请</span>
+                                    <span class="text-sm font-medium text-blue-600" id="sevenDaysDirectAmount">¥0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">间接邀请</span>
+                                    <span class="text-sm font-medium text-purple-600" id="sevenDaysIndirectAmount">¥0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
+                                    <span class="text-sm font-medium text-gray-800">总计</span>
+                                    <span class="text-sm font-bold text-green-600" id="sevenDaysTotalAmount">¥0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 30天 -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">30天</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">直接邀请</span>
+                                    <span class="text-sm font-medium text-blue-600" id="thirtyDaysDirectAmount">¥0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-600">间接邀请</span>
+                                    <span class="text-sm font-medium text-purple-600" id="thirtyDaysIndirectAmount">¥0.00</span>
+                                </div>
+                                <div class="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
+                                    <span class="text-sm font-medium text-gray-800">总计</span>
+                                    <span class="text-sm font-bold text-green-600" id="thirtyDaysTotalAmount">¥0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 邀请用户收益统计 -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+                    <h3 class="text-md font-semibold text-gray-800 mb-4">邀请用户收益统计</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[600px] divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户名</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">邀请层级</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">收益值</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="inviteUsersTableBody">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-12 text-center text-gray-500">
                                         <i class="fa fa-spinner fa-spin mr-2"></i>
                                         加载中...
                                     </td>
@@ -381,7 +477,8 @@
         // 全局变量
         let currentPage = 1;
         let currentPanel = 'statistics';
-        let token = 'eyJ1c2VyX2lkIjoxLCJ0eXBlIjozLCJleHAiOjE3NzQzMjU2Mjl9';
+        let currentPeriod = 'today'; // 当前选中的时间周期
+        let token = 'eyJ1c2VyX2lkIjoxMDEsInR5cGUiOjEsImV4cCI6MTc3NDM2OTc1M30=';
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -393,6 +490,25 @@
                 item.addEventListener('click', function() {
                     const panel = this.dataset.panel;
                     switchPanel(panel);
+                });
+            });
+
+            // 时间周期切换事件
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const period = this.dataset.period;
+                    currentPeriod = period;
+                    
+                    // 更新按钮状态
+                    document.querySelectorAll('.period-btn').forEach(b => {
+                        b.classList.remove('bg-blue-600', 'text-white');
+                        b.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    this.classList.remove('bg-gray-200', 'text-gray-700');
+                    this.classList.add('bg-blue-600', 'text-white');
+                    
+                    // 重新加载数据
+                    loadStatistics();
                 });
             });
 
@@ -503,10 +619,23 @@
         async function loadStatistics() {
             // 获取查询参数
             const params = new URLSearchParams();
-            params.append('user_id', document.getElementById('statisticsUserId').value);
-            params.append('username', document.getElementById('statisticsUsername').value);
-            params.append('days', document.getElementById('statisticsDays').value);
-            params.append('is_agent', document.getElementById('statisticsIsAgent').value);
+            const userId = document.getElementById('statisticsUserId').value;
+            const username = document.getElementById('statisticsUsername').value;
+            const days = document.getElementById('statisticsDays').value;
+            const isAgent = document.getElementById('statisticsIsAgent').value;
+            
+            if (userId) {
+                params.append('user_id', userId);
+            }
+            if (username) {
+                params.append('username', username);
+            }
+            if (days) {
+                params.append('days', days);
+            }
+            if (isAgent) {
+                params.append('is_agent', isAgent);
+            }
 
             try {
                 // 发送API请求
@@ -547,6 +676,31 @@
                         document.getElementById('level1Revenue').textContent = '0.00';
                         document.getElementById('level2Revenue').textContent = '0.00';
                         document.getElementById('revenueCount').textContent = '0';
+                    }
+
+                    // 更新周期收益统计
+                    if (data.data.period_revenue) {
+                        const periodRevenue = data.data.period_revenue;
+                        
+                        // 今天
+                        document.getElementById('todayDirectAmount').textContent = '¥' + (periodRevenue.today?.direct?.amount || '0.00');
+                        document.getElementById('todayIndirectAmount').textContent = '¥' + (periodRevenue.today?.indirect?.amount || '0.00');
+                        document.getElementById('todayTotalAmount').textContent = '¥' + (periodRevenue.today?.total?.amount || '0.00');
+                        
+                        // 7天
+                        document.getElementById('sevenDaysDirectAmount').textContent = '¥' + (periodRevenue['7days']?.direct?.amount || '0.00');
+                        document.getElementById('sevenDaysIndirectAmount').textContent = '¥' + (periodRevenue['7days']?.indirect?.amount || '0.00');
+                        document.getElementById('sevenDaysTotalAmount').textContent = '¥' + (periodRevenue['7days']?.total?.amount || '0.00');
+                        
+                        // 30天
+                        document.getElementById('thirtyDaysDirectAmount').textContent = '¥' + (periodRevenue['30days']?.direct?.amount || '0.00');
+                        document.getElementById('thirtyDaysIndirectAmount').textContent = '¥' + (periodRevenue['30days']?.indirect?.amount || '0.00');
+                        document.getElementById('thirtyDaysTotalAmount').textContent = '¥' + (periodRevenue['30days']?.total?.amount || '0.00');
+                    }
+
+                    // 渲染邀请用户收益统计
+                    if (data.data.invite_users_revenue) {
+                        renderInviteUsersRevenue(data.data.invite_users_revenue);
                     }
 
                     // 渲染统计列表
@@ -627,6 +781,59 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${item.revenue_stats.task_amount}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${item.revenue_stats.order_amount}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.last_revenue_time}</td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = html;
+        }
+
+        // 渲染邀请用户收益统计
+        function renderInviteUsersRevenue(users) {
+            const tableBody = document.getElementById('inviteUsersTableBody');
+
+            if (!users || users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fa fa-info-circle mr-2"></i>
+                            暂无邀请用户数据
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            users.forEach(user => {
+                // 获取当前周期的收益数据
+                const revenue = user.revenue[currentPeriod] || { amount: '0.00' };
+                
+                // 邀请层级样式
+                let levelClass = 'bg-gray-100 text-gray-800';
+                let levelText = '未知';
+                if (user.agent_level === 1) {
+                    levelClass = 'bg-blue-100 text-blue-800';
+                    levelText = '一级';
+                } else if (user.agent_level === 2) {
+                    levelClass = 'bg-purple-100 text-purple-800';
+                    levelText = '二级';
+                }
+
+                html += `
+                    <tr class="hover:bg-gray-50 transition-all-300">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.user_id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                ${user.username}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${levelClass}">
+                                ${levelText}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${revenue.amount}</td>
                     </tr>
                 `;
             });
