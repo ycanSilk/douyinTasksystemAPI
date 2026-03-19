@@ -169,52 +169,56 @@ try {
         ]);
         
         // 记录C端任务统计（仅当买家是C端用户时）
-        if ($order['buyer_user_type'] === 'c' || $order['buyer_user_type'] === '1') {
-            try {
-                $stmt = $db->prepare(" 
-                    INSERT INTO c_task_statistics (
-                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
-                        related_type, related_id, task_types, task_types_text, remark
-                    ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
-                ");
-                $stmt->execute([
-                    $order['buyer_user_id'],
-                    $username,
-                    $totalAmount,
-                    $buyerWalletBalance,
-                    $newBalance,
-                    $orderId,
-                    "订单取消退款"
-                ]);
-            } catch (Exception $e) {
-                // 记录插入失败时的错误日志，但不影响主流程
-                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+            if ($order['buyer_user_type'] === 'c' || $order['buyer_user_type'] === '1') {
+                try {
+                    $stmt = $db->prepare(" 
+                        INSERT INTO c_task_statistics (
+                            c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                            related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $order['buyer_user_id'],
+                        $username,
+                        $totalAmount,
+                        $buyerWalletBalance,
+                        $newBalance,
+                        $orderId,
+                        8, // record_status: 订单没开始就取消
+                        '租赁订单已取消，已退款', // record_status_text
+                        "订单取消退款"
+                    ]);
+                } catch (Exception $e) {
+                    // 记录插入失败时的错误日志，但不影响主流程
+                    error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                }
             }
-        }
-        
-        // 仅当买家是B端用户时，插入B端任务统计记录
-        if ($order['buyer_user_type'] === 'b' || $order['buyer_user_type'] === '2') {
-            try {
-                $stmt = $db->prepare(" 
-                    INSERT INTO b_task_statistics (
-                        b_user_id, username, flow_type, amount, before_balance, after_balance, 
-                        related_type, related_id, task_types, task_types_text, remark
-                    ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
-                ");
-                $stmt->execute([
-                    $order['buyer_user_id'],
-                    $username,
-                    $totalAmount,
-                    $buyerWalletBalance,
-                    $newBalance,
-                    $orderId,
-                    "订单取消退款"
-                ]);
-            } catch (Exception $e) {
-                // 记录插入失败时的错误日志，但不影响主流程
-                error_log('插入b_task_statistics失败: ' . $e->getMessage());
+            
+            // 仅当买家是B端用户时，插入B端任务统计记录
+            if ($order['buyer_user_type'] === 'b' || $order['buyer_user_type'] === '2') {
+                try {
+                    $stmt = $db->prepare(" 
+                        INSERT INTO b_task_statistics (
+                            b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                            related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $order['buyer_user_id'],
+                        $username,
+                        $totalAmount,
+                        $buyerWalletBalance,
+                        $newBalance,
+                        $orderId,
+                        8, // record_status: 订单没开始就取消
+                        '租赁订单已取消，已退款', // record_status_text
+                        "订单取消退款"
+                    ]);
+                } catch (Exception $e) {
+                    // 记录插入失败时的错误日志，但不影响主流程
+                    error_log('插入b_task_statistics失败: ' . $e->getMessage());
+                }
             }
-        }
 
         // 更新订单状态
         $updateStmt = $db->prepare("UPDATE rental_orders SET status = 4 WHERE id = ?");
@@ -254,9 +258,104 @@ try {
         $orderJson['original_end_time'] = $orderJson['end_time'] ?? 0;
         $orderJson['end_time'] = $now; // 修正结束时间为现在
 
+        // 计算已租赁天数和剩余天数
+        $startTime = $orderJson['start_time'] ?? $now;
+        $totalDays = intval($order['days']);
+        $rentedDays = ceil(($now - $startTime) / 86400);
+        $remainingDays = max(0, $totalDays - $rentedDays);
+        $sellerAmount = $rentedDays * ceil(intval($order['total_amount']) / $totalDays);
+        $refundAmount = 0;
+
         // 更新订单状态
         $updateStmt = $db->prepare("UPDATE rental_orders SET status = 4, order_json = ? WHERE id = ?");
         $updateStmt->execute([json_encode($orderJson, JSON_UNESCAPED_UNICODE), $orderId]);
+
+        // 插入终止租赁订单记录
+        $insertTerminationStmt = $db->prepare("INSERT INTO termination_rental_orders (
+            rental_order_id, termination_type, buyer_user_id, buyer_user_type, 
+            seller_user_id, seller_user_type, total_amount, refund_amount, 
+            seller_amount, rented_days, remaining_days, terminated_at, 
+            admin_user_id, order_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $insertTerminationStmt->execute([
+            $orderId,
+            1, // 终止类型：1=终止租赁不退款
+            $order['buyer_user_id'],
+            $order['buyer_user_type'],
+            $order['seller_user_id'],
+            $order['seller_user_type'],
+            intval($order['total_amount']),
+            $refundAmount,
+            $sellerAmount,
+            $rentedDays,
+            $remainingDays,
+            date('Y-m-d H:i:s', $now),
+            $admin['admin_id'],
+            json_encode($orderJson, JSON_UNESCAPED_UNICODE)
+        ]);
+
+        // 记录卖家统计记录
+        $sellerUserId = $order['seller_user_id'];
+        $sellerUserType = ($order['seller_user_type'] === 'c' || $order['seller_user_type'] === '1') ? 1 : 2;
+        $sellerUsername = '';
+        if ($order['seller_user_type'] === 'c' || $order['seller_user_type'] === '1') {
+            $uStmt = $db->prepare("SELECT username FROM c_users WHERE id = ?");
+            $uStmt->execute([$sellerUserId]);
+            $sellerUsername = $uStmt->fetchColumn();
+        } else {
+            $uStmt = $db->prepare("SELECT username FROM b_users WHERE id = ?");
+            $uStmt->execute([$sellerUserId]);
+            $sellerUsername = $uStmt->fetchColumn();
+        }
+        
+        if ($sellerUserType === 1) {
+            // C端用户
+            try {
+                $stmt = $db->prepare(" 
+                    INSERT INTO c_task_statistics (
+                        c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                        related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                    ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?, ?, ?)
+                ");
+                $stmt->execute([
+                    $sellerUserId,
+                    $sellerUsername,
+                    $sellerAmount,
+                    0,
+                    0,
+                    $orderId,
+                    8, // record_status: 订单终止不退款
+                    '租赁订单终止，不退款', // record_status_text
+                    "订单终止结算"
+                ]);
+            } catch (Exception $e) {
+                error_log('插入c_task_statistics失败: ' . $e->getMessage());
+            }
+        } else {
+            // B端用户
+            try {
+                $stmt = $db->prepare(" 
+                    INSERT INTO b_task_statistics (
+                        b_user_id, username, flow_type, amount, before_balance, after_balance, 
+                        related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                    ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?, ?, ?)
+                ");
+                $stmt->execute([
+                    $sellerUserId,
+                    $sellerUsername,
+                    $sellerAmount,
+                    0,
+                    0,
+                    $orderId,
+                    8, // record_status: 订单终止不退款
+                    '租赁订单终止，不退款', // record_status_text
+                    "订单终止结算"
+                ]);
+            } catch (Exception $e) {
+                error_log('插入b_task_statistics失败: ' . $e->getMessage());
+            }
+        }
 
         // 准备通知数据（稍后发送）
         $notifications[] = [
@@ -354,8 +453,8 @@ try {
                     $stmt = $db->prepare(" 
                         INSERT INTO c_task_statistics (
                             c_user_id, username, flow_type, amount, before_balance, after_balance, 
-                            related_type, related_id, task_types, task_types_text, remark
-                        ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+                            related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?, ?, ?)
                     ");
                     $stmt->execute([
                         $order['buyer_user_id'],
@@ -364,6 +463,8 @@ try {
                         $buyerWalletBalance,
                         $newBalance,
                         $orderId,
+                        9, // record_status: 订单终止并退款
+                        '租赁订单终止，已退款', // record_status_text
                         "订单终止退款"
                     ]);
                 } catch (Exception $e) {
@@ -378,8 +479,8 @@ try {
                     $stmt = $db->prepare(" 
                         INSERT INTO b_task_statistics (
                             b_user_id, username, flow_type, amount, before_balance, after_balance, 
-                            related_type, related_id, task_types, task_types_text, remark
-                        ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+                            related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?, ?, ?)
                     ");
                     $stmt->execute([
                         $order['buyer_user_id'],
@@ -388,6 +489,8 @@ try {
                         $buyerWalletBalance,
                         $newBalance,
                         $orderId,
+                        9, // record_status: 订单终止并退款
+                        '租赁订单终止，已退款', // record_status_text
                         "订单终止退款"
                     ]);
                 } catch (Exception $e) {
@@ -454,8 +557,8 @@ try {
                     $stmt = $db->prepare(" 
                         INSERT INTO c_task_statistics (
                             c_user_id, username, flow_type, amount, before_balance, after_balance, 
-                            related_type, related_id, task_types, task_types_text, remark
-                        ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?)
+                            related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?, ?, ?)
                     ");
                     $stmt->execute([
                         $sellerUserId,
@@ -464,6 +567,8 @@ try {
                         $sellerWalletBalance,
                         $newSellerBalance,
                         $orderId,
+                        9, // record_status: 订单终止并退款
+                        '租赁订单终止，已退款', // record_status_text
                         "订单终止结算"
                     ]);
                 } catch (Exception $e) {
@@ -475,8 +580,8 @@ try {
                     $stmt = $db->prepare(" 
                         INSERT INTO b_task_statistics (
                             b_user_id, username, flow_type, amount, before_balance, after_balance, 
-                            related_type, related_id, task_types, task_types_text, remark
-                        ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?)
+                            related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                        ) VALUES (?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, 6, '出租订单', ?, ?, ?)
                     ");
                     $stmt->execute([
                         $sellerUserId,
@@ -485,6 +590,8 @@ try {
                         $sellerWalletBalance,
                         $newSellerBalance,
                         $orderId,
+                        9, // record_status: 订单终止并退款
+                        '租赁订单终止，已退款', // record_status_text
                         "订单终止结算"
                     ]);
                 } catch (Exception $e) {
@@ -505,21 +612,37 @@ try {
                     $level = 0;
                     $maxLevel = 2; // 最多查找两级
                     
+                    // 调试日志
+                    error_log("开始记录团队收益统计，卖方用户ID: {$sellerUserId}, 一级代理ID: {$currentUserId}");
+                    
                     while (!empty($currentUserId) && $level < $maxLevel) {
+                        error_log("循环开始，当前level: {$level}, currentUserId: {$currentUserId}");
+                        
                         $stmt = $db->prepare("SELECT id, username FROM c_users WHERE id = ?");
                         $stmt->execute([$currentUserId]);
                         $agentUser = $stmt->fetch(PDO::FETCH_ASSOC);
                         
                         if (!$agentUser) {
+                            error_log("未找到代理用户，currentUserId: {$currentUserId}");
                             break;
                         }
                         
-                        // 获取代理的佣金金额（这里使用卖方的收益金额作为团队收益）
+                        error_log("找到代理用户，ID: {$agentUser['id']}, 用户名: {$agentUser['username']}, level: {$level}");
+                        
+                        // 团队收益金额与卖方获得的收益金额相同
                         $agentCommAmount = $sellerAmount;
-                        $agentBeforeAmount = 0;
-                        $agentAfterAmount = 0;
+                        
+                        // 查询当前代理的团队收益汇总记录，获取当前收益总额
+                        $stmt = $db->prepare("SELECT total_team_revenue FROM team_revenue_statistics_summary WHERE user_id = ?");
+                        $stmt->execute([$agentUser['id']]);
+                        $summary = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        $agentBeforeAmount = $summary ? (float)$summary['total_team_revenue'] : 0;
+                        $agentAfterAmount = $agentBeforeAmount + $agentCommAmount;
                         
                         // 插入团队收益记录
+                        error_log("准备插入团队收益记录，代理ID: {$agentUser['id']}, 层级: " . ($level + 1) . ", 金额: {$agentCommAmount}");
+                        
                         $stmt = $db->prepare("INSERT INTO team_revenue_statistics_breakdown (
                             agent_id, agent_username, agent_level, 
                             downline_user_id, downline_username, downline_user_amount, 
@@ -528,7 +651,7 @@ try {
                             order_type, order_type_text
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         
-                        $stmt->execute([
+                        $result = $stmt->execute([
                             $agentUser['id'],
                             $agentUser['username'],
                             $level + 1, // 代理层级：1=一级代理，2=二级代理
@@ -545,57 +668,111 @@ try {
                             '出租订单'
                         ]);
                         
+                        error_log("插入团队收益记录结果: " . ($result ? "成功" : "失败") . ", 代理ID: {$agentUser['id']}");
+                        
                         // 更新团队收益汇总表
-                        $stmt = $db->prepare("INSERT INTO team_revenue_statistics_summary (
-                            user_id, username, total_team_revenue, level1_team_revenue, level2_team_revenue,
-                            level1_downline_count, level2_downline_count, task_revenue_count, order_revenue_count,
-                            task_revenue_amount, order_revenue_amount, last_revenue_time
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE
-                            total_team_revenue = total_team_revenue + ?,
-                            level1_team_revenue = level1_team_revenue + CASE WHEN ? = 1 THEN ? ELSE 0 END,
-                            level2_team_revenue = level2_team_revenue + CASE WHEN ? = 2 THEN ? ELSE 0 END,
-                            task_revenue_count = task_revenue_count + CASE WHEN ? = 1 THEN 1 ELSE 0 END,
-                            order_revenue_count = order_revenue_count + CASE WHEN ? = 2 THEN 1 ELSE 0 END,
-                            task_revenue_amount = task_revenue_amount + CASE WHEN ? = 1 THEN ? ELSE 0 END,
-                            order_revenue_amount = order_revenue_amount + CASE WHEN ? = 2 THEN ? ELSE 0 END,
-                            last_revenue_time = ?");
+                        // 先查询是否存在记录
+                        $stmt = $db->prepare("SELECT id FROM team_revenue_statistics_summary WHERE user_id = ?");
+                        $stmt->execute([$agentUser['id']]);
+                        $exists = $stmt->fetch(PDO::FETCH_ASSOC);
                         
                         $revenueSource = 2; // 账号出租收益
                         $agentLevel = $level + 1;
                         $currentTime = date('Y-m-d H:i:s');
                         
-                        $stmt->execute([
-                            $agentUser['id'],
-                            $agentUser['username'],
-                            $agentCommAmount,
-                            $agentLevel == 1 ? $agentCommAmount : 0,
-                            $agentLevel == 2 ? $agentCommAmount : 0,
-                            0, // 暂时不更新下线人数
-                            0, // 暂时不更新下线人数
-                            $revenueSource == 1 ? 1 : 0,
-                            $revenueSource == 2 ? 1 : 0,
-                            $revenueSource == 1 ? $agentCommAmount : 0,
-                            $revenueSource == 2 ? $agentCommAmount : 0,
-                            $currentTime,
-                            // 更新部分
-                            $agentCommAmount,
-                            $agentLevel, $agentCommAmount,
-                            $agentLevel, $agentCommAmount,
-                            $revenueSource,
-                            $revenueSource,
-                            $revenueSource, $agentCommAmount,
-                            $revenueSource, $agentCommAmount,
-                            $currentTime
-                        ]);
+                        error_log("准备更新团队收益汇总表，代理ID: {$agentUser['id']}, 层级: {$agentLevel}, 金额: {$agentCommAmount}");
+                        
+                        if ($exists) {
+                            // 记录存在，执行更新
+                            $updateSql = "UPDATE team_revenue_statistics_summary SET ";
+                            $updateParams = [];
+                            
+                            // 总团队收益
+                            $updateSql .= "total_team_revenue = total_team_revenue + ?, ";
+                            $updateParams[] = $agentCommAmount;
+                            
+                            // 一级或二级下线收益
+                            if ($agentLevel == 1) {
+                                $updateSql .= "level1_team_revenue = level1_team_revenue + ?, ";
+                                $updateParams[] = $agentCommAmount;
+                            } elseif ($agentLevel == 2) {
+                                $updateSql .= "level2_team_revenue = level2_team_revenue + ?, ";
+                                $updateParams[] = $agentCommAmount;
+                            }
+                            
+                            // 订单收益笔数和金额
+                            $updateSql .= "order_revenue_count = order_revenue_count + 1, ";
+                            $updateSql .= "order_revenue_amount = order_revenue_amount + ?, ";
+                            $updateParams[] = $agentCommAmount;
+                            
+                            // 一级或二级下线收益笔数
+                            if ($agentLevel == 1) {
+                                $updateSql .= "level1_revenue_count = level1_revenue_count + 1, ";
+                            } elseif ($agentLevel == 2) {
+                                $updateSql .= "level2_revenue_count = level2_revenue_count + 1, ";
+                            }
+                            
+                            // 最后收益时间
+                            $updateSql .= "last_revenue_time = ?, ";
+                            $updateParams[] = $currentTime;
+                            
+                            // 最后一级或二级下线收益时间
+                            if ($agentLevel == 1) {
+                                $updateSql .= "last_level1_revenue_time = ? ";
+                                $updateParams[] = $currentTime;
+                            } elseif ($agentLevel == 2) {
+                                $updateSql .= "last_level2_revenue_time = ? ";
+                                $updateParams[] = $currentTime;
+                            }
+                            
+                            $updateSql .= "WHERE user_id = ?";
+                            $updateParams[] = $agentUser['id'];
+                            
+                            $stmt = $db->prepare($updateSql);
+                            $result = $stmt->execute($updateParams);
+                        } else {
+                            // 记录不存在，执行插入
+                            $insertSql = "INSERT INTO team_revenue_statistics_summary (
+                                user_id, username, total_team_revenue, level1_team_revenue, level2_team_revenue,
+                                level1_downline_count, level2_downline_count, total_downline_count,
+                                level1_active_count, level2_active_count, total_active_count,
+                                task_revenue_count, order_revenue_count, task_revenue_amount, order_revenue_amount,
+                                level1_revenue_count, level2_revenue_count,
+                                last_revenue_time, last_level1_revenue_time, last_level2_revenue_time
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            
+                            $insertParams = [
+                                $agentUser['id'],
+                                $agentUser['username'],
+                                $agentCommAmount,
+                                $agentLevel == 1 ? $agentCommAmount : 0,
+                                $agentLevel == 2 ? $agentCommAmount : 0,
+                                0, 0, 0, 0, 0, 0, // 下线人数相关字段
+                                0, 1, // 任务收益笔数和订单收益笔数
+                                0, $agentCommAmount, // 任务收益金额和订单收益金额
+                                $agentLevel == 1 ? 1 : 0, // 一级下线收益笔数
+                                $agentLevel == 2 ? 1 : 0, // 二级下线收益笔数
+                                $currentTime,
+                                $agentLevel == 1 ? $currentTime : null,
+                                $agentLevel == 2 ? $currentTime : null
+                            ];
+                            
+                            $stmt = $db->prepare($insertSql);
+                            $result = $stmt->execute($insertParams);
+                        }
+                        
+                        error_log("更新团队收益汇总表结果: " . ($result ? "成功" : "失败") . ", 代理ID: {$agentUser['id']}");
                         
                         // 继续向上查找
                         $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
-                        $stmt->execute([$currentUserId]);
+                        $stmt->execute([$agentUser['id']]);
                         $nextParent = $stmt->fetch(PDO::FETCH_ASSOC);
                         $currentUserId = $nextParent['parent_id'] ?? null;
+                        error_log("继续向上查找，下一级代理ID: {$currentUserId}");
                         $level++;
                     }
+                    
+                    error_log("团队收益统计循环结束");
                 }
             } catch (Exception $e) {
                 // 记录插入失败时的错误日志，但不影响主流程
@@ -615,6 +792,31 @@ try {
         // 更新订单状态
         $updateStmt = $db->prepare("UPDATE rental_orders SET status = 4, order_json = ? WHERE id = ?");
         $updateStmt->execute([json_encode($orderJson, JSON_UNESCAPED_UNICODE), $orderId]);
+
+        // 插入终止租赁订单记录
+        $insertTerminationStmt = $db->prepare("INSERT INTO termination_rental_orders (
+            rental_order_id, termination_type, buyer_user_id, buyer_user_type, 
+            seller_user_id, seller_user_type, total_amount, refund_amount, 
+            seller_amount, rented_days, remaining_days, terminated_at, 
+            admin_user_id, order_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $insertTerminationStmt->execute([
+            $orderId,
+            2, // 终止类型：2=终止租赁并退款
+            $order['buyer_user_id'],
+            $order['buyer_user_type'],
+            $order['seller_user_id'],
+            $order['seller_user_type'],
+            intval($order['total_amount']),
+            $refundAmount,
+            $sellerAmount,
+            $rentedDays,
+            $remainingDays,
+            date('Y-m-d H:i:s', $now),
+            $admin['admin_id'],
+            json_encode($orderJson, JSON_UNESCAPED_UNICODE)
+        ]);
 
         // 准备通知数据（稍后发送）
         $notifications[] = [

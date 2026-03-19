@@ -1,0 +1,90 @@
+{
+    "code": 0,
+    "message": "团队用户列表查询成功",
+    "data": {
+        "total": 6,
+        "per_page": 20,
+        "current_page": 1,
+        "last_page": 1,
+        "statistics": {
+            "total_users": 6,
+            "total_superiors": 1,
+            "direct_superiors": 1,
+            "indirect_superiors": 0,
+            "total_subordinates": 5,
+            "direct_subordinates": 2,
+            "indirect_subordinates": 3,
+            "normal_users": 3,
+            "normal_captains": 2,
+            "senior_captains": 1,
+            "large_captains": 0
+        },
+        "list": [
+            {
+                "user_id": 101,
+                "username": "user101",
+                "phone": "15900013811",
+                "is_agent": 2,
+                "is_agent_text": "高级团长",
+                "agent_level": 1,
+                "created_at": "2026-03-17 10:21:19",
+                "superiors": {
+                    "direct": {
+                        "user_id": 100,
+                        "username": "user100",
+                        "is_agent": 2,
+                        "is_agent_text": "高级团长",
+                        "agent_level_text": "一级代理"
+                    },
+                    "indirect": null
+                },
+                "subordinates": {
+                    "direct": [
+                        {
+                            "user_id": 103,
+                            "username": "user103",
+                            "is_agent": 1,
+                            "agent_level": 1,
+                            "is_agent_text": "普通团长",
+                            "agent_level_text": "一级邀请"
+                        },
+                        {
+                            "user_id": 104,
+                            "username": "user104",
+                             "is_agent": 1,
+                            "agent_level": 1,
+                            "is_agent_text": "普通团长",
+                            "agent_level_text": "一级邀请"
+                        }
+                    ],
+                    "indirect": [
+                        {
+                            "user_id": 106,
+                            "username": "user106",
+                             "is_agent": 0,
+                            "agent_level": 2,
+                            "is_agent_text": "普通用户",
+                            "agent_level_text": "二级邀请"
+                        },
+                        {
+                            "user_id": 107,
+                            "username": "user107",
+                             "is_agent": 0,
+                            "agent_level": 2,
+                            "is_agent_text": "普通用户",
+                            "agent_level_text": "二级邀请"
+                        },
+                        {
+                            "user_id": 108,
+                            "username": "user108",
+                            "is_agent": 0,
+                            "agent_level": 2,
+                            "is_agent_text": "普通用户",
+                            "agent_level_text": "二级邀请"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -143,7 +143,7 @@ function renderRentalOrdersTable(list, pagination) {
                 // 进行中：终止
                 actions = `
                     <button class="btn-danger btn-small" onclick="dispatchOrder(${order.id}, 'terminate')" style="margin: 2px;">终止租赁不退款</button>
-                    <button class="btn-warning btn-small" onclick="dispatchOrder(${order.id}, 'terminate_refund')" style="margin: 2px;">终止租赁并退款</button>
+                    <button class="btn-danger btn-small" onclick="dispatchOrder(${order.id}, 'terminate_refund')" style="margin: 2px;">终止租赁并退款</button>
                 `;
             }
 

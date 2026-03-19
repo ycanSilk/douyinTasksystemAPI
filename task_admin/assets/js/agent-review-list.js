@@ -223,3 +223,11 @@ function showToast(message, type = 'info') {
         setTimeout(() => toast.remove(), 400);
     }, 3000);
 }
+
+// 关闭模态框
+function closeModal() {
+    const modal = document.getElementById('modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}

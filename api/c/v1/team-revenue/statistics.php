@@ -223,9 +223,9 @@ try {
             'username' => $item['username'],
             'is_agent' => intval($item['is_agent'] ?? 0),
             'team_revenue' => [
-                'total' => $item['total_team_revenue'],
-                'level1' => $item['level1_team_revenue'],
-                'level2' => $item['level2_team_revenue']
+                'total' => number_format(floatval($item['total_team_revenue']) / 100, 2),
+                'level1' => number_format(floatval($item['level1_team_revenue']) / 100, 2),
+                'level2' => number_format(floatval($item['level2_team_revenue']) / 100, 2)
             ],
             'team_members' => [
                 'level1' => [
@@ -239,9 +239,9 @@ try {
             ],
             'revenue_stats' => [
                 'task_count' => intval($item['task_revenue_count']),
-                'task_amount' => $item['task_revenue_amount'],
+                'task_amount' => number_format(floatval($item['task_revenue_amount']) / 100, 2),
                 'order_count' => intval($item['order_revenue_count']),
-                'order_amount' => $item['order_revenue_amount']
+                'order_amount' => number_format(floatval($item['order_revenue_amount']) / 100, 2)
             ],
             'last_revenue_time' => $item['last_revenue_time']
         ];
@@ -253,6 +253,10 @@ try {
         'today' => [
             'start' => date('Y-m-d 00:00:00'),
             'end' => date('Y-m-d 23:59:59')
+        ],
+        'yesterday' => [
+            'start' => date('Y-m-d 00:00:00', strtotime('-1 day')),
+            'end' => date('Y-m-d 23:59:59', strtotime('-1 day'))
         ],
         '7days' => [
             'start' => date('Y-m-d 00:00:00', strtotime('-7 days')),
@@ -286,15 +290,15 @@ try {
         $periodRevenue[$key] = [
             'direct' => [
                 'count' => intval($level1Data['count'] ?? 0),
-                'amount' => $level1Data['amount'] ?? '0.00'
+                'amount' => number_format(floatval($level1Data['amount'] ?? 0) / 100, 2)
             ],
             'indirect' => [
                 'count' => intval($level2Data['count'] ?? 0),
-                'amount' => $level2Data['amount'] ?? '0.00'
+                'amount' => number_format(floatval($level2Data['amount'] ?? 0) / 100, 2)
             ],
             'total' => [
                 'count' => intval($level1Data['count'] ?? 0) + intval($level2Data['count'] ?? 0),
-                'amount' => number_format(floatval($level1Data['amount'] ?? 0) + floatval($level2Data['amount'] ?? 0), 2)
+                'amount' => number_format((floatval($level1Data['amount'] ?? 0) + floatval($level2Data['amount'] ?? 0)) / 100, 2)
             ]
         ];
     }
@@ -302,26 +306,25 @@ try {
     // 获取邀请用户周期收益
     $inviteUsersRevenue = [];
     
-    // 查询当前用户的所有一级邀请用户
+    // 查询当前用户的所有一级邀请用户（直接邀请）
     $level1Stmt = $db->prepare("SELECT
         u.id as user_id,
         u.username,
         r.level as agent_level
     FROM c_users u
     JOIN c_user_relations r ON u.id = r.user_id
-    WHERE r.agent_id = ?");
+    WHERE r.agent_id = ? AND r.level = 1");
     $level1Stmt->execute([$currentUserId]);
     $level1Users = $level1Stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // 查询当前用户的所有二级邀请用户
+    // 查询当前用户的所有二级邀请用户（间接邀请）
     $level2Stmt = $db->prepare("SELECT
         u.id as user_id,
         u.username,
-        2 as agent_level
+        r.level as agent_level
     FROM c_users u
-    JOIN c_user_relations r1 ON u.id = r1.user_id
-    JOIN c_user_relations r2 ON r1.agent_id = r2.user_id
-    WHERE r2.agent_id = ?");
+    JOIN c_user_relations r ON u.id = r.user_id
+    WHERE r.agent_id = ? AND r.level = 2");
     $level2Stmt->execute([$currentUserId]);
     $level2Users = $level2Stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -342,18 +345,18 @@ try {
         $userRevenue = [];
         
         foreach ($timePeriods as $key => $period) {
-            // 查询该用户作为下线产生的收益
+            // 查询该用户作为下线产生的收益，只统计当前用户作为代理时获得的收益
             $userRevenueStmt = $db->prepare("SELECT
                 COUNT(*) as count,
                 SUM(team_revenue_amount) as amount
             FROM team_revenue_statistics_breakdown
-            WHERE downline_user_id = ? AND created_at BETWEEN ? AND ?");
-            $userRevenueStmt->execute([$user['user_id'], $period['start'], $period['end']]);
+            WHERE downline_user_id = ? AND agent_id = ? AND created_at BETWEEN ? AND ?");
+            $userRevenueStmt->execute([$user['user_id'], $currentUserId, $period['start'], $period['end']]);
             $userRevenueData = $userRevenueStmt->fetch(PDO::FETCH_ASSOC);
             
             $userRevenue[$key] = [
                 'count' => intval($userRevenueData['count'] ?? 0),
-                'amount' => $userRevenueData['amount'] ?? '0.00'
+                'amount' => number_format(floatval($userRevenueData['amount'] ?? 0) / 100, 2)
             ];
         }
         
@@ -372,77 +375,6 @@ try {
         'period_revenue' => $periodRevenue,
         'invite_users_revenue' => $inviteUsersRevenue
     ];
-    
-    // 获取团队用户列表（只返回当前token用户的团队数据）
-    try {
-        // 查询当前用户的所有一级下线用户
-        $level1Stmt = $db->prepare("SELECT
-            u.id as user_id,
-            u.username,
-            u.phone,
-            u.is_agent,
-            u.created_at,
-            r.agent_id as parent_id,
-            p.username as parent_username,
-            r.level as agent_level
-        FROM c_users u
-        JOIN c_user_relations r ON u.id = r.user_id
-        JOIN c_users p ON r.agent_id = p.id
-        WHERE r.agent_id = ?");
-        $level1Stmt->execute([$currentUserId]);
-        $level1Users = $level1Stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // 查询当前用户的所有二级下线用户
-        $level2Stmt = $db->prepare("SELECT
-            u.id as user_id,
-            u.username,
-            u.phone,
-            u.is_agent,
-            u.created_at,
-            r1.agent_id as parent_id,
-            p.username as parent_username,
-            2 as agent_level
-        FROM c_users u
-        JOIN c_user_relations r1 ON u.id = r1.user_id
-        JOIN c_users p ON r1.agent_id = p.id
-        JOIN c_user_relations r2 ON r1.agent_id = r2.user_id
-        WHERE r2.agent_id = ?");
-        $level2Stmt->execute([$currentUserId]);
-        $level2Users = $level2Stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // 合并一级和二级用户，确保每个用户只出现一次
-        $teamUsers = array_merge($level1Users, $level2Users);
-        
-        // 去重，保留用户的最高层级（一级优先于二级）
-        $uniqueUsers = [];
-        foreach ($teamUsers as $user) {
-            if (!isset($uniqueUsers[$user['user_id']]) || $user['agent_level'] < $uniqueUsers[$user['user_id']]['agent_level']) {
-                $uniqueUsers[$user['user_id']] = $user;
-            }
-        }
-        $teamUsers = array_values($uniqueUsers);
-        
-        // 格式化团队用户列表
-        $formattedTeamUsers = [];
-        foreach ($teamUsers as $user) {
-            $formattedTeamUsers[] = [
-                'user_id' => intval($user['user_id']),
-                'username' => $user['username'],
-                'phone' => $user['phone'],
-                'is_agent' => intval($user['is_agent']),
-                'agent_level' => intval($user['agent_level']),
-                'parent_id' => intval($user['parent_id']),
-                'parent_username' => $user['parent_username'],
-                'created_at' => $user['created_at']
-            ];
-        }
-        
-        $result['team_users'] = $formattedTeamUsers;
-    } catch (PDOException $e) {
-        // 团队用户列表查询失败不影响主查询结果
-        error_log('Admin端团队用户列表查询 Error: ' . $e->getMessage());
-        $result['team_users'] = [];
-    }
     
     Response::success($result, '团队收益统计列表查询成功');
     

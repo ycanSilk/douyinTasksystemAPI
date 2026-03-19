@@ -2,7 +2,7 @@
 /**
  * C端用户注册接口
  * 
- * POST /api/c/v2/auth/register
+ * POST /api/c/v1/auth/register
  * 
  * 请求体：
  * {
@@ -10,8 +10,7 @@
  *   "email": "string (选填)",
  *   "phone": "string (必填)",
  *   "password": "string (必填)",
- *   "parent_invite_code": "string (选填，6位邀请码)",
- *   "team_name": "string (选填，团队名称)"
+ *   "parent_invite_code": "string (选填，6位邀请码)"
  * }
  */
 
@@ -47,20 +46,6 @@ require_once __DIR__ . '/../../../../core/Token.php';
 require_once __DIR__ . '/../../../../core/Response.php';
 require_once __DIR__ . '/../../../../core/InviteCode.php';
 
-// 生成UUID函数
-function generateUUID() {
-    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0x0fff) | 0x4000,
-        mt_rand(0, 0x3fff) | 0x8000,
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff),
-        mt_rand(0, 0xffff)
-    );
-}
-
 $errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
 
 // 获取请求参数
@@ -71,7 +56,6 @@ $email = empty($email) ? null : $email; // 邮箱为空时设置为null
 $phone = trim($input['phone'] ?? '');
 $password = trim($input['password'] ?? '');
 $parentInviteCode = strtoupper(trim($input['parent_invite_code'] ?? '')); // 转大写
-$teamName = trim($input['team_name'] ?? ''); // 团队名称（可选）
 
 // 参数校验
 error_log('开始参数校验');
@@ -174,72 +158,24 @@ try {
     error_log('开启事务');
     $db->beginTransaction();
     
-    // 1. 创建钱包记录
-    error_log('创建钱包记录');
-    $stmt = $db->prepare("INSERT INTO wallets (balance) VALUES (0)");
-    $stmt->execute();
-    $walletId = $db->lastInsertId();
-    error_log('钱包创建成功，ID: ' . $walletId);
-    
-    // 2. 密码哈希
+    // 1. 密码哈希
     error_log('生成密码哈希');
     $passwordHash = password_hash($password, PASSWORD_BCRYPT);
     error_log('密码哈希生成成功');
     
-    // 3. 生成唯一邀请码
+    // 2. 生成唯一邀请码
     error_log('生成唯一邀请码');
     $inviteCode = InviteCode::generate($db);
     error_log('邀请码生成成功: ' . $inviteCode);
     
-    // 4. 处理团队相关逻辑
-    $teamId = null;
-    $teamRole = null;
-    
-    if (!empty($parentInviteCode) && $parentId) {
-        // 有邀请码，加入邀请人的团队
-        error_log('有邀请码，查询邀请人所属团队');
-        $stmt = $db->prepare("SELECT team_id, team_role FROM c_users WHERE id = ?");
-        $stmt->execute([$parentId]);
-        $parentTeam = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($parentTeam && $parentTeam['team_id']) {
-            // 邀请人有团队，加入该团队
-            $teamId = $parentTeam['team_id'];
-            $teamRole = 2; // 成员
-            error_log('加入邀请人团队，团队ID: ' . $teamId);
-        } else {
-            // 邀请人没有团队，创建新团队
-            $teamName = !empty($teamName) ? $teamName : $username . '的团队';
-            $teamId = generateUUID();
-            $teamRole = 1; // 团长
-            
-            // 创建团队
-            error_log('邀请人无团队，创建新团队: ' . $teamName);
-            $stmt = $db->prepare("INSERT INTO teams (id, team_name, creator_id, status) VALUES (?, ?, ?, 1)");
-            $stmt->execute([$teamId, $teamName, $userId]);
-            error_log('团队创建成功，团队ID: ' . $teamId);
-        }
-    } else {
-        // 无邀请码，创建新团队
-        $teamName = !empty($teamName) ? $teamName : $username . '的团队';
-        $teamId = generateUUID();
-        $teamRole = 1; // 团长
-        
-        // 创建团队
-        error_log('无邀请码，创建新团队: ' . $teamName);
-        $stmt = $db->prepare("INSERT INTO teams (id, team_name, creator_id, status) VALUES (?, ?, ?, 1)");
-        $stmt->execute([$teamId, $teamName, $userId]);
-        error_log('团队创建成功，团队ID: ' . $teamId);
-    }
-    
-    // 5. 创建 C端用户记录（暂不写入 token）
+    // 3. 先创建 C端用户记录（不关联钱包，因为钱包还没创建）
     error_log('创建 C端用户记录');
     $stmt = $db->prepare("
         INSERT INTO c_users (
             username, email, phone, password_hash, invite_code, 
-            parent_id, is_agent, wallet_id, create_ip, status, team_id, team_role
+            parent_id, is_agent, wallet_id, create_ip, status
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 1, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?, 1)
     ");
     error_log('执行用户插入，参数: ' . json_encode([
         $username,
@@ -248,10 +184,7 @@ try {
         '***', // 密码哈希不记录
         $inviteCode,
         $parentId,
-        $walletId, 
-        $createIp,
-        $teamId,
-        $teamRole
+        $createIp
     ]));
     $stmt->execute([
         $username,
@@ -260,21 +193,22 @@ try {
         $passwordHash,
         $inviteCode,
         $parentId,
-        $walletId, 
-        $createIp,
-        $teamId,
-        $teamRole
+        $createIp
     ]);
     $userId = $db->lastInsertId();
     error_log('用户创建成功，ID: ' . $userId);
     
-    // 6. 记录用户团队关系
-    if ($teamId) {
-        error_log('记录用户团队关系');
-        $stmt = $db->prepare("INSERT INTO user_team_relations (user_id, team_id, role, status) VALUES (?, ?, ?, 1)");
-        $stmt->execute([$userId, $teamId, $teamRole]);
-        error_log('用户团队关系记录成功');
-    }
+    // 4. 创建钱包记录（此时用户已存在，可以直接使用正确的user_id）
+    error_log('创建钱包记录');
+    $stmt = $db->prepare("INSERT INTO wallets (balance, username, user_id, user_type) VALUES (0, ?, ?, 1)");
+    $stmt->execute([$username, $userId]);
+    $walletId = $db->lastInsertId();
+    error_log('钱包创建成功，ID: ' . $walletId);
+    
+    // 5. 更新用户记录的钱包ID
+    $stmt = $db->prepare("UPDATE c_users SET wallet_id = ? WHERE id = ?");
+    $stmt->execute([$walletId, $userId]);
+    error_log('用户钱包ID更新成功: ' . $walletId);
     
     // 5. 生成 Token
     error_log('生成 Token');
@@ -290,6 +224,28 @@ try {
     ");
     $stmt->execute([$tokenData['token'], $tokenData['expired_at'], $userId]);
     error_log('Token更新成功');
+    
+    // 7. 创建团队关系
+    if ($parentId) {
+        error_log('创建团队关系，用户ID: ' . $userId . ', 上级ID: ' . $parentId);
+        // 插入一级代理关系
+        $stmt = $db->prepare("INSERT INTO c_user_relations (user_id, agent_id, level) VALUES (?, ?, 1)");
+        $stmt->execute([$userId, $parentId]);
+        error_log('一级代理关系创建成功');
+        
+        // 查询祖父ID
+        $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
+        $stmt->execute([$parentId]);
+        $grandparentId = $stmt->fetchColumn();
+        
+        // 插入二级代理关系
+        if ($grandparentId) {
+            error_log('创建二级代理关系，用户ID: ' . $userId . ', 祖父ID: ' . $grandparentId);
+            $stmt = $db->prepare("INSERT INTO c_user_relations (user_id, agent_id, level) VALUES (?, ?, 2)");
+            $stmt->execute([$userId, $grandparentId]);
+            error_log('二级代理关系创建成功');
+        }
+    }
     
     // 提交事务
     error_log('提交事务');
@@ -307,10 +263,7 @@ try {
         'invite_code' => $inviteCode,
         'parent_id' => $parentId,
         'is_agent' => 0,
-        'wallet_id' => $walletId,
-        'team_id' => $teamId,
-        'team_name' => $teamName,
-        'team_role' => $teamRole
+        'wallet_id' => $walletId
     ], '注册成功');
     
 } catch (PDOException $e) {

@@ -130,6 +130,7 @@ try {
             'related_id' => $item['related_id'],
             'task_types' => $item['task_types'],
             'task_types_text' => getTaskTypesText($item['task_types']),
+            'record_status_text' => $item['record_status_text'] ?? '',
             'remark' => $item['remark'],
             'created_at' => $item['created_at']
         ];

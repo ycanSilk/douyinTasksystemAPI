@@ -667,9 +667,9 @@
                     // 更新统计卡片
                     if (data.data.list && data.data.list.length > 0) {
                         const firstItem = data.data.list[0];
-                        document.getElementById('totalRevenue').textContent = firstItem.team_revenue.total || '0.00';
-                        document.getElementById('level1Revenue').textContent = firstItem.team_revenue.level1 || '0.00';
-                        document.getElementById('level2Revenue').textContent = firstItem.team_revenue.level2 || '0.00';
+                        document.getElementById('totalRevenue').textContent = (firstItem.team_revenue.total) || '0.00';
+                        document.getElementById('level1Revenue').textContent = (firstItem.team_revenue.level1) || '0.00';
+                        document.getElementById('level2Revenue').textContent = (firstItem.team_revenue.level2) || '0.00';
                         document.getElementById('revenueCount').textContent = (firstItem.revenue_stats.task_count || 0) + (firstItem.revenue_stats.order_count || 0);
                     } else {
                         document.getElementById('totalRevenue').textContent = '0.00';
@@ -775,11 +775,11 @@
                                 ${agentLevelText}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${item.team_revenue.total}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">¥${item.team_revenue.level1}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-purple-600">¥${item.team_revenue.level2}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${item.revenue_stats.task_amount}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${item.revenue_stats.order_amount}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${(item.team_revenue.total)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">¥${(item.team_revenue.level1)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-purple-600">¥${(item.team_revenue.level2)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${(item.revenue_stats.task_amount)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${(item.revenue_stats.order_amount)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.last_revenue_time}</td>
                     </tr>
                 `;
@@ -833,7 +833,7 @@
                                 ${levelText}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${revenue.amount}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${(revenue.amount)}</td>
                     </tr>
                 `;
             });
@@ -936,8 +936,8 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.downline_user.username}(${item.downline_user.id})</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${item.team_revenue_amount}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${item.downline_amount}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">¥${(item.team_revenue_amount)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${(item.downline_amount)}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.revenue_source_text}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.related_id}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.task_info ? item.task_info.type_text : '-'}</td>

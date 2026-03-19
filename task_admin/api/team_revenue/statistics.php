@@ -226,9 +226,9 @@ try {
             'username' => $item['username'],
             'is_agent' => intval($item['is_agent'] ?? 0),
             'team_revenue' => [
-                'total' => $item['total_team_revenue'],
-                'level1' => $item['level1_team_revenue'],
-                'level2' => $item['level2_team_revenue']
+                'total' => number_format(floatval($item['total_team_revenue']) / 100, 2),
+                'level1' => number_format(floatval($item['level1_team_revenue']) / 100, 2),
+                'level2' => number_format(floatval($item['level2_team_revenue']) / 100, 2)
             ],
             'team_members' => [
                 'level1' => [
@@ -242,18 +242,75 @@ try {
             ],
             'revenue_stats' => [
                 'task_count' => intval($item['task_revenue_count']),
-                'task_amount' => $item['task_revenue_amount'],
+                'task_amount' => number_format(floatval($item['task_revenue_amount']) / 100, 2),
                 'order_count' => intval($item['order_revenue_count']),
-                'order_amount' => $item['order_revenue_amount']
+                'order_amount' => number_format(floatval($item['order_revenue_amount']) / 100, 2)
             ],
             'last_revenue_time' => $item['last_revenue_time']
+        ];
+    }
+    
+    // 获取周期收益统计
+    $periodRevenue = [];
+    $timePeriods = [
+        'today' => [
+            'start' => date('Y-m-d 00:00:00'),
+            'end' => date('Y-m-d 23:59:59')
+        ],
+        'yesterday' => [
+            'start' => date('Y-m-d 00:00:00', strtotime('-1 day')),
+            'end' => date('Y-m-d 23:59:59', strtotime('-1 day'))
+        ],
+        '7days' => [
+            'start' => date('Y-m-d 00:00:00', strtotime('-7 days')),
+            'end' => date('Y-m-d 23:59:59')
+        ],
+        '30days' => [
+            'start' => date('Y-m-d 00:00:00', strtotime('-30 days')),
+            'end' => date('Y-m-d 23:59:59')
+        ]
+    ];
+    
+    foreach ($timePeriods as $key => $period) {
+        // 查询直接邀请（一级下线）的收益
+        $level1Stmt = $db->prepare("SELECT
+            COUNT(*) as count,
+            SUM(team_revenue_amount) as amount
+        FROM team_revenue_statistics_breakdown
+        WHERE agent_level = 1 AND created_at BETWEEN ? AND ?");
+        $level1Stmt->execute([$period['start'], $period['end']]);
+        $level1Data = $level1Stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // 查询间接邀请（二级下线）的收益
+        $level2Stmt = $db->prepare("SELECT
+            COUNT(*) as count,
+            SUM(team_revenue_amount) as amount
+        FROM team_revenue_statistics_breakdown
+        WHERE agent_level = 2 AND created_at BETWEEN ? AND ?");
+        $level2Stmt->execute([$period['start'], $period['end']]);
+        $level2Data = $level2Stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $periodRevenue[$key] = [
+            'direct' => [
+                'count' => intval($level1Data['count'] ?? 0),
+                'amount' => number_format(floatval($level1Data['amount'] ?? 0) / 100, 2)
+            ],
+            'indirect' => [
+                'count' => intval($level2Data['count'] ?? 0),
+                'amount' => number_format(floatval($level2Data['amount'] ?? 0) / 100, 2)
+            ],
+            'total' => [
+                'count' => intval($level1Data['count'] ?? 0) + intval($level2Data['count'] ?? 0),
+                'amount' => number_format((floatval($level1Data['amount'] ?? 0) + floatval($level2Data['amount'] ?? 0)) / 100, 2)
+            ]
         ];
     }
     
     // 构建返回结果
     $result = [
         'total' => intval($total),
-        'list' => $formattedList
+        'list' => $formattedList,
+        'period_revenue' => $periodRevenue
     ];
     
     // 获取团队用户列表（包含一级、二级代理）

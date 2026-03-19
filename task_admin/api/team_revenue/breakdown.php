@@ -221,16 +221,16 @@ try {
                 'relation' => $item['agent_level'] == 1 ? '直接邀请' : '间接邀请'
             ],
             'revenue' => [
-                'amount' => $item['team_revenue_amount'],
+                'amount' => number_format(floatval($item['team_revenue_amount']) / 100, 2),
                 'source' => intval($item['revenue_source']),
                 'source_text' => $item['revenue_source_text']
             ],
-            'downline_amount' => $item['downline_user_amount'],
+            'downline_amount' => number_format(floatval($item['downline_user_amount']) / 100, 2),
             'related_id' => $item['related_id'],
             'created_at' => $item['created_at'],
-            'agent_before_amount' => $item['agent_before_amount'],
-            'agent_after_amount' => $item['agent_after_amount'],
-            'team_revenue_amount' => $item['team_revenue_amount'],
+            'agent_before_amount' => number_format(floatval($item['agent_before_amount']) / 100, 2),
+            'agent_after_amount' => number_format(floatval($item['agent_after_amount']) / 100, 2),
+            'team_revenue_amount' => number_format(floatval($item['team_revenue_amount']) / 100, 2),
             'revenue_source_text' => $item['revenue_source_text'],
             'downline_username' => $item['downline_username']
         ];

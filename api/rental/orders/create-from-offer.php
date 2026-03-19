@@ -227,8 +227,8 @@ try {
             $stmt = $db->prepare(" 
                 INSERT INTO c_task_statistics (
                     c_user_id, username, flow_type, amount, before_balance, after_balance, 
-                    related_type, related_id, task_types, task_types_text, remark
-                ) VALUES (?, ?, 2, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+                    related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                ) VALUES (?, ?, 2, ?, ?, ?, 'account_rental', ?, 6, '出租订单',10,'出租订单已支付', ?)
             ");
             $stmt->execute([
                 $userId,
@@ -251,8 +251,8 @@ try {
             $stmt = $db->prepare(" 
                 INSERT INTO b_task_statistics (
                     b_user_id, username, flow_type, amount, before_balance, after_balance, 
-                    related_type, related_id, task_types, task_types_text, remark
-                ) VALUES (?, ?, 2, ?, ?, ?, 'account_rental', ?, 6, '出租订单', ?)
+                    related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                ) VALUES (?, ?, 2, ?, ?, ?, 'account_rental', ?, 6, '出租订单',10,'出租订单已支付', ?)
             ");
             $stmt->execute([
                 $userId,
