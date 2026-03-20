@@ -139,9 +139,14 @@ class Token
             }
 
             // 检查token一致性，确保每次登录后旧token失效
-            if ($user['token'] !== $token) {
+            error_log('[Token验证] 数据库token: ' . ($user['token'] ?? 'null'));
+            error_log('[Token验证] 请求token: ' . $token);
+            if (empty($user['token']) || $user['token'] !== $token) {
+                error_log('[Token验证] Token不一致');
                 return ['valid' => false, 'error' => '账号已在其他设备登录，请重新登录', 'code' => 4011];
             }
+            error_log('[Token验证] Token一致');
+
 
             // 数据库中的过期时间二次校验
             if (strtotime($user['token_expired_at']) < time()) {

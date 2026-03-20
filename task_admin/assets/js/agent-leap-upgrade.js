@@ -107,12 +107,12 @@ function renderAgentUpgradeTable(list, pagination) {
             if (u.is_agent === 0) {
                 actions = `
                     <button class="btn-success btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 1)"><i class="ri-arrow-up-circle-line"></i> 升级成团长</button>
-                    <button class="btn-warning btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
+                    <button class="btn-primary btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
                     <button class="btn-danger btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 3)"><i class="ri-arrow-up-circle-line"></i> 升级成大团团长</button>
                 `;
             } else if (u.is_agent === 1) {
                 actions = `
-                    <button class="btn-warning btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
+                    <button class="btn-primary btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 2)"><i class="ri-arrow-up-circle-line"></i> 升级成高级团长</button>
                     <button class="btn-danger btn-small" onclick="upgradeToAgent(${u.id}, '${u.username}', 3)"><i class="ri-arrow-up-circle-line"></i> 升级成大团团长</button>
                 `;
             } else if (u.is_agent === 2) {

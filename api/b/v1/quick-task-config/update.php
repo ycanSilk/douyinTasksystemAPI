@@ -29,11 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-require_once __DIR__ . '/../../../../../core/Database.php';
-require_once __DIR__ . '/../../../../../core/AuthMiddleware.php';
-require_once __DIR__ . '/../../../../../core/Response.php';
+require_once __DIR__ . '/../../../../core/Database.php';
+require_once __DIR__ . '/../../../../core/AuthMiddleware.php';
+require_once __DIR__ . '/../../../../core/Response.php';
 
-$errorCodes = require __DIR__ . '/../../../../../config/error_codes.php';
+$errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
 
 // 数据库连接
 $db = Database::connect();

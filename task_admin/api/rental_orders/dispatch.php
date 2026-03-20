@@ -599,6 +599,135 @@ try {
                 }
             }
             
+            // 发放代理佣金
+            try {
+                // 查询卖方用户的一级和二级代理
+                if ($sellerUserType === 1) {
+                    // 查询卖方用户信息
+                    $stmt = $db->prepare("SELECT parent_id FROM c_users WHERE id = ?");
+                    $stmt->execute([$sellerUserId]);
+                    $sellerUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    $currentUserId = $sellerUser['parent_id'] ?? null;
+                    $level = 0;
+                    $maxLevel = 2; // 最多查找两级
+                    
+                    // 读取配置
+                    $stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = ?");
+                    $stmt->execute(['rental_agent_rate']);
+                    $rentalAgentRate = $stmt->fetchColumn();
+                    $rentalAgentRate = $rentalAgentRate ? (float)$rentalAgentRate : 5; // 默认5%
+                    
+                    $stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = ?");
+                    $stmt->execute(['rental_senior_agent_rate']);
+                    $rentalSeniorAgentRate = $stmt->fetchColumn();
+                    $rentalSeniorAgentRate = $rentalSeniorAgentRate ? (float)$rentalSeniorAgentRate : 5; // 默认5%
+                    
+                    error_log("开始发放代理佣金，卖方用户ID: {$sellerUserId}, 一级代理ID: {$currentUserId}");
+                    
+                    while (!empty($currentUserId) && $level < $maxLevel) {
+                        error_log("循环开始，当前level: {$level}, currentUserId: {$currentUserId}");
+                        
+                        $stmt = $db->prepare("SELECT id, username, wallet_id, is_agent, parent_id FROM c_users WHERE id = ?");
+                        $stmt->execute([$currentUserId]);
+                        $agentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if (!$agentUser) {
+                            error_log("未找到代理用户，currentUserId: {$currentUserId}");
+                            break;
+                        }
+                        
+                        $agentLevel = $agentUser['is_agent'] ?? 0;
+                        error_log("找到代理用户，ID: {$agentUser['id']}, 用户名: {$agentUser['username']}, level: {$level}, is_agent: {$agentLevel}");
+                        
+                        // 只有团长或以上等级才发放佣金
+                        if ($agentLevel > 0) {
+                            // 根据代理等级计算佣金
+                            if ($agentLevel === 1) {
+                                // 普通团长
+                                $commissionRate = $rentalAgentRate;
+                            } else {
+                                // 高级团长或大团团长
+                                $commissionRate = $rentalSeniorAgentRate;
+                            }
+                            
+                            // 计算佣金金额：账号结算金额 * 配置值（百分比）
+                            $agentCommission = (int)round($sellerAmount * $commissionRate / 100);
+                            
+                            if ($agentCommission > 0) {
+                                // 查询代理钱包
+                                $stmt = $db->prepare("SELECT balance FROM wallets WHERE id = ?");
+                                $stmt->execute([$agentUser['wallet_id']]);
+                                $agentWallet = $stmt->fetch(PDO::FETCH_ASSOC);
+                                
+                                if ($agentWallet) {
+                                    $agentBeforeBalance = (int)$agentWallet['balance'];
+                                    $agentAfterBalance = $agentBeforeBalance + $agentCommission;
+                                    
+                                    // 更新代理钱包
+                                    $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
+                                    $stmt->execute([$agentAfterBalance, $agentUser['wallet_id']]);
+                                    
+                                    // 记录代理钱包流水
+                                    $stmt = $db->prepare(" 
+                                        INSERT INTO wallets_log (
+                                            wallet_id, user_id, username, user_type, type, 
+                                            amount, before_balance, after_balance, 
+                                            related_type, related_id, remark, created_at
+                                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'rental_agent_commission', ?, ?, NOW())
+                                    ");
+                                    $stmt->execute([
+                                        $agentUser['wallet_id'],
+                                        $agentUser['id'],
+                                        $agentUser['username'],
+                                        $agentCommission,
+                                        $agentBeforeBalance,
+                                        $agentAfterBalance,
+                                        $orderId,
+                                        "租赁订单代理佣金（订单#{$orderId}）"
+                                    ]);
+                                    
+                                    // 记录代理C端任务统计
+                                    try {
+                                        $stmt = $db->prepare(" 
+                                            INSERT INTO c_task_statistics (
+                                                c_user_id, username, flow_type, amount, before_balance, after_balance, 
+                                                related_type, related_id, task_types, task_types_text, record_status, record_status_text, remark
+                                            ) VALUES (?, ?, 1, ?, ?, ?, 'rental_agent_commission', ?, 6, '出租订单', ?, ?, ?)
+                                        ");
+                                        $stmt->execute([
+                                            $agentUser['id'],
+                                            $agentUser['username'],
+                                            $agentCommission,
+                                            $agentBeforeBalance,
+                                            $agentAfterBalance,
+                                            $orderId,
+                                            9, // record_status: 订单终止并退款
+                                            '租赁订单终止，已退款', // record_status_text
+                                            "租赁订单代理佣金（订单#{$orderId}）"
+                                        ]);
+                                        error_log("  - 插入代理统计记录: agent_id={$agentUser['id']}, 金额={$agentCommission}分");
+                                    } catch (Exception $e) {
+                                        // 记录插入失败时的错误日志，但不影响主流程
+                                        error_log('插入c_task_statistics失败: ' . $e->getMessage());
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 继续向上查找
+                        $currentUserId = $agentUser['parent_id'] ?? null;
+                        error_log("继续向上查找，下一级代理ID: {$currentUserId}");
+                        $level++;
+                    }
+                    
+                    error_log("代理佣金发放循环结束");
+                }
+            } catch (Exception $e) {
+                // 记录插入失败时的错误日志，但不影响主流程
+                error_log('发放代理佣金失败: ' . $e->getMessage());
+            }
+            
             // 记录团队收益统计
             try {
                 // 查询卖方用户的一级和二级代理
