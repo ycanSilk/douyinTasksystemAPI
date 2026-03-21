@@ -904,7 +904,45 @@ try {
             error_log('插入team_revenue_statistics_breakdown失败: ' . $e->getMessage());
         }
 
-        // 15. 提交事务
+        // 15. 检查并处理新手转正
+        $isNewbie = false;
+        $hasCompletedTasks = 0;
+        $isPromoted = false;
+        
+        // 查询用户的新手状态
+        $stmt = $db->prepare("SELECT is_newbie FROM c_users WHERE id = ?");
+        $stmt->execute([$cUser['id']]);
+        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($userInfo && (int)$userInfo['is_newbie'] === 1) {
+            $isNewbie = true;
+            
+            // 审核通过时增加完成任务数量计数
+            if ($action === 'approve') {
+                // 更新c_user_task_records_static表中的已完成任务数量
+                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, task_id, task_type, action, status, reward, completed_task_count) VALUES (?, ?, 1, 'complete', 2, ?, 1) ON DUPLICATE KEY UPDATE completed_task_count = completed_task_count + 1");
+                $stmt->execute([$cUser['id'], $bTaskId, $cUserCommission / 100]);
+            } elseif ($action === 'reject') {
+                // 驳回任务时增加驳回任务数量计数
+                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, task_id, task_type, action, status, reward, rejected_task_count) VALUES (?, ?, 1, 'reject', 4, ?, 1) ON DUPLICATE KEY UPDATE rejected_task_count = rejected_task_count + 1");
+                $stmt->execute([$cUser['id'], $bTaskId, $cUserCommission / 100]);
+            }
+            
+            // 查询用户已完成的任务数量
+            $stmt = $db->prepare("SELECT COUNT(*) as completed_count FROM c_task_records WHERE c_user_id = ? AND status = 3");
+            $stmt->execute([$cUser['id']]);
+            $completedInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+            $hasCompletedTasks = (int)$completedInfo['completed_count'];
+            
+            // 如果完成任务数 >= 5，自动转正
+            if ($hasCompletedTasks >= 5) {
+                $stmt = $db->prepare("UPDATE c_users SET is_newbie = 0 WHERE id = ?");
+                $stmt->execute([$cUser['id']]);
+                $isPromoted = true;
+            }
+        }
+
+        // 16. 提交事务
         $db->commit();
         
         // 16. 返回成功响应
@@ -926,8 +964,14 @@ try {
                 'agent_amount' => $agentUserId ? number_format($cUserCommission / 100, 2) : '0.00',
                 'second_agent_amount' => $secondAgentUserId ? number_format($cUserCommission / 100, 2) : '0.00'
             ],
+            // 新增：新手转正信息
+            'newbie_info' => [
+                'is_newbie' => $isNewbie,
+                'completed_tasks' => $hasCompletedTasks,
+                'is_promoted' => $isPromoted
+            ],
             'reviewed_at' => $reviewedAt
-        ], '审核通过，佣金已发放');
+        ], $isPromoted ? '审核通过，佣金已发放，用户已转正' : '审核通过，佣金已发放');
         
     }else{
         // ========== 审核驳回 ==========
@@ -1038,10 +1082,27 @@ try {
             error_log('插入c_task_statistics失败: ' . $e->getMessage());
         }
 
-        // 11. 提交事务
+        // 11. 检查并处理新手转正
+        $isNewbie = false;
+        $hasCompletedTasks = 0;
+        
+        // 查询用户的新手状态
+        $stmt = $db->prepare("SELECT is_newbie FROM c_users WHERE id = ?");
+        $stmt->execute([$cUser['id']]);
+        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($userInfo && (int)$userInfo['is_newbie'] === 1) {
+            $isNewbie = true;
+            
+            // 驳回任务时增加驳回任务数量计数
+            $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, task_id, task_type, action, status, reward, rejected_task_count) VALUES (?, ?, 1, 'reject', 4, ?, 1) ON DUPLICATE KEY UPDATE rejected_task_count = rejected_task_count + 1");
+            $stmt->execute([$cUser['id'], $bTaskId, $cUserCommission / 100]);
+        }
+
+        // 12. 提交事务
         $db->commit();
         
-        // 12. 返回成功响应
+        // 13. 返回成功响应
         Response::success([
             'record_id' => (int)$recordId,
             'b_task_id' => (int)$bTaskId,

@@ -157,6 +157,27 @@ try {
         Response::error('您今日已被驳回3次，暂时无法接单，请明天再试', $errorCodes['TASK_ACCEPT_REJECT_LIMIT']);
     }
     
+    // 5. 校验当日弃单次数
+    $abandonCount = (int)($dailyStats['abandon_count'] ?? 0);
+    if ($abandonCount > 3) {
+        Response::error('您今日已弃单超过3次，暂时无法接单，请明天再试', $errorCodes['TASK_ACCEPT_REJECT_LIMIT']);
+    }
+    
+    // 6. 校验最后一次接单时间，需间隔3分钟
+    $stmt = $db->prepare("SELECT accept_task_update_at FROM c_user_task_records_static WHERE user_id = ?");
+    $stmt->execute([$currentUser['user_id']]);
+    $staticRecord = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($staticRecord && isset($staticRecord['accept_task_update_at'])) {
+        $lastAcceptTime = strtotime($staticRecord['accept_task_update_at']);
+        $currentTime = time();
+        $timeDiff = $currentTime - $lastAcceptTime;
+        
+        if ($timeDiff < 180) { // 3分钟 = 180秒
+            Response::error('请稍后再试，接单间隔需至少3分钟', $errorCodes['TASK_ACCEPT_FREQUENCY_LIMIT']);
+        }
+    }
+    
     // 5. 查询任务信息
     $stmt = $db->prepare("
         SELECT
@@ -309,10 +330,15 @@ try {
     ");
     $stmt->execute([$dailyStatsId]);
     
-    // 14. 提交事务
+    // 14. 更新用户任务静态记录的最后接单时间
+    $currentDatetime = date('Y-m-d H:i:s');
+    $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, accept_task_update_at) VALUES (?, ?) ON DUPLICATE KEY UPDATE accept_task_update_at = ?");
+    $stmt->execute([$currentUser['user_id'], $currentDatetime, $currentDatetime]);
+    
+    // 15. 提交事务
     $db->commit();
     
-    // 15. 返回成功响应
+    // 16. 返回成功响应
     Response::success([
         'record_id' => (int)$recordId,
         'b_task_id' => (int)$bTaskId,

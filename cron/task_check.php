@@ -296,6 +296,26 @@ try {
                     WHERE id = ?
                 ");
                 $updateStmt->execute([$bTaskId]);
+                
+                // 3. 更新C端用户每日统计：abandon_count + 1
+                $today = date('Y-m-d');
+                $stmt = $db->prepare("SELECT id FROM c_user_daily_stats WHERE c_user_id = ? AND stat_date = ?");
+                $stmt->execute([$cUserId, $today]);
+                $dailyStats = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$dailyStats) {
+                    // 创建当日统计记录
+                    $stmt = $db->prepare("INSERT INTO c_user_daily_stats (c_user_id, stat_date, abandon_count) VALUES (?, ?, 1)");
+                    $stmt->execute([$cUserId, $today]);
+                } else {
+                    // 更新当日统计记录
+                    $stmt = $db->prepare("UPDATE c_user_daily_stats SET abandon_count = abandon_count + 1 WHERE id = ?");
+                    $stmt->execute([$dailyStats['id']]);
+                }
+                
+                // 4. 更新c_user_task_records_static表中的已弃单任务数量
+                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, task_id, task_type, action, status, reward, abandoned_task_count) VALUES (?, ?, 1, 'abandon', 5, 0, 1) ON DUPLICATE KEY UPDATE abandoned_task_count = abandoned_task_count + 1");
+                $stmt->execute([$cUserId, $bTaskId]);
 
                 $db->commit();
                 $releaseSuccessCount++;

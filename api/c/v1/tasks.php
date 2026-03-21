@@ -40,6 +40,12 @@ $db = Database::connect();
 $auth = new AuthMiddleware($db);
 $currentUser = $auth->authenticateC();
 
+// 获取用户的新手状态
+$userStmt = $db->prepare("SELECT is_newbie FROM c_users WHERE id = ?");
+$userStmt->execute([$currentUser['user_id']]);
+$userInfo = $userStmt->fetch(PDO::FETCH_ASSOC);
+$isNewbie = (int)($userInfo['is_newbie'] ?? 1);
+
 // 获取查询参数
 $page = max(1, (int)($_GET['page'] ?? 1));
 $limit = min(100, max(1, (int)($_GET['limit'] ?? 20)));
@@ -47,6 +53,9 @@ $statusFilter = (int)($_GET['status'] ?? 1);
 $offset = ($page - 1) * $limit;
 
 try {
+    // 根据用户新手状态选择查询的表
+    $taskTable = $isNewbie ? 'b_newbie_tasks' : 'b_tasks';
+    
     // 查询任务列表（只显示已开放且有剩余数量的任务：stage_status=1）
     $stmt = $db->prepare("
         SELECT 
@@ -74,7 +83,7 @@ try {
             tm.c_user_commission,
             tm.stage1_c_user_commission,
             tm.stage2_c_user_commission
-        FROM b_tasks t
+        FROM $taskTable t
         LEFT JOIN task_templates tm ON t.template_id = tm.id
         WHERE t.stage_status = 1 
           AND t.status = ? 
@@ -102,7 +111,7 @@ try {
     // 统计总数
     $stmt = $db->prepare("
         SELECT COUNT(*) AS total
-        FROM b_tasks
+        FROM $taskTable
         WHERE stage_status = 1 
           AND status = ? 
           AND deadline > ?
