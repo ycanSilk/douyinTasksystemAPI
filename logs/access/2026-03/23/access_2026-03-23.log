@@ -1,0 +1,25 @@
+{
+    "timestamp": "2026-03-23T21:25:12+08:00",
+    "datetime": {
+        "date": "2026-03-23 21:25:12.324891",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "access",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "用户登录",
+    "context": {
+        "user_id": 137,
+        "user_type": "C",
+        "ip": "34.143.229.197",
+        "device_id": "device_abc123",
+        "login_result": "success"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "file": "log_usage.php",
+        "line": 88
+    }
+}

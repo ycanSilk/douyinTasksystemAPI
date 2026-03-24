@@ -3,6 +3,8 @@ if (typeof window.LoginDevicesConfig === 'undefined') {
         constructor() {
             this.cMaxDevicesInput = document.getElementById('c-max-devices');
             this.bMaxDevicesInput = document.getElementById('b-max-devices');
+            this.cCurrentConfigText = document.getElementById('c-current-config');
+            this.bCurrentConfigText = document.getElementById('b-current-config');
             this.saveCConfigBtn = document.getElementById('save-c-config');
             this.saveBConfigBtn = document.getElementById('save-b-config');
             this.messageDiv = document.getElementById('config-message');
@@ -29,16 +31,87 @@ if (typeof window.LoginDevicesConfig === 'undefined') {
          */
         async loadCurrentConfig() {
             try {
-                // 这里可以添加获取当前配置的逻辑
-                // 暂时使用默认值
+                const url = '/task_admin/api/login_devices_configuration/b_and_c_devices.php';
+                const token = sessionStorage.getItem('admin_token');
+                const headers = {};
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: headers,
+                    credentials: 'include'
+                });
+                
+                if (response.status === 401) {
+                    sessionStorage.clear();
+                    localStorage.removeItem('admin_current_page');
+                    fetch('/task_admin/auth/logout.php', { method: 'POST' }).catch(err => {});
+                    window.location.href = '/task_admin/login.html';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result && result.code === 0 && result.data && result.data.current_config) {
+                    const cCurrentDevices = result.data.current_config.c_user_login_max_devices || 1;
+                    const bCurrentDevices = result.data.current_config.b_user_login_max_devices || 1;
+                    
+                    // 更新输入框值
+                    if (this.cMaxDevicesInput) {
+                        this.cMaxDevicesInput.value = cCurrentDevices;
+                    }
+                    if (this.bMaxDevicesInput) {
+                        this.bMaxDevicesInput.value = bCurrentDevices;
+                    }
+                    
+                    // 显示当前配置数量
+                    if (this.cCurrentConfigText) {
+                        this.cCurrentConfigText.textContent = `当前配置：${cCurrentDevices} 台设备`;
+                    }
+                    if (this.bCurrentConfigText) {
+                        this.bCurrentConfigText.textContent = `当前配置：${bCurrentDevices} 台设备`;
+                    }
+                } else {
+                    // 使用默认值
+                    if (this.cMaxDevicesInput) {
+                        this.cMaxDevicesInput.value = 1;
+                    }
+                    if (this.bMaxDevicesInput) {
+                        this.bMaxDevicesInput.value = 1;
+                    }
+                    
+                    // 显示默认配置数量
+                    if (this.cCurrentConfigText) {
+                        this.cCurrentConfigText.textContent = '当前配置：1 台设备';
+                    }
+                    if (this.bCurrentConfigText) {
+                        this.bCurrentConfigText.textContent = '当前配置：1 台设备';
+                    }
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                // 出错时使用默认值
                 if (this.cMaxDevicesInput) {
                     this.cMaxDevicesInput.value = 1;
                 }
                 if (this.bMaxDevicesInput) {
                     this.bMaxDevicesInput.value = 1;
                 }
-            } catch (error) {
-                console.error('加载配置失败:', error);
+                
+                // 显示默认配置数量
+                if (this.cCurrentConfigText) {
+                    this.cCurrentConfigText.textContent = '当前配置：1 台设备';
+                }
+                if (this.bCurrentConfigText) {
+                    this.bCurrentConfigText.textContent = '当前配置：1 台设备';
+                }
             }
         }
         

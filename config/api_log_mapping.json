@@ -1,0 +1,541 @@
+{
+  "_comment": "接口日志映射配置文件",
+  "_description": "配置接口路径与日志文件前缀的映射关系",
+  "_version": "1.0.0",
+  "_log_config": {
+    "base_path": {
+      "windows": "d:\\github\\douyinTasksystemAPI\\logs",
+      "linux": "/www/wwwlogs",
+      "auto_detect": true
+    },
+    "description": "日志基础路径配置，auto_detect=true 时根据操作系统自动选择"
+  },
+  "api_routes": {
+    "B 端认证接口": {
+      "b/v1/auth/change-password": {
+        "log_prefix": "request/b-v1-auth-change-password",
+        "description": "Auth Change Password",
+        "file": "api/b/v1/auth/change-password.php"
+      },
+      "b/v1/auth/check-token": {
+        "log_prefix": "request/b-v1-auth-check-token",
+        "description": "Auth Check Token",
+        "file": "api/b/v1/auth/check-token.php"
+      },
+      "b/v1/auth/login": {
+        "log_prefix": "request/b-v1-auth-login",
+        "description": "Auth Login",
+        "file": "api/b/v1/auth/login.php"
+      },
+      "b/v1/auth/logout": {
+        "log_prefix": "request/b-v1-auth-logout",
+        "description": "Auth Logout",
+        "file": "api/b/v1/auth/logout.php"
+      },
+      "b/v1/auth/refresh": {
+        "log_prefix": "request/b-v1-auth-refresh",
+        "description": "Auth Refresh",
+        "file": "api/b/v1/auth/refresh.php"
+      },
+      "b/v1/auth/register": {
+        "log_prefix": "request/b-v1-auth-register",
+        "description": "Auth Register",
+        "file": "api/b/v1/auth/register.php"
+      },
+      "b/v1/auth/reset-password": {
+        "log_prefix": "request/b-v1-auth-reset-password",
+        "description": "Auth Reset Password",
+        "file": "api/b/v1/auth/reset-password.php"
+      }
+    },
+    "C 端认证接口": {
+      "c/v1/auth/change-password": {
+        "log_prefix": "request/c-v1-auth-change-password",
+        "description": "Auth Change Password",
+        "file": "api/c/v1/auth/change-password.php"
+      },
+      "c/v1/auth/check-token": {
+        "log_prefix": "request/c-v1-auth-check-token",
+        "description": "Auth Check Token",
+        "file": "api/c/v1/auth/check-token.php"
+      },
+      "c/v1/auth/login": {
+        "log_prefix": "request/c-v1-auth-login",
+        "description": "Auth Login",
+        "file": "api/c/v1/auth/login.php"
+      },
+      "c/v1/auth/logout": {
+        "log_prefix": "request/c-v1-auth-logout",
+        "description": "Auth Logout",
+        "file": "api/c/v1/auth/logout.php"
+      },
+      "c/v1/auth/refresh": {
+        "log_prefix": "request/c-v1-auth-refresh",
+        "description": "Auth Refresh",
+        "file": "api/c/v1/auth/refresh.php"
+      },
+      "c/v1/auth/register": {
+        "log_prefix": "request/c-v1-auth-register",
+        "description": "Auth Register",
+        "file": "api/c/v1/auth/register.php"
+      },
+      "c/v1/auth/reset-password": {
+        "log_prefix": "request/c-v1-auth-reset-password",
+        "description": "Auth Reset Password",
+        "file": "api/c/v1/auth/reset-password.php"
+      }
+    },
+    "B 端任务接口": {
+      "b/v1/newbie-tasks": {
+        "log_prefix": "request/b-v1-newbie-tasks",
+        "description": "V1 Newbie Tasks",
+        "file": "api/b/v1/newbie-tasks.php"
+      },
+      "b/v1/quick-task": {
+        "log_prefix": "request/b-v1-quick-task",
+        "description": "V1 Quick Task",
+        "file": "api/b/v1/quick-task.php"
+      },
+      "b/v1/recharge": {
+        "log_prefix": "request/b-v1-recharge",
+        "description": "V1 Recharge",
+        "file": "api/b/v1/recharge.php"
+      },
+      "b/v1/task-templates": {
+        "log_prefix": "request/b-v1-task-templates",
+        "description": "V1 Task Templates",
+        "file": "api/b/v1/task-templates.php"
+      },
+      "b/v1/tasks": {
+        "log_prefix": "request/b-v1-tasks",
+        "description": "V1 Tasks",
+        "file": "api/b/v1/tasks.php"
+      },
+      "b/v1/magnify/create": {
+        "log_prefix": "request/b-v1-magnify-create",
+        "description": "Magnify Create",
+        "file": "api/b/v1/magnify/create.php"
+      },
+      "b/v1/magnify/detail": {
+        "log_prefix": "request/b-v1-magnify-detail",
+        "description": "Magnify Detail",
+        "file": "api/b/v1/magnify/detail.php"
+      },
+      "b/v1/magnify/list": {
+        "log_prefix": "request/b-v1-magnify-list",
+        "description": "Magnify List",
+        "file": "api/b/v1/magnify/list.php"
+      },
+      "b/v1/quick-task-config/get": {
+        "log_prefix": "request/b-v1-quick-task-config-get",
+        "description": "Quick Task Config Get",
+        "file": "api/b/v1/quick-task-config/get.php"
+      },
+      "b/v1/quick-task-config/update": {
+        "log_prefix": "request/b-v1-quick-task-config-update",
+        "description": "Quick Task Config Update",
+        "file": "api/b/v1/quick-task-config/update.php"
+      },
+      "b/v1/tasks/detail": {
+        "log_prefix": "request/b-v1-tasks-detail",
+        "description": "Tasks Detail",
+        "file": "api/b/v1/tasks/detail.php"
+      },
+      "b/v1/tasks/list": {
+        "log_prefix": "request/b-v1-tasks-list",
+        "description": "Tasks List",
+        "file": "api/b/v1/tasks/list.php"
+      },
+      "b/v1/tasks/pending": {
+        "log_prefix": "request/b-v1-tasks-pending",
+        "description": "Tasks Pending",
+        "file": "api/b/v1/tasks/pending.php"
+      },
+      "b/v1/tasks/review": {
+        "log_prefix": "request/b-v1-tasks-review",
+        "description": "Tasks Review",
+        "file": "api/b/v1/tasks/review.php"
+      }
+    },
+    "C 端任务接口": {
+      "c/v1/tasks": {
+        "log_prefix": "request/c-v1-tasks",
+        "description": "V1 Tasks",
+        "file": "api/c/v1/tasks.php"
+      },
+      "c/v1/withdraw-list": {
+        "log_prefix": "request/c-v1-withdraw-list",
+        "description": "V1 Withdraw List",
+        "file": "api/c/v1/withdraw-list.php"
+      },
+      "c/v1/withdraw": {
+        "log_prefix": "request/c-v1-withdraw",
+        "description": "V1 Withdraw",
+        "file": "api/c/v1/withdraw.php"
+      },
+      "c/v1/agent/applications": {
+        "log_prefix": "request/c-v1-agent-applications",
+        "description": "Agent Applications",
+        "file": "api/c/v1/agent/applications.php"
+      },
+      "c/v1/agent/apply-senior": {
+        "log_prefix": "request/c-v1-agent-apply-senior",
+        "description": "Agent Apply Senior",
+        "file": "api/c/v1/agent/apply-senior.php"
+      },
+      "c/v1/agent/apply": {
+        "log_prefix": "request/c-v1-agent-apply",
+        "description": "Agent Apply",
+        "file": "api/c/v1/agent/apply.php"
+      },
+      "c/v1/agent/downlines": {
+        "log_prefix": "request/c-v1-agent-downlines",
+        "description": "Agent Downlines",
+        "file": "api/c/v1/agent/downlines.php"
+      },
+      "c/v1/agent/info": {
+        "log_prefix": "request/c-v1-agent-info",
+        "description": "Agent Info",
+        "file": "api/c/v1/agent/info.php"
+      },
+      "c/v1/tasks/accept-newbie": {
+        "log_prefix": "request/c-v1-tasks-accept-newbie",
+        "description": "Tasks Accept Newbie",
+        "file": "api/c/v1/tasks/accept-newbie.php"
+      },
+      "c/v1/tasks/accept": {
+        "log_prefix": "request/c-v1-tasks-accept",
+        "description": "Tasks Accept",
+        "file": "api/c/v1/tasks/accept.php"
+      },
+      "c/v1/tasks/my-tasks": {
+        "log_prefix": "request/c-v1-tasks-my-tasks",
+        "description": "Tasks My Tasks",
+        "file": "api/c/v1/tasks/my-tasks.php"
+      },
+      "c/v1/tasks/submit": {
+        "log_prefix": "request/c-v1-tasks-submit",
+        "description": "Tasks Submit",
+        "file": "api/c/v1/tasks/submit.php"
+      },
+      "c/v1/team-revenue/breakdown": {
+        "log_prefix": "request/c-v1-team-revenue-breakdown",
+        "description": "Team Revenue Breakdown",
+        "file": "api/c/v1/team-revenue/breakdown.php"
+      },
+      "c/v1/team-revenue/team_users": {
+        "log_prefix": "request/c-v1-team-revenue-team_users",
+        "description": "Team Revenue Team_Users",
+        "file": "api/c/v1/team-revenue/team_users.php"
+      },
+      "c/v1/users/update-guide": {
+        "log_prefix": "request/c-v1-users-update-guide",
+        "description": "Users Update Guide",
+        "file": "api/c/v1/users/update-guide.php"
+      }
+    },
+    "B 端用户接口": {
+      "b/v1/check-wallet-password": {
+        "log_prefix": "request/b-v1-check-wallet-password",
+        "description": "V1 Check Wallet Password",
+        "file": "api/b/v1/check-wallet-password.php"
+      },
+      "b/v1/me": {
+        "log_prefix": "request/b-v1-me",
+        "description": "V1 Me",
+        "file": "api/b/v1/me.php"
+      },
+      "b/v1/wallet-password": {
+        "log_prefix": "request/b-v1-wallet-password",
+        "description": "V1 Wallet Password",
+        "file": "api/b/v1/wallet-password.php"
+      },
+      "b/v1/wallet": {
+        "log_prefix": "request/b-v1-wallet",
+        "description": "V1 Wallet",
+        "file": "api/b/v1/wallet.php"
+      }
+    },
+    "C 端用户接口": {
+      "c/v1/check-wallet-password": {
+        "log_prefix": "request/c-v1-check-wallet-password",
+        "description": "V1 Check Wallet Password",
+        "file": "api/c/v1/check-wallet-password.php"
+      },
+      "c/v1/me": {
+        "log_prefix": "request/c-v1-me",
+        "description": "V1 Me",
+        "file": "api/c/v1/me.php"
+      },
+      "c/v1/wallet-password": {
+        "log_prefix": "request/c-v1-wallet-password",
+        "description": "V1 Wallet Password",
+        "file": "api/c/v1/wallet-password.php"
+      },
+      "c/v1/wallet": {
+        "log_prefix": "request/c-v1-wallet",
+        "description": "V1 Wallet",
+        "file": "api/c/v1/wallet.php"
+      }
+    },
+    "B 端统计接口": {
+      "b/v1/statistics/flows": {
+        "log_prefix": "request/b-v1-statistics-flows",
+        "description": "Statistics Flows",
+        "file": "api/b/v1/statistics/flows.php"
+      },
+      "b/v1/statistics/summary": {
+        "log_prefix": "request/b-v1-statistics-summary",
+        "description": "Statistics Summary",
+        "file": "api/b/v1/statistics/summary.php"
+      }
+    },
+    "C 端统计接口": {
+      "c/v1/agent/stats": {
+        "log_prefix": "request/c-v1-agent-stats",
+        "description": "Agent Stats",
+        "file": "api/c/v1/agent/stats.php"
+      },
+      "c/v1/statistics/flows": {
+        "log_prefix": "request/c-v1-statistics-flows",
+        "description": "Statistics Flows",
+        "file": "api/c/v1/statistics/flows.php"
+      },
+      "c/v1/statistics/summary": {
+        "log_prefix": "request/c-v1-statistics-summary",
+        "description": "Statistics Summary",
+        "file": "api/c/v1/statistics/summary.php"
+      },
+      "c/v1/statistics/team-revenue-details": {
+        "log_prefix": "request/c-v1-statistics-team-revenue-details",
+        "description": "Statistics Team Revenue Details",
+        "file": "api/c/v1/statistics/team-revenue-details.php"
+      },
+      "c/v1/statistics/team-revenue": {
+        "log_prefix": "request/c-v1-statistics-team-revenue",
+        "description": "Statistics Team Revenue",
+        "file": "api/c/v1/statistics/team-revenue.php"
+      },
+      "c/v1/team-revenue/statistics": {
+        "log_prefix": "request/c-v1-team-revenue-statistics",
+        "description": "Team Revenue Statistics",
+        "file": "api/c/v1/team-revenue/statistics.php"
+      }
+    },
+    "B 端通知接口": {
+      "b/v1/notifications/details": {
+        "log_prefix": "request/b-v1-notifications-details",
+        "description": "Notifications Details",
+        "file": "api/b/v1/notifications/details.php"
+      },
+      "b/v1/notifications/list": {
+        "log_prefix": "request/b-v1-notifications-list",
+        "description": "Notifications List",
+        "file": "api/b/v1/notifications/list.php"
+      },
+      "b/v1/notifications/read": {
+        "log_prefix": "request/b-v1-notifications-read",
+        "description": "Notifications Read",
+        "file": "api/b/v1/notifications/read.php"
+      }
+    },
+    "C 端通知接口": {
+      "c/v1/notifications/details": {
+        "log_prefix": "request/c-v1-notifications-details",
+        "description": "Notifications Details",
+        "file": "api/c/v1/notifications/details.php"
+      },
+      "c/v1/notifications/list": {
+        "log_prefix": "request/c-v1-notifications-list",
+        "description": "Notifications List",
+        "file": "api/c/v1/notifications/list.php"
+      },
+      "c/v1/notifications/read": {
+        "log_prefix": "request/c-v1-notifications-read",
+        "description": "Notifications Read",
+        "file": "api/c/v1/notifications/read.php"
+      }
+    },
+    "租赁业务接口": {
+      "rental/applications/apply": {
+        "log_prefix": "request/rental-applications-apply",
+        "description": "Applications Apply",
+        "file": "api/rental/applications/apply.php"
+      },
+      "rental/applications/list": {
+        "log_prefix": "request/rental-applications-list",
+        "description": "Applications List",
+        "file": "api/rental/applications/list.php"
+      },
+      "rental/applications/review": {
+        "log_prefix": "request/rental-applications-review",
+        "description": "Applications Review",
+        "file": "api/rental/applications/review.php"
+      },
+      "rental/demands/create": {
+        "log_prefix": "request/rental-demands-create",
+        "description": "Demands Create",
+        "file": "api/rental/demands/create.php"
+      },
+      "rental/demands/detail": {
+        "log_prefix": "request/rental-demands-detail",
+        "description": "Demands Detail",
+        "file": "api/rental/demands/detail.php"
+      },
+      "rental/demands/list": {
+        "log_prefix": "request/rental-demands-list",
+        "description": "Demands List",
+        "file": "api/rental/demands/list.php"
+      },
+      "rental/demands/toggle-status": {
+        "log_prefix": "request/rental-demands-toggle-status",
+        "description": "Demands Toggle Status",
+        "file": "api/rental/demands/toggle-status.php"
+      },
+      "rental/demands/update": {
+        "log_prefix": "request/rental-demands-update",
+        "description": "Demands Update",
+        "file": "api/rental/demands/update.php"
+      },
+      "rental/offers/create": {
+        "log_prefix": "request/rental-offers-create",
+        "description": "Offers Create",
+        "file": "api/rental/offers/create.php"
+      },
+      "rental/offers/detail": {
+        "log_prefix": "request/rental-offers-detail",
+        "description": "Offers Detail",
+        "file": "api/rental/offers/detail.php"
+      },
+      "rental/offers/list": {
+        "log_prefix": "request/rental-offers-list",
+        "description": "Offers List",
+        "file": "api/rental/offers/list.php"
+      },
+      "rental/offers/toggle-status": {
+        "log_prefix": "request/rental-offers-toggle-status",
+        "description": "Offers Toggle Status",
+        "file": "api/rental/offers/toggle-status.php"
+      },
+      "rental/offers/update": {
+        "log_prefix": "request/rental-offers-update",
+        "description": "Offers Update",
+        "file": "api/rental/offers/update.php"
+      },
+      "rental/orders/create-from-offer": {
+        "log_prefix": "request/rental-orders-create-from-offer",
+        "description": "Orders Create From Offer",
+        "file": "api/rental/orders/create-from-offer.php"
+      },
+      "rental/orders/my-buyer": {
+        "log_prefix": "request/rental-orders-my-buyer",
+        "description": "Orders My Buyer",
+        "file": "api/rental/orders/my-buyer.php"
+      },
+      "rental/orders/my-seller": {
+        "log_prefix": "request/rental-orders-my-seller",
+        "description": "Orders My Seller",
+        "file": "api/rental/orders/my-seller.php"
+      },
+      "rental/orders/renew": {
+        "log_prefix": "request/rental-orders-renew",
+        "description": "Orders Renew",
+        "file": "api/rental/orders/renew.php"
+      },
+      "rental/tickets/close": {
+        "log_prefix": "request/rental-tickets-close",
+        "description": "Tickets Close",
+        "file": "api/rental/tickets/close.php"
+      },
+      "rental/tickets/create": {
+        "log_prefix": "request/rental-tickets-create",
+        "description": "Tickets Create",
+        "file": "api/rental/tickets/create.php"
+      },
+      "rental/tickets/detail": {
+        "log_prefix": "request/rental-tickets-detail",
+        "description": "Tickets Detail",
+        "file": "api/rental/tickets/detail.php"
+      },
+      "rental/tickets/list": {
+        "log_prefix": "request/rental-tickets-list",
+        "description": "Tickets List",
+        "file": "api/rental/tickets/list.php"
+      },
+      "rental/tickets/messages": {
+        "log_prefix": "request/rental-tickets-messages",
+        "description": "Tickets Messages",
+        "file": "api/rental/tickets/messages.php"
+      },
+      "rental/tickets/send-message": {
+        "log_prefix": "request/rental-tickets-send-message",
+        "description": "Tickets Send Message",
+        "file": "api/rental/tickets/send-message.php"
+      }
+    },
+    "短信接口": {
+      "sms/send-code": {
+        "log_prefix": "request/sms-send-code",
+        "description": "Send Code",
+        "file": "api/sms/send-code.php"
+      },
+      "sms/verify-code": {
+        "log_prefix": "request/sms-verify-code",
+        "description": "Verify Code",
+        "file": "api/sms/verify-code.php"
+      }
+    },
+    "其他接口": {
+      "upload": {
+        "log_prefix": "request/upload",
+        "description": "Upload",
+        "file": "api/upload.php"
+      }
+    }
+  },
+  "log_types": {
+    "request": {
+      "description": "请求日志",
+      "retention_days": 30,
+      "priority": "high"
+    },
+    "error": {
+      "description": "错误日志",
+      "retention_days": 90,
+      "priority": "critical"
+    },
+    "audit": {
+      "description": "审计日志",
+      "retention_days": 365,
+      "priority": "high"
+    },
+    "sql": {
+      "description": "SQL 日志",
+      "retention_days": 7,
+      "priority": "low",
+      "production_enabled": false
+    },
+    "operation": {
+      "description": "运维日志",
+      "retention_days": 180,
+      "priority": "medium"
+    },
+    "access": {
+      "description": "访问日志",
+      "retention_days": 90,
+      "priority": "medium"
+    },
+    "cron": {
+      "description": "定时任务日志",
+      "retention_days": 30,
+      "priority": "medium"
+    }
+  },
+  "settings": {
+    "default_log_type": "request",
+    "date_format": "Y-m-d",
+    "dir_structure": "{log_type}/{year-month}/{day}/{prefix}_{date}.log",
+    "auto_rotation": true,
+    "compression_enabled": false
+  }
+}

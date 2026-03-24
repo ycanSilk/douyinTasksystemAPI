@@ -28,8 +28,6 @@ require_once __DIR__ . '/../../../../core/Database.php';
 require_once __DIR__ . '/../../../../core/Token.php';
 require_once __DIR__ . '/../../../../core/Response.php';
 
-$errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
-
 // 获取请求参数
 $input = json_decode(file_get_contents('php://input'), true);
 $account = trim($input['account'] ?? '');
@@ -39,16 +37,16 @@ $deviceName = trim($input['device_name'] ?? '');
 
 // 设备ID不能为空
 if (empty($deviceId)) {
-    Response::error('设备ID不能为空', $errorCodes['AUTH_DEVICE_ID_MISSING'] ?? 401);
+    Response::error('设备ID不能为空', 401);
 }
 
 // 参数校验
 if (empty($account)) {
-    Response::error('账号不能为空', $errorCodes['USER_EMAIL_EMPTY']);
+    Response::error('账号不能为空', 3006);
 }
 
 if (empty($password)) {
-    Response::error('密码不能为空', $errorCodes['USER_PASSWORD_EMPTY']);
+    Response::error('密码不能为空', 3008);
 }
 
 // 数据库连接
@@ -59,7 +57,8 @@ try {
     $stmt = $db->prepare(" 
         SELECT id, username, email, phone, password_hash, 
                invite_code, parent_id, is_agent, wallet_id, status, reason, 
-               blocked_status, blocked_start_time, blocked_duration, blocked_end_time 
+               blocked_status, blocked_start_time, blocked_duration, blocked_end_time, 
+               has_completed_newbie_guide, is_newbie
         FROM c_users 
         WHERE username = ? OR email = ? OR phone = ?
     ");
@@ -68,13 +67,13 @@ try {
     
     // 用户不存在或密码错误
     if (!$user || !password_verify($password, $user['password_hash'])) {
-        Response::error('账号或密码错误', $errorCodes['USER_PASSWORD_WRONG']);
+        Response::error('账号或密码错误', 3004);
     }
     
     // 检查用户状态
     if ($user['status'] != 1) {
         $reason = $user['reason'] ?: '违规操作';
-        Response::error('账号已被禁用：' . $reason, $errorCodes['AUTH_ACCOUNT_DISABLED']);
+        Response::error('账号已被禁用：' . $reason, 2004);
     }
     
     // 检查封禁状态
@@ -84,11 +83,15 @@ try {
         if ($endTime) {
             $message .= '，解禁时间：' . $endTime;
         }
-        Response::error($message, $errorCodes['AUTH_ACCOUNT_BLOCKED']);
+        Response::error($message, 2005);
     }
     
-    // 检查设备限制
-    $maxDevices = isset($user['max_devices']) ? (int)$user['max_devices'] : 1;
+    // 从 app_config 表中查询 C端用户最大登录设备数配置
+    $stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = 'c_user_login_max_devices'");
+    $stmt->execute();
+    $maxDevicesConfig = $stmt->fetchColumn();
+    $maxDevices = $maxDevicesConfig ? (int)$maxDevicesConfig : 1; // 默认值为1
+    
     $deviceList = [];
     if (!empty($user['device_list'])) {
         $deviceList = json_decode($user['device_list'], true) ?: [];
@@ -106,7 +109,7 @@ try {
         }
         
         if (!$deviceExists) {
-            Response::error('登录设备数量已达到限制', $errorCodes['AUTH_DEVICE_LIMIT_REACHED'] ?? 401);
+            Response::error('登录设备数量已达到限制', 401);
         }
     }
     
@@ -161,14 +164,16 @@ try {
         'invite_code' => $user['invite_code'],
         'parent_id' => $user['parent_id'],
         'is_agent' => (int)$user['is_agent'],
+        'is_newbie' => (int)($user['is_newbie'] ?? 1),
         'wallet_id' => $user['wallet_id'],
         'device_id' => $deviceId,
         'device_name' => $deviceName,
         'max_devices' => $maxDevices,
-        'device_list' => $deviceList
+        'device_list' => $deviceList,
+        'has_completed_newbie_guide' => (int)($user['has_completed_newbie_guide'] ?? 0)
     ], '登录成功');
     
 } catch (PDOException $e) {
-    Response::error('登录失败', $errorCodes['DATABASE_ERROR'], 500);
+    Response::error('登录失败', 1002, 500);
 }
 

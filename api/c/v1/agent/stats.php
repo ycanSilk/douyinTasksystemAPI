@@ -46,8 +46,6 @@ require_once __DIR__ . '/../../../../core/AuthMiddleware.php';
 require_once __DIR__ . '/../../../../core/Response.php';
 require_once __DIR__ . '/../../../../core/AppConfig.php';
 
-$errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
-
 // 数据库连接
 $db = Database::connect();
 
@@ -57,13 +55,22 @@ $currentUser = $auth->authenticateC();
 
 try {
     // 1. 查询总邀请人数
-    $stmt = $db->prepare("
+    $stmt = $db->prepare(" 
         SELECT COUNT(*) as total
         FROM c_users
         WHERE parent_id = ?
     ");
     $stmt->execute([$currentUser['user_id']]);
     $totalInvites = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    // 2. 查询发展下线数量
+    $stmt = $db->prepare(" 
+        SELECT COUNT(*) as total
+        FROM develop_downline_users_count
+        WHERE developer_user_id = ?
+    ");
+    $stmt->execute([$currentUser['user_id']]);
+    $developDownlineCount = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     // 2. 读取普通团长有效邀请配置
     $agentTaskCount = AppConfig::get('agent_active_user_task_count', 5);
@@ -129,6 +136,7 @@ try {
     // 返回成功响应
     Response::success([
         'total_invites' => $totalInvites,
+        'develop_downline_count' => $developDownlineCount,
         'valid_invites' => $validInvites,
         'senior_valid_invites' => $seniorValidInvites,
         'total_tasks_completed' => $totalTasksCompleted,
@@ -148,5 +156,5 @@ try {
     ]);
     
 } catch (PDOException $e) {
-    Response::error('查询失败', $errorCodes['DATABASE_ERROR'], 500);
+    Response::error('查询失败', 5000, 500);
 }

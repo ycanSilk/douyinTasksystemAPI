@@ -1,0 +1,837 @@
+{
+    "timestamp": "2026-03-24T00:08:10+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:08:10.481939",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log.php",
+        "line": 62
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 59
+    }
+}
+{
+    "timestamp": "2026-03-24T00:08:10+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:08:10.479699",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 32
+    }
+}
+{
+    "timestamp": "2026-03-24T00:08:10+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:08:10.481680",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 40
+    }
+}
+{
+    "timestamp": "2026-03-24T00:08:10+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:08:10.481796",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 49
+    }
+}
+{
+    "timestamp": "2026-03-24T00:08:45+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:08:45.131793",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "测试日志",
+    "context": {
+        "test": "data"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "file": "test_debug_log.php",
+        "line": 59
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:01+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:01.617049",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log.php",
+        "line": 62
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 59
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:01+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:01.614844",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 32
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:01+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:01.616797",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 40
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:01+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:01.616912",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 49
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:46+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:46.871539",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log.php",
+        "line": 62
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 59
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:46+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:46.869340",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 32
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:46+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:46.871242",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 40
+    }
+}
+{
+    "timestamp": "2026-03-24T00:11:46+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:11:46.871371",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 49
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:11+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:11.471362",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log.php",
+        "line": 62
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 59
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:11+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:11.467830",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 32
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:11+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:11.470955",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 40
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:11+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:11.471150",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 49
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:57+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:57.913531",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log.php",
+        "line": 62
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 59
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:57+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:57.910661",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 32
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:57+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:57.913245",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 40
+    }
+}
+{
+    "timestamp": "2026-03-24T00:13:57+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:13:57.913392",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log.php",
+        "line": 49
+    }
+}
+{
+    "timestamp": "2026-03-24T00:14:32+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:14:32.606252",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log_v2.php",
+        "line": 66
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 63
+    }
+}
+{
+    "timestamp": "2026-03-24T00:14:32+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:14:32.604124",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 36
+    }
+}
+{
+    "timestamp": "2026-03-24T00:14:32+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:14:32.605942",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 44
+    }
+}
+{
+    "timestamp": "2026-03-24T00:14:32+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:14:32.606101",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 53
+    }
+}
+{
+    "timestamp": "2026-03-24T00:15:35+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:15:35.679567",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log_v2.php",
+        "line": 66
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 63
+    }
+}
+{
+    "timestamp": "2026-03-24T00:15:35+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:15:35.677320",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 36
+    }
+}
+{
+    "timestamp": "2026-03-24T00:15:35+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:15:35.679256",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 44
+    }
+}
+{
+    "timestamp": "2026-03-24T00:15:35+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:15:35.679374",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 53
+    }
+}
+{
+    "timestamp": "2026-03-24T00:16:42+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:16:42.371045",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "这是一个测试错误",
+    "context": {
+        "message": "测试错误信息",
+        "file": "D:\\github\\douyinTasksystemAPI\\test_list_api_log_v2.php",
+        "line": 66
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 63
+    }
+}
+{
+    "timestamp": "2026-03-24T00:16:42+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:16:42.369000",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端任务列表请求开始 ===",
+    "context": {
+        "method": "GET",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/tasks\/list?status=1"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 36
+    }
+}
+{
+    "timestamp": "2026-03-24T00:16:42+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:16:42.370757",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "status": 1,
+        "page": 1,
+        "page_size": 20,
+        "offset": 0
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 44
+    }
+}
+{
+    "timestamp": "2026-03-24T00:16:42+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:16:42.370864",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "任务列表获取成功",
+    "context": {
+        "total": 50,
+        "page": 1,
+        "page_size": 20,
+        "returned_count": 20
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/tasks\/list?status=1",
+        "request_method": "GET",
+        "file": "test_list_api_log_v2.php",
+        "line": 53
+    }
+}

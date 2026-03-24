@@ -65,9 +65,19 @@ $errorCodes = require __DIR__ . '/../../../config/error_codes.php';
 $db = Database::connect();
 
 try {
+    // 开启事务
+    $db->beginTransaction();
+    
     // 更新C端用户的最大设备数量
     $stmt = $db->prepare("UPDATE c_users SET max_devices = ?");
     $stmt->execute([$maxDevices]);
+    
+    // 更新 app_config 表中的配置值
+    $stmt = $db->prepare("UPDATE app_config SET config_value = ? WHERE config_key = 'c_user_login_max_devices'");
+    $stmt->execute([$maxDevices]);
+    
+    // 提交事务
+    $db->commit();
     
     // 返回成功响应
     Response::success([
@@ -75,6 +85,11 @@ try {
     ], 'C端用户设备配置更新成功');
     
 } catch (PDOException $e) {
+    // 回滚事务
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    
     http_response_code(500);
     echo json_encode([
         'code' => $errorCodes['SYSTEM_ERROR'],

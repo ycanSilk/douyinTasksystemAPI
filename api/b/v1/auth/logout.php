@@ -37,7 +37,7 @@ try {
     // 数据库连接
     $db = Database::connect();
     
-    // Token 认证（必须是 B端用户）
+    // Token 认证（必须是 B 端用户）
     $auth = new AuthMiddleware($db);
     $currentUser = $auth->authenticateB();
     
@@ -45,6 +45,37 @@ try {
     $result = Token::clearFromDatabase($currentUser['user_id'], Token::TYPE_B, $db);
     
     if ($result) {
+        // 清理设备信息：从 device_list 中移除当前设备
+        $currentDeviceId = $currentUser['device_id'] ?? null;
+        if ($currentDeviceId) {
+            // 获取当前 device_list
+            $deviceList = !empty($currentUser['device_list']) 
+                ? json_decode($currentUser['device_list'], true) 
+                : [];
+            
+            // 过滤掉当前设备
+            $deviceList = array_filter($deviceList, function($device) use ($currentDeviceId) {
+                return $device['device_id'] !== $currentDeviceId;
+            });
+            
+            // 重新索引数组
+            $deviceList = array_values($deviceList);
+            
+            // 更新用户设备信息
+            $updateStmt = $db->prepare("
+                UPDATE b_users 
+                SET device_list = ?, 
+                    device_id = NULL,
+                    device_name = NULL,
+                    last_login_device = NULL
+                WHERE id = ?
+            ");
+            $updateStmt->execute([
+                count($deviceList) > 0 ? json_encode($deviceList, JSON_UNESCAPED_UNICODE) : '[]',
+                $currentUser['user_id']
+            ]);
+        }
+        
         Response::success([
             'user_id' => $currentUser['user_id'],
             'logout_at' => date('Y-m-d H:i:s')
@@ -54,6 +85,6 @@ try {
     }
     
 } catch (Exception $e) {
-    error_log('B端退出登录错误: ' . $e->getMessage());
-    Response::error('退出登录失败: ' . $e->getMessage(), $errorCodes['SYSTEM_ERROR']);
+    error_log('B 端退出登录错误：' . $e->getMessage());
+    Response::error('退出登录失败：' . $e->getMessage(), $errorCodes['SYSTEM_ERROR']);
 }

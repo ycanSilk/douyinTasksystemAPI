@@ -1,0 +1,142 @@
+{
+    "timestamp": "2026-03-24T00:20:03+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:20:03.753706",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 20,
+    "level_name": "INFO",
+    "message": "=== B 端用户注册请求开始 ===",
+    "context": {
+        "method": "POST",
+        "ip": "127.0.0.1",
+        "uri": "\/api\/b\/v1\/auth\/register.php"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/auth\/register.php",
+        "request_method": "POST",
+        "file": "register.php",
+        "line": 43
+    }
+}
+{
+    "timestamp": "2026-03-24T00:20:03+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:20:03.753903",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求体内容",
+    "context": {
+        "body": "{\"username\":\"task\",\"password\":\"abc123\",\"phone\":\"\",\"email\":\"task@qq.com\",\"organization_name\":\"task\",\"organization_leader\":\"task\"}"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/auth\/register.php",
+        "request_method": "POST",
+        "file": "register.php",
+        "line": 67
+    }
+}
+{
+    "timestamp": "2026-03-24T00:20:03+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:20:03.769460",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "数据库连接成功",
+    "context": [],
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/auth\/register.php",
+        "request_method": "POST",
+        "file": "register.php",
+        "line": 80
+    }
+}
+{
+    "timestamp": "2026-03-24T00:20:03+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:20:03.769643",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "请求参数",
+    "context": {
+        "username": "task",
+        "email": "t***k@qq.com",
+        "phone": "***",
+        "organization_name": "task",
+        "organization_leader": "task"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/auth\/register.php",
+        "request_method": "POST",
+        "file": "register.php",
+        "line": 102
+    }
+}
+{
+    "timestamp": "2026-03-24T00:20:03+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:20:03.769725",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 10,
+    "level_name": "DEBUG",
+    "message": "检查用户名是否已存在",
+    "context": {
+        "username": "task"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/auth\/register.php",
+        "request_method": "POST",
+        "file": "register.php",
+        "line": 182
+    }
+}
+{
+    "timestamp": "2026-03-24T00:20:03+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:20:03.770361",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "request",
+    "level": 40,
+    "level_name": "WARNING",
+    "message": "用户名已被占用",
+    "context": {
+        "username": "task"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "request_uri": "\/api\/b\/v1\/auth\/register.php",
+        "request_method": "POST",
+        "file": "register.php",
+        "line": 186
+    }
+}

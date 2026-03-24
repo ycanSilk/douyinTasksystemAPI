@@ -1,0 +1,22 @@
+{
+    "timestamp": "2026-03-24T00:30:38+08:00",
+    "datetime": {
+        "date": "2026-03-24 00:30:38.502681",
+        "timezone_type": 3,
+        "timezone": "Asia\/Shanghai"
+    },
+    "channel": "error",
+    "level": 50,
+    "level_name": "ERROR",
+    "message": "测试日志 - 错误信息",
+    "context": {
+        "error_code": 500,
+        "message": "测试错误"
+    },
+    "extra": {
+        "memory_usage": "2MB",
+        "server": "sola",
+        "file": "test_log_system.php",
+        "line": 28
+    }
+}

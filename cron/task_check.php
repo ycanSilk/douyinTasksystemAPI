@@ -247,7 +247,7 @@ try {
     // ============================================
     log_message('正在检测C端超时未提交的任务...');
 
-    // 获取超时配置（默认600秒=10分钟）
+    // 获取超时配置（单位：秒，默认 600 秒=10 分钟）
     $taskSubmitTimeout = AppConfig::get('task_submit_timeout', 600);
     $timeoutThreshold = date('Y-m-d H:i:s', $currentTime - $taskSubmitTimeout);
 
@@ -289,10 +289,13 @@ try {
             $updateStmt->execute([$recordId]);
 
             if ($updateStmt->rowCount() > 0) {
-                // 2. 更新B端任务统计：task_doing - 1
+                // 2. 更新 B 端任务统计：task_doing - 1（使用 CASE 避免 UNSIGNED 溢出）
                 $updateStmt = $db->prepare("
                     UPDATE b_tasks
-                    SET task_doing = GREATEST(task_doing - 1, 0)
+                    SET task_doing = CASE 
+                        WHEN task_doing > 0 THEN task_doing - 1 
+                        ELSE 0 
+                    END
                     WHERE id = ?
                 ");
                 $updateStmt->execute([$bTaskId]);
@@ -313,9 +316,9 @@ try {
                     $stmt->execute([$dailyStats['id']]);
                 }
                 
-                // 4. 更新c_user_task_records_static表中的已弃单任务数量
-                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, task_id, task_type, action, status, reward, abandoned_task_count) VALUES (?, ?, 1, 'abandon', 5, 0, 1) ON DUPLICATE KEY UPDATE abandoned_task_count = abandoned_task_count + 1");
-                $stmt->execute([$cUserId, $bTaskId]);
+                // 4. 更新 c_user_task_records_static 表中的已弃单任务数量
+                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, abandoned_task_count) VALUES (?, 1) ON DUPLICATE KEY UPDATE abandoned_task_count = abandoned_task_count + 1");
+                $stmt->execute([$cUserId]);
 
                 $db->commit();
                 $releaseSuccessCount++;
