@@ -1,7 +1,7 @@
 {
-    "timestamp": "2026-03-24T00:30:38+08:00",
+    "timestamp": "2026-03-24T09:27:19+08:00",
     "datetime": {
-        "date": "2026-03-24 00:30:38.502681",
+        "date": "2026-03-24 09:27:19.343060",
         "timezone_type": 3,
         "timezone": "Asia\/Shanghai"
     },
@@ -16,7 +16,7 @@
     "extra": {
         "memory_usage": "2MB",
         "server": "sola",
-        "file": "test_log_system.php",
-        "line": 28
+        "file": "test_new_log_structure.php",
+        "line": 29
     }
 }

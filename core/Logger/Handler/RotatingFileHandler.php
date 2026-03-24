@@ -48,7 +48,8 @@ class RotatingFileHandler extends FileHandler
     /**
      * 获取带时间戳的文件名
      * 
-     * 新目录结构：logs/request/b-v1-auth-register/2026-03-23/log.log
+     * 新目录结构：logs/20260324/request/b-v1-auth-register/log.log
+     * 日期放在第二层，方便按日期管理和清理
      * 
      * @param string $filename 原始文件名
      * @return string 带日期的完整路径
@@ -65,19 +66,10 @@ class RotatingFileHandler extends FileHandler
                 $subType = $parts[1] ?? 'request';
                 $apiName = $parts[2] ?? 'default';
                 
-                // 检查最后一部分是否已经是日期格式（避免重复添加）
-                $lastPart = end($parts);
-                $secondLastPart = $parts[count($parts) - 2] ?? '';
-                
-                // 如果倒数第二部分已经是日期格式，说明路径已经包含日期目录
-                if ($this->isDateFormat($secondLastPart)) {
-                    // 路径已经包含日期，直接使用
-                    $path = implode('/', array_slice($parts, 0, -1));
-                } else {
-                    // 添加日期目录
-                    $date = date($this->dateFormat);
-                    $path = $logType . '/' . $subType . '/' . $apiName . '/' . $date;
-                }
+                // 使用新结构：logs/日期/类型/API 名称/log.log
+                // 日期格式：20260324（无横杠，更简洁）
+                $date = date('Ymd');
+                $path = $logType . '/' . $date . '/' . $subType . '/' . $apiName;
                 
                 // 使用项目根目录作为基础路径
                 $isWindowsPath = (strlen($path) >= 3 && $path[1] === ':');
@@ -122,27 +114,32 @@ class RotatingFileHandler extends FileHandler
     /**
      * 轮转日志（删除过期文件）
      * 
-     * 新结构：按日期目录删除
+     * 新结构：logs/20260324/request/b-v1-auth-register/log.log
+     * 按日期目录删除，保留最近 N 天的日志
      * 
      * @return void
      */
     private function rotate(): void
     {
         try {
-            // 新结构：logs/request/b-v1-auth-register/2026-03-23/log.log
-            // 获取 API 目录：logs/request/b-v1-auth-register
+            // 新结构：logs/20260324/request/b-v1-auth-register/log.log
+            // 获取日志类型目录：logs/request
             $parts = explode('/', str_replace('\\', '/', $this->filePath));
             
             if (count($parts) >= 5) {
-                // logs/request/b-v1-auth-register
-                $apiDir = implode('/', array_slice($parts, 0, 3));
+                // logs/20260324/request/b-v1-auth-register
+                $logType = $parts[0] ?? 'logs';
+                $subType = $parts[2] ?? 'request';
                 
-                if (!is_dir($apiDir)) {
+                // 日志类型根目录：logs/request
+                $typeRootDir = dirname(__DIR__, 3) . '/' . $logType;
+                
+                if (!is_dir($typeRootDir)) {
                     return;
                 }
                 
                 // 获取所有日期目录
-                $dateDirs = @glob($apiDir . '/*', GLOB_ONLYDIR);
+                $dateDirs = @glob($typeRootDir . '/*', GLOB_ONLYDIR);
                 if ($dateDirs === false || count($dateDirs) <= $this->maxFiles) {
                     return;
                 }
