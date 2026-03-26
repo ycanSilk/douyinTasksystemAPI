@@ -1,163 +1,144 @@
 <?php
 namespace Core\Logger\Handler;
 
+use Core\Logger\LoggerFactory;
+
 /**
  * 轮转文件处理器
  * 
  * 按日期自动轮转日志文件，支持保留指定数量的文件
+ * 新目录结构：logs/{log_type}/{date}/{log_type}.log
+ * 例如：logs/audit/20260324/audit.log
  * 
  * @package Core\Logger\Handler
  */
 class RotatingFileHandler extends FileHandler
 {
     /**
-     * @var int 最大保留文件数量
+     * @var int 最大保留文件数量（天数）
      */
     private int $maxFiles;
     
     /**
-     * @var string 日期格式
+     * @var string 日志类型（audit, request, error, sql, operation, access）
      */
-    private string $dateFormat;
+    private string $logType;
     
     /**
      * 构造函数
      * 
-     * @param string $filename 日志文件名（不含日期）
+     * @param string $logType 日志类型（audit, request, error, sql, operation, access）
      * @param int $maxFiles 最大保留文件数量（天数）
      * @param int $filePermission 文件权限
      * @param bool $useLocking 是否使用文件锁
      */
     public function __construct(
-        string $filename,
+        string $logType,
         int $maxFiles = 30,
         int $filePermission = 0644,
         bool $useLocking = true
     ) {
         $this->maxFiles = $maxFiles;
-        $this->dateFormat = 'Y-m-d';
+        $this->logType = $logType;
         
-        // 生成带日期的文件名
-        $filename = $this->getTimedFilename($filename);
+        // 生成带日期的文件名：logs/{log_type}/{date}/{log_type}.log
+        $filename = $this->getTimedFilename($logType);
         parent::__construct($filename, $filePermission, $useLocking);
-        
-        // 清理过期日志
-        $this->rotate();
     }
     
     /**
      * 获取带时间戳的文件名
      * 
-     * 新目录结构：logs/20260324/request/b-v1-auth-register/log.log
-     * 日期放在第二层，方便按日期管理和清理
+     * 新目录结构：logs/{log_type}/{date}/{log_type}.log
+     * 例如：logs/audit/20260324/audit.log
      * 
-     * @param string $filename 原始文件名
+     * @param string $logType 日志类型
      * @return string 带日期的完整路径
      */
-    private function getTimedFilename(string $filename): string
+    private function getTimedFilename(string $logType): string
     {
         try {
-            // 解析路径：logs/request/b-v1-auth-register/log.log
-            $parts = explode('/', str_replace('\\', '/', $filename));
+            // 获取日志基础路径
+            $logBasePath = LoggerFactory::getLogBasePath();
             
-            if (count($parts) >= 4) {
-                // logs/request/b-v1-auth-register/log.log
-                $logType = $parts[0] ?? 'logs';
-                $subType = $parts[1] ?? 'request';
-                $apiName = $parts[2] ?? 'default';
-                
-                // 使用新结构：logs/日期/类型/API 名称/log.log
-                // 日期格式：20260324（无横杠，更简洁）
-                $date = date('Ymd');
-                $path = $logType . '/' . $date . '/' . $subType . '/' . $apiName;
-                
-                // 使用项目根目录作为基础路径
-                $isWindowsPath = (strlen($path) >= 3 && $path[1] === ':');
-                $isUnixPath = (strlen($path) >= 1 && $path[0] === '/');
-                
-                if (!$isWindowsPath && !$isUnixPath) {
-                    $path = dirname(__DIR__, 3) . '/' . $path;
+            // 日期格式：20260324（无横杠，更简洁）
+            $date = date('Ymd');
+            
+            // 构建路径：logs/{log_type}/{date}/{log_type}.log
+            $path = $logBasePath . DIRECTORY_SEPARATOR . $logType . DIRECTORY_SEPARATOR . $date . DIRECTORY_SEPARATOR . $logType . '.log';
+            
+            // 确保目录存在
+            $dir = dirname($path);
+            if (!is_dir($dir)) {
+                if (!@mkdir($dir, 0755, true)) {
+                    $error = error_get_last();
+                    error_log('Failed to create log directory: ' . $dir . ' - Error: ' . ($error['message'] ?? 'Unknown'));
+                    return $path;
                 }
-                
-                if (!is_dir($path)) {
-                    if (!@mkdir($path, 0755, true)) {
-                        $error = error_get_last();
-                        error_log('Failed to create log directory: ' . $path . ' - Error: ' . ($error['message'] ?? 'Unknown'));
-                        return $filename;
-                    }
-                }
-                
-                // 日志文件名固定为 log.log
-                return $path . '/log.log';
             }
             
-            // 兼容旧结构
-            return $filename;
+            return $path;
         } catch (\Throwable $e) {
             error_log('RotatingFileHandler getTimedFilename failed: ' . $e->getMessage());
-            return $filename;
+            return $logType . '.log';
         }
     }
     
     /**
-     * 检查字符串是否是日期格式
+     * 处理日志记录
      * 
-     * @param string $str 待检查的字符串
-     * @return bool
+     * @param array $record 日志记录
+     * @param bool $useJsonFormat 是否使用 JSON 格式（默认 false，使用行内格式）
+     * @return void
      */
-    private function isDateFormat(string $str): bool
+    public function handle(array $record, bool $useJsonFormat = false): void
     {
-        // 检查是否符合 Y-m-d 格式（如 2026-03-24）
-        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $str) === 1;
+        parent::handle($record, $useJsonFormat);
+        
+        try {
+            // 清理旧日志文件
+            $this->rotate();
+        } catch (\Throwable $e) {
+            error_log('RotatingFileHandler rotate failed: ' . $e->getMessage());
+        }
     }
     
     /**
-     * 轮转日志（删除过期文件）
-     * 
-     * 新结构：logs/20260324/request/b-v1-auth-register/log.log
-     * 按日期目录删除，保留最近 N 天的日志
+     * 轮转日志文件（删除超过保留天数的旧日志）
      * 
      * @return void
      */
     private function rotate(): void
     {
         try {
-            // 新结构：logs/20260324/request/b-v1-auth-register/log.log
-            // 获取日志类型目录：logs/request
-            $parts = explode('/', str_replace('\\', '/', $this->filePath));
+            // 获取日志基础路径
+            $logBasePath = LoggerFactory::getLogBasePath();
             
-            if (count($parts) >= 5) {
-                // logs/20260324/request/b-v1-auth-register
-                $logType = $parts[0] ?? 'logs';
-                $subType = $parts[2] ?? 'request';
-                
-                // 日志类型根目录：logs/request
-                $typeRootDir = dirname(__DIR__, 3) . '/' . $logType;
-                
-                if (!is_dir($typeRootDir)) {
-                    return;
-                }
-                
-                // 获取所有日期目录
-                $dateDirs = @glob($typeRootDir . '/*', GLOB_ONLYDIR);
-                if ($dateDirs === false || count($dateDirs) <= $this->maxFiles) {
-                    return;
-                }
-                
-                // 按目录名（日期）排序
-                usort($dateDirs, function($a, $b) {
-                    return basename($a) <=> basename($b);
-                });
-                
-                // 删除最旧的日期目录
-                $dirsToDelete = array_slice($dateDirs, 0, count($dateDirs) - $this->maxFiles);
-                foreach ($dirsToDelete as $dir) {
-                    // 删除目录及其内容
-                    try {
-                        $this->deleteDir($dir);
-                    } catch (\Throwable $e) {
-                        error_log('Failed to delete old log directory: ' . $dir . ' - ' . $e->getMessage());
-                    }
+            // 日志类型目录：logs/{log_type}
+            $typeDir = $logBasePath . DIRECTORY_SEPARATOR . $this->logType;
+            
+            if (!is_dir($typeDir)) {
+                return;
+            }
+            
+            // 获取所有日期目录
+            $dateDirs = @glob($typeDir . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
+            if ($dateDirs === false || count($dateDirs) <= $this->maxFiles) {
+                return;
+            }
+            
+            // 按目录名（日期）排序
+            usort($dateDirs, function($a, $b) {
+                return basename($a) <=> basename($b);
+            });
+            
+            // 删除最旧的日期目录
+            $dirsToDelete = array_slice($dateDirs, 0, count($dateDirs) - $this->maxFiles);
+            foreach ($dirsToDelete as $dir) {
+                try {
+                    $this->deleteDir($dir);
+                } catch (\Throwable $e) {
+                    error_log('Failed to delete old log directory: ' . $dir . ' - ' . $e->getMessage());
                 }
             }
         } catch (\Throwable $e) {
@@ -173,15 +154,25 @@ class RotatingFileHandler extends FileHandler
      */
     private function deleteDir(string $dir): void
     {
-        if (!is_dir($dir)) {
-            return;
+        try {
+            $files = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::CHILD_FIRST
+            );
+            
+            foreach ($files as $fileInfo) {
+                $path = $fileInfo->getPathname();
+                
+                if ($fileInfo->isDir()) {
+                    @rmdir($path);
+                } else {
+                    @unlink($path);
+                }
+            }
+            
+            @rmdir($dir);
+        } catch (\Throwable $e) {
+            error_log('Failed to delete directory: ' . $dir . ' - ' . $e->getMessage());
         }
-        
-        $files = array_diff(scandir($dir), ['.', '..']);
-        foreach ($files as $file) {
-            $path = $dir . '/' . $file;
-            is_dir($path) ? $this->deleteDir($path) : @unlink($path);
-        }
-        @rmdir($dir);
     }
 }

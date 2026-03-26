@@ -10,6 +10,7 @@ use Core\Logger\Processor\SensitiveDataProcessor;
  * 日志工厂
  * 
  * 单例模式，负责创建和管理各种日志通道的 Logger 实例
+ * 新目录结构：logs/{log_type}/{date}/{log_type}.log
  * 
  * @package Core\Logger
  */
@@ -40,7 +41,7 @@ class LoggerFactory
      * 
      * @return string 日志基础路径
      */
-    private static function getLogBasePath(): string
+    public static function getLogBasePath(): string
     {
         if (self::$logBasePath === null) {
             // 尝试从配置文件加载
@@ -50,25 +51,20 @@ class LoggerFactory
             if (isset(self::$logConfig['base_path'])) {
                 $basePathConfig = self::$logConfig['base_path'];
                 
-                // 如果启用了自动检测
-                if (!empty($basePathConfig['auto_detect'])) {
-                    // 根据操作系统选择路径
-                    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                        self::$logBasePath = $basePathConfig['windows'] ?? __DIR__ . '/../../logs';
-                    } else {
-                        self::$logBasePath = $basePathConfig['linux'] ?? '/www/wwwlogs';
-                    }
+                // 根据配置的 system_type 选择路径
+                $systemType = self::$logConfig['system_type'] ?? 'windows';
+                
+                if ($systemType === 'windows') {
+                    self::$logBasePath = $basePathConfig['windows'] ?? __DIR__ . '/../../logs';
+                } elseif ($systemType === 'linux') {
+                    self::$logBasePath = $basePathConfig['linux'] ?? '/www/wwwroot/logs';
                 } else {
-                    // 使用默认路径（不区分系统）
+                    // 使用默认路径
                     self::$logBasePath = $basePathConfig['default'] ?? __DIR__ . '/../../logs';
                 }
             } else {
-                // 没有配置文件，自动检测
-                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                    self::$logBasePath = __DIR__ . '/../../logs';
-                } else {
-                    self::$logBasePath = '/www/wwwlogs';
-                }
+                // 没有配置文件，使用默认路径
+                self::$logBasePath = __DIR__ . '/../../logs';
             }
         }
         
@@ -82,10 +78,6 @@ class LoggerFactory
      */
     private static function loadConfig(): void
     {
-        if (!empty(self::$logConfig)) {
-            return;
-        }
-        
         try {
             $configFile = __DIR__ . '/../../config/api_log_mapping.json';
             if (file_exists($configFile)) {
@@ -114,7 +106,7 @@ class LoggerFactory
     /**
      * 获取日志实例
      * 
-     * @param string $channel 日志通道（audit, request, error, sql, operation, access）
+     * @param string $channel 日志通道（audit, request, error, sql, operation, access, cron）
      * @return Logger Logger 实例
      */
     public static function getLogger(string $channel): Logger
@@ -133,30 +125,13 @@ class LoggerFactory
                 error_log('LoggerFactory processor init failed: ' . $e->getMessage());
             }
             
-            // 获取当前接口上下文
-            $apiContext = '';
-            try {
-                $fullPrefix = LoggerRouter::getLogPrefix();
-                // 提取 apiContext（去掉第一个部分）
-                $parts = explode('/', $fullPrefix);
-                if (count($parts) >= 2) {
-                    $apiContext = implode('/', array_slice($parts, 1));
-                } else {
-                    $apiContext = $fullPrefix;
-                }
-            } catch (\Throwable $e) {
-                error_log('LoggerRouter getContext failed: ' . $e->getMessage());
-            }
-            
             // 根据通道配置处理器
             switch ($channel) {
                 case 'audit':
-                    $logPath = $apiContext ? 
-                        'logs/audit/' . $apiContext . '/log.log' :
-                        'logs/audit/audit.log';
                     try {
+                        // 新结构：logs/audit/{date}/audit.log
                         $handler = new RotatingFileHandler(
-                            $logPath,
+                            'audit',
                             365,
                             0644,
                             true
@@ -168,12 +143,10 @@ class LoggerFactory
                     break;
                     
                 case 'request':
-                    $logPath = $apiContext ? 
-                        'logs/request/' . $apiContext . '/log.log' :
-                        'logs/request/request.log';
                     try {
+                        // 新结构：logs/request/{date}/request.log
                         $handler = new RotatingFileHandler(
-                            $logPath,
+                            'request',
                             30,
                             0644,
                             true
@@ -185,12 +158,10 @@ class LoggerFactory
                     break;
                     
                 case 'error':
-                    $logPath = $apiContext ? 
-                        'logs/error/' . $apiContext . '/log.log' :
-                        'logs/error/error.log';
                     try {
+                        // 新结构：logs/error/{date}/error.log
                         $handler = new RotatingFileHandler(
-                            $logPath,
+                            'error',
                             90,
                             0644,
                             true
@@ -203,12 +174,10 @@ class LoggerFactory
                     
                 case 'sql':
                     if (self::isDevelopment()) {
-                        $logPath = $apiContext ? 
-                            'logs/sql/' . $apiContext . '/log.log' :
-                            'logs/sql/sql.log';
                         try {
+                            // 新结构：logs/sql/{date}/sql.log
                             $handler = new RotatingFileHandler(
-                                $logPath,
+                                'sql',
                                 7,
                                 0644,
                                 true
@@ -221,12 +190,10 @@ class LoggerFactory
                     break;
                     
                 case 'operation':
-                    $logPath = $apiContext ? 
-                        'logs/operation/' . $apiContext . '/log.log' :
-                        'logs/operation/operation.log';
                     try {
+                        // 新结构：logs/operation/{date}/operation.log
                         $handler = new RotatingFileHandler(
-                            $logPath,
+                            'operation',
                             90,
                             0644,
                             true
@@ -238,12 +205,10 @@ class LoggerFactory
                     break;
                     
                 case 'access':
-                    $logPath = $apiContext ? 
-                        'logs/access/' . $apiContext . '/log.log' :
-                        'logs/access/access.log';
                     try {
+                        // 新结构：logs/access/{date}/access.log
                         $handler = new RotatingFileHandler(
-                            $logPath,
+                            'access',
                             30,
                             0644,
                             true
@@ -254,10 +219,26 @@ class LoggerFactory
                     }
                     break;
                     
+                case 'cron':
+                    try {
+                        // 新结构：logs/cron/{date}/cron.log
+                        $handler = new RotatingFileHandler(
+                            'cron',
+                            30,
+                            0644,
+                            true
+                        );
+                        $logger->pushHandler(new AsyncHandler($handler, 100));
+                    } catch (\Throwable $e) {
+                        error_log('LoggerFactory cron handler init failed: ' . $e->getMessage());
+                    }
+                    break;
+                    
                 default:
                     try {
+                        // 默认：logs/error/default.log
                         $handler = new RotatingFileHandler(
-                            'logs/error/default.log',
+                            'error',
                             30,
                             0644,
                             true

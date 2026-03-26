@@ -12,6 +12,42 @@
  *   "device_name": "string (选填)"
  * }
  * 
+ * 请求示例：
+ * {
+ *   "account": "test@example.com",
+ *   "password": "123456",
+ *   "device_id": "device_12345",
+ *   "device_name": "iPhone 15"
+ * }
+ * 
+ * 成功响应示例：
+ * {
+ *   "code": 0,
+ *   "message": "登录成功",
+ *   "data": {
+ *     "token": "eyJ1c2VyX2lkIjoxLCJ0eXBlIjoyLCJleHAiOjE3NzQ4ODYzNjN9...",
+ *     "user_id": 1,
+ *     "username": "testuser",
+ *     "email": "test@example.com",
+ *     "phone": "13800138000",
+ *     "organization_name": "测试组织",
+ *     "organization_leader": "张三",
+ *     "wallet_id": 1,
+ *     "device_id": "device_12345",
+ *     "device_name": "iPhone 15",
+ *     "max_devices": 1,
+ *     "device_list": [
+ *       {
+ *         "device_id": "device_12345",
+ *         "device_name": "iPhone 15",
+ *         "login_time": "2026-03-24 10:00:00",
+ *         "last_activity": "2026-03-24 10:00:00"
+ *       }
+ *     ]
+ *   },
+ *   "timestamp": 1711267200
+ * }
+ * 
  * 错误码说明：
  * 1001 - 请求方法错误
  * 4001 - 设备 ID 不能为空
@@ -38,6 +74,8 @@ $requestLogger = LoggerFactory::getLogger('request');
 $errorLogger = LoggerFactory::getLogger('error');
 $auditLogger = LoggerFactory::getLogger('audit');
 
+
+
 // 记录请求开始
 $requestLogger->info('=== B 端用户登录请求开始 ===', [
     'method' => $_SERVER['REQUEST_METHOD'],
@@ -45,12 +83,17 @@ $requestLogger->info('=== B 端用户登录请求开始 ===', [
     'uri' => $_SERVER['REQUEST_URI'] ?? '',
 ]);
 
+
 header('Content-Type: application/json; charset=utf-8');
 
 // 只允许 POST 请求
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     $requestLogger->warning('请求方法错误', ['method' => $_SERVER['REQUEST_METHOD']]);
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
     echo json_encode([
         'code' => 1001,
         'message' => '请求方法错误',
@@ -91,6 +134,21 @@ $requestLogger->debug('请求参数', [
 // 设备 ID 不能为空
 if (empty($deviceId)) {
     $requestLogger->warning('设备 ID 为空', ['device_id' => $deviceId]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户登录失败：设备 ID 为空', [
+        'device_id' => $deviceId,
+        'reason' => '设备 ID 不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 4001,
         'message' => '设备 ID 不能为空',
@@ -103,6 +161,22 @@ if (empty($deviceId)) {
 // 参数校验
 if (empty($account)) {
     $requestLogger->warning('账号为空', ['account' => $account]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户登录失败：账号为空', [
+        'account' => $account,
+        'device_id' => $deviceId,
+        'reason' => '账号不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 4002,
         'message' => '账号不能为空',
@@ -114,6 +188,22 @@ if (empty($account)) {
 
 if (empty($password)) {
     $requestLogger->warning('密码为空', ['password' => $password]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户登录失败：密码为空', [
+        'account' => $account,
+        'device_id' => $deviceId,
+        'reason' => '密码不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 4003,
         'message' => '密码不能为空',
@@ -129,6 +219,21 @@ try {
     $requestLogger->debug('数据库连接成功');
 } catch (Exception $e) {
     $errorLogger->error('数据库连接失败', ['exception' => $e->getMessage()]);
+    
+    // 记录审计日志
+    $auditLogger->error('B 端用户登录失败：数据库连接失败', [
+        'exception' => $e->getMessage(),
+        'reason' => '数据库连接失败',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 5001,
         'message' => '数据库连接失败',
@@ -162,6 +267,23 @@ try {
     // 用户不存在或密码错误
     if (!$user || !password_verify($password, $user['password_hash'])) {
         $requestLogger->warning('登录失败：账号或密码错误', ['account' => $account]);
+        
+        // 记录审计日志
+        $auditLogger->warning('B 端用户登录失败：账号或密码错误', [
+            'account' => $account,
+            'device_id' => $deviceId,
+            'device_name' => $deviceName,
+            'reason' => '账号或密码错误',
+        ]);
+        
+        // 手动刷新异步队列
+        if (method_exists($requestLogger, 'flush')) {
+            $requestLogger->flush();
+        }
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+        
         echo json_encode([
             'code' => 4004,
             'message' => '账号或密码错误',
@@ -179,6 +301,24 @@ try {
             'username' => $user['username'],
             'reason' => $reason,
         ]);
+        
+        // 记录审计日志
+        $auditLogger->warning('B 端用户登录失败：账号已被禁用', [
+            'user_id' => $user['id'],
+            'username' => $user['username'],
+            'device_id' => $deviceId,
+            'device_name' => $deviceName,
+            'reason' => $reason,
+        ]);
+        
+        // 手动刷新异步队列
+        if (method_exists($requestLogger, 'flush')) {
+            $requestLogger->flush();
+        }
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+        
         echo json_encode([
             'code' => 4005,
             'message' => '账号已被禁用：' . $reason,
@@ -219,6 +359,26 @@ try {
                 'max_devices' => $maxDevices,
                 'current_devices' => count($deviceList),
             ]);
+            
+            // 记录审计日志
+            $auditLogger->warning('B 端用户登录失败：设备数量超限', [
+                'user_id' => $user['id'],
+                'username' => $user['username'],
+                'device_id' => $deviceId,
+                'device_name' => $deviceName,
+                'max_devices' => $maxDevices,
+                'current_devices' => count($deviceList),
+                'reason' => '设备数量已达到限制',
+            ]);
+            
+            // 手动刷新异步队列
+            if (method_exists($requestLogger, 'flush')) {
+                $requestLogger->flush();
+            }
+            if (method_exists($auditLogger, 'flush')) {
+                $auditLogger->flush();
+            }
+            
             echo json_encode([
                 'code' => 4006,
                 'message' => '登录设备数量已达到限制，最多只能登录' . $maxDevices . '个设备',
@@ -286,6 +446,15 @@ try {
         'device_id' => $deviceId,
         'device_name' => $deviceName,
     ]);
+    echo "\n";
+    
+    // 手动刷新异步队列
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
     
     // 构建成功响应
     $successResponse = [
@@ -325,6 +494,21 @@ try {
         'line' => $e->getLine(),
     ]);
     
+    // 记录审计日志
+    $auditLogger->error('B 端用户登录失败：数据库异常', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'reason' => '数据库异常',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 5001,
         'message' => '登录失败',
@@ -345,6 +529,22 @@ try {
         'file' => $e->getFile(),
         'line' => $e->getLine(),
     ]);
+    
+    // 记录审计日志
+    $auditLogger->error('B 端用户登录失败：系统异常', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'reason' => '系统异常',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
     
     echo json_encode([
         'code' => 5002,

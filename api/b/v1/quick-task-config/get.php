@@ -56,7 +56,8 @@ try {
     $config = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($config) {
-        $config['config_info'] = json_decode($config['config_info'], true);
+        $configInfo = $config['config_info'] ?? '';
+        $config['config_info'] = !empty($configInfo) ? json_decode($configInfo, true) : null;
     } else {
         $config = [];
     }

@@ -3,12 +3,62 @@
   "_description": "配置接口路径与日志文件前缀的映射关系",
   "_version": "1.0.0",
   "_log_config": {
+    "system_type": "windows",
     "base_path": {
       "windows": "d:\\github\\douyinTasksystemAPI\\logs",
       "linux": "/www/wwwlogs",
-      "auto_detect": true
+      "auto_detect": false
     },
-    "description": "日志基础路径配置，auto_detect=true 时根据操作系统自动选择"
+    "description": "日志基础路径配置，system_type 指定使用哪个系统的路径配置",
+    "directory_structure": {
+      "pattern": "{log_type}/{date}/{log_type}.log",
+      "description": "日志目录结构模式，{log_type}会被替换为日志类型(audit/request/error/sql/operation/access)，{date}会被替换为日期(20260324)",
+      "date_format": "Ymd",
+      "examples": {
+        "audit": "logs/audit/20260324/audit.log",
+        "request": "logs/request/20260324/request.log",
+        "error": "logs/error/20260324/error.log"
+      }
+    },
+    "log_types": {
+      "audit": {
+        "description": "审计日志",
+        "retention_days": 365,
+        "priority": "high"
+      },
+      "request": {
+        "description": "请求日志",
+        "retention_days": 30,
+        "priority": "high"
+      },
+      "error": {
+        "description": "错误日志",
+        "retention_days": 90,
+        "priority": "critical"
+      },
+      "sql": {
+        "description": "SQL 日志",
+        "retention_days": 7,
+        "priority": "low",
+        "production_enabled": false
+      },
+      "operation": {
+        "description": "运维日志",
+        "retention_days": 180,
+        "priority": "medium"
+      },
+      "access": {
+        "description": "访问日志",
+        "retention_days": 90,
+        "priority": "medium"
+      }
+    },
+    "log_format": {
+      "default": "line",
+      "description": "日志输出格式，line为行内输出，json为JSON格式",
+      "line_format": "[{timestamp}] {level} {message} {context}",
+      "timestamp_format": "Y-m-d H:i:s.v"
+    }
   },
   "api_routes": {
     "B 端认证接口": {
@@ -492,50 +542,5 @@
         "file": "api/upload.php"
       }
     }
-  },
-  "log_types": {
-    "request": {
-      "description": "请求日志",
-      "retention_days": 30,
-      "priority": "high"
-    },
-    "error": {
-      "description": "错误日志",
-      "retention_days": 90,
-      "priority": "critical"
-    },
-    "audit": {
-      "description": "审计日志",
-      "retention_days": 365,
-      "priority": "high"
-    },
-    "sql": {
-      "description": "SQL 日志",
-      "retention_days": 7,
-      "priority": "low",
-      "production_enabled": false
-    },
-    "operation": {
-      "description": "运维日志",
-      "retention_days": 180,
-      "priority": "medium"
-    },
-    "access": {
-      "description": "访问日志",
-      "retention_days": 90,
-      "priority": "medium"
-    },
-    "cron": {
-      "description": "定时任务日志",
-      "retention_days": 30,
-      "priority": "medium"
-    }
-  },
-  "settings": {
-    "default_log_type": "request",
-    "date_format": "Y-m-d",
-    "dir_structure": "{log_type}/{year-month}/{day}/{prefix}_{date}.log",
-    "auto_rotation": true,
-    "compression_enabled": false
   }
 }

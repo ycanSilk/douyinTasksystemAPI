@@ -41,17 +41,32 @@
  *    - b_tasks.task_doing -1, task_reviewing +1
  *    - c_user_daily_stats.submit_count +1
  *    - 用户可以继续接其他任务
+ *
+ * 错误码说明：
+ * 1001 - 请求方法错误
+ * 1002 - 数据库错误
+ * 2001 - Token无效
+ * 2002 - Token过期
+ * 4003 - 权限不足
+ * 5000 - 系统错误
+ * 9006 - 任务记录不存在或参数不匹配
+ * 9007 - 任务状态无效
+ * 9008 - 接单后超过N分钟未提交，任务已超时
+ * 9009 - 截图必须是数组格式
+ * 9010 - 截图最多3张
+ * 9011 - 至少需要提交1张截图
+ * 9012 - 任务提交失败
  */
 
 header('Content-Type: application/json; charset=utf-8');
 
-// 日志文件路径
-$logFile = 'd:\github\douyinTasksystemAPI\apierr-log.log';
+// 日志文件路径（使用相对路径，兼容不同操作系统）
+$logFile = __DIR__ . '/../../../../logs/apierr-log.log';
 
 // 确保日志目录存在
 $logDir = dirname($logFile);
 if (!is_dir($logDir)) {
-    mkdir($logDir, 0755, true);
+    @mkdir($logDir, 0755, true);
 }
 
 // 自定义日志函数
@@ -61,8 +76,8 @@ function customLog($message) {
     $logMessage = "{$timestamp} {$message}\n";
     // 输出到终端
     error_log($message);
-    // 输出到文件
-    file_put_contents($logFile, $logMessage, FILE_APPEND);
+    // 输出到文件（使用@抑制警告，确保日志写入失败不影响接口功能）
+    @file_put_contents($logFile, $logMessage, FILE_APPEND);
 }
 
 // 只允许 POST 请求
@@ -185,7 +200,7 @@ try {
 
         // 更新任务记录状态为已超时
         customLog('步骤6: 更新任务记录状态为已超时，记录ID: ' . $recordId);
-        $stmt = $db->prepare("UPDATE c_task_records SET status = 5 WHERE id = ?");
+        $stmt = $db->prepare("UPDATE c_task_records SET status = 5, update_at = NOW() WHERE id = ?");
         $stmt->execute([$recordId]);
         customLog('任务记录状态更新为已超时');
 

@@ -33,11 +33,16 @@
 require_once __DIR__ . '/../../../../core/Autoloader.php';
 
 use Core\Logger\LoggerFactory;
+use Core\Logger\LoggerRouter;
+
+// 设置当前接口上下文（必须！）
+LoggerRouter::setContext('b/v1/auth/register');
 
 // 获取日志实例
 $requestLogger = LoggerFactory::getLogger('request');
 $auditLogger = LoggerFactory::getLogger('audit');
 $errorLogger = LoggerFactory::getLogger('error');
+
 
 // 记录请求开始
 $requestLogger->info('=== B 端用户注册请求开始 ===', [
@@ -46,12 +51,28 @@ $requestLogger->info('=== B 端用户注册请求开始 ===', [
     'uri' => $_SERVER['REQUEST_URI'] ?? '',
 ]);
 
+
 header('Content-Type: application/json; charset=utf-8');
 
 // 只允许 POST 请求
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     $requestLogger->warning('请求方法错误', ['method' => $_SERVER['REQUEST_METHOD']]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：请求方法错误', [
+        'method' => $_SERVER['REQUEST_METHOD'],
+        'reason' => '请求方法错误',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 1001,
         'message' => '请求方法错误',
@@ -67,6 +88,21 @@ try {
     $requestLogger->debug('请求体内容', ['body' => $rawInput]);
 } catch (Exception $e) {
     $errorLogger->error('读取请求体失败', ['exception' => $e->getMessage()]);
+    
+    // 记录审计日志
+    $auditLogger->error('B 端用户注册失败：读取请求体失败', [
+        'exception' => $e->getMessage(),
+        'reason' => '读取请求体失败',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     $rawInput = '';
 }
 
@@ -80,6 +116,21 @@ try {
     $requestLogger->debug('数据库连接成功');
 } catch (Exception $e) {
     $errorLogger->error('数据库连接失败', ['exception' => $e->getMessage()]);
+    
+    // 记录审计日志
+    $auditLogger->error('B 端用户注册失败：数据库连接失败', [
+        'exception' => $e->getMessage(),
+        'reason' => '数据库连接失败',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 5001,
         'message' => '数据库连接失败',
@@ -110,6 +161,21 @@ $requestLogger->debug('请求参数', [
 // 参数校验
 if (empty($username)) {
     $requestLogger->warning('用户名为空', ['username' => $username]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：用户名为空', [
+        'username' => $username,
+        'reason' => '用户名不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 2001,
         'message' => '用户名不能为空',
@@ -121,6 +187,21 @@ if (empty($username)) {
 
 if (empty($email)) {
     $requestLogger->warning('邮箱为空', ['email' => $email]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：邮箱为空', [
+        'email' => $email,
+        'reason' => '邮箱不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 2002,
         'message' => '邮箱不能为空',
@@ -132,6 +213,21 @@ if (empty($email)) {
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $requestLogger->warning('邮箱格式无效', ['email' => $email]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：邮箱格式无效', [
+        'email' => $email,
+        'reason' => '邮箱格式不正确',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 2003,
         'message' => '邮箱格式不正确',
@@ -142,7 +238,21 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 if (empty($password)) {
-    $requestLogger->warning('密码为空');
+    $requestLogger->warning('密码为空', ['password' => $password]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：密码为空', [
+        'reason' => '密码不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 2004,
         'message' => '密码不能为空',
@@ -154,6 +264,21 @@ if (empty($password)) {
 
 if (empty($organizationName)) {
     $requestLogger->warning('组织名称为空', ['organization_name' => $organizationName]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：组织名称为空', [
+        'organization_name' => $organizationName,
+        'reason' => '组织名称不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 2005,
         'message' => '组织名称不能为空',
@@ -165,6 +290,21 @@ if (empty($organizationName)) {
 
 if (empty($organizationLeader)) {
     $requestLogger->warning('组织负责人名称为空', ['organization_leader' => $organizationLeader]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B 端用户注册失败：组织负责人名称为空', [
+        'organization_leader' => $organizationLeader,
+        'reason' => '组织负责人名称不能为空',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 2006,
         'message' => '组织负责人名称不能为空',
@@ -184,6 +324,22 @@ try {
     $stmt->execute([$username]);
     if ($stmt->fetch()) {
         $requestLogger->warning('用户名已被占用', ['username' => $username]);
+        
+        // 记录审计日志
+        $auditLogger->warning('B 端用户注册失败：用户名已被占用', [
+            'username' => $username,
+            'email' => $email,
+            'reason' => '用户名已被占用',
+        ]);
+        
+        // 手动刷新异步队列
+        if (method_exists($requestLogger, 'flush')) {
+            $requestLogger->flush();
+        }
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+        
         echo json_encode(['code' => 2007, 'message' => '用户名已被占用', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -195,6 +351,22 @@ try {
     $stmt->execute([$email]);
     if ($stmt->fetch()) {
         $requestLogger->warning('邮箱已被注册', ['email' => $email]);
+        
+        // 记录审计日志
+        $auditLogger->warning('B 端用户注册失败：邮箱已被注册', [
+            'username' => $username,
+            'email' => $email,
+            'reason' => '邮箱已被注册',
+        ]);
+        
+        // 手动刷新异步队列
+        if (method_exists($requestLogger, 'flush')) {
+            $requestLogger->flush();
+        }
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+        
         echo json_encode(['code' => 2008, 'message' => '邮箱已被注册', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -207,6 +379,23 @@ try {
         $stmt->execute([$phone]);
         if ($stmt->fetch()) {
             $requestLogger->warning('手机号已被注册', ['phone' => $phone]);
+            
+            // 记录审计日志
+            $auditLogger->warning('B 端用户注册失败：手机号已被注册', [
+                'username' => $username,
+                'email' => $email,
+                'phone' => $phone,
+                'reason' => '手机号已被注册',
+            ]);
+            
+            // 手动刷新异步队列
+            if (method_exists($requestLogger, 'flush')) {
+                $requestLogger->flush();
+            }
+            if (method_exists($auditLogger, 'flush')) {
+                $auditLogger->flush();
+            }
+            
             echo json_encode(['code' => 2009, 'message' => '手机号已被注册', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
             exit;
         }
@@ -274,7 +463,28 @@ try {
     $db->commit();
     $requestLogger->debug('事务提交成功');
     
-    // 8. 返回成功响应
+    // 8. 记录审计日志
+    $auditLogger->notice('B 端用户注册成功', [
+        'user_id' => $userId,
+        'username' => $username,
+        'email' => $email,
+        'phone' => $phone,
+        'organization_name' => $organizationName,
+        'organization_leader' => $organizationLeader,
+        'wallet_id' => $walletId,
+        'create_ip' => $createIp,
+    ]);
+    echo "\n";
+    
+    // 手动刷新异步队列
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    
+    // 9. 返回成功响应
     $requestLogger->info('B 端用户注册成功', ['user_id' => $userId, 'username' => $username]);
     $responseData = [
         'token' => $tokenData['token'],
@@ -286,7 +496,7 @@ try {
         'organization_leader' => $organizationLeader,
         'wallet_id' => $walletId
     ];
-    ;
+    
     echo json_encode([
         'code' => 0,
         'message' => '注册成功',
@@ -301,9 +511,30 @@ try {
         $requestLogger->debug('回滚数据库事务');
         $db->rollBack();
     }
-    $errorLogger->error('数据库异常', ['message' => $e->getMessage(), 'code' => $e->getCode()]);
-    ;
-    ;
+    
+    // 记录错误
+    $errorLogger->error('注册失败：数据库异常', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+    ]);
+    
+    // 记录审计日志
+    $auditLogger->error('B 端用户注册失败：数据库异常', [
+        'message' => $e->getMessage(),
+        'code' => $e->getCode(),
+        'reason' => '数据库异常',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 5001,
         'message' => '注册失败',
@@ -317,8 +548,30 @@ try {
         $requestLogger->debug('回滚数据库事务');
         $db->rollBack();
     }
-    $errorLogger->error('系统异常', ['message' => $e->getMessage()]);
-    ;
+    
+    // 记录错误
+    $errorLogger->error('注册失败：系统异常', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+    ]);
+    
+    // 记录审计日志
+    $auditLogger->error('B 端用户注册失败：系统异常', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'reason' => '系统异常',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
     echo json_encode([
         'code' => 5002,
         'message' => '注册失败',
@@ -327,4 +580,3 @@ try {
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
-

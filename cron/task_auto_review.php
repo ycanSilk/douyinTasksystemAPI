@@ -6,7 +6,7 @@
  */
 
 // 日志文件路径
-$logFile = 'd:\github\douyinTasksystemAPI\apierr-log.log';
+$logFile = __DIR__ . '/../../../../logs/apierr-log.log';
 
 // 确保日志目录存在
 $logDir = dirname($logFile);
@@ -61,8 +61,8 @@ function hasLargeGroupAgent($db, $userId, $maxLevel = 2)
 customLog('=== 自动审核任务脚本开始 ===');
 customLog('当前时间: ' . date('Y-m-d H:i:s'));
 
-// 定义自动审核时间阈值（1分钟，用于测试）
-$autoReviewThreshold = 1 * 10; // 秒
+// 定义自动审核时间阈值（5分钟，用于测试）
+$autoReviewThreshold = 5 * 60; // 秒
 $currentTime = time();
 $thresholdTime = $currentTime - $autoReviewThreshold;
 customLog('自动审核时间阈值: ' . $autoReviewThreshold . '秒');

@@ -285,7 +285,7 @@ try {
             $acceptedAt = $record['accepted_at'];
 
             // 1. 更新超时任务记录状态为5（已超时）
-            $updateStmt = $db->prepare("UPDATE c_task_records SET status = 5 WHERE id = ? AND status = 1");
+            $updateStmt = $db->prepare("UPDATE c_task_records SET status = 5, update_at = NOW() WHERE id = ? AND status = 1");
             $updateStmt->execute([$recordId]);
 
             if ($updateStmt->rowCount() > 0) {

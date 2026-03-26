@@ -91,6 +91,10 @@ class Logger implements LoggerInterface
                 return;
             }
             
+            // 默认使用行内格式（不使用 JSON 格式）
+            // 如果需要 JSON 格式，可以显式传递参数
+            $useJsonFormat = false;
+            
             $record = [
                 'timestamp' => date('c'),
                 'datetime' => new \DateTime(),
@@ -115,7 +119,7 @@ class Logger implements LoggerInterface
             // 写入所有处理器
             foreach ($this->handlers as $handler) {
                 try {
-                    $handler->handle($record);
+                    $handler->handle($record, $useJsonFormat);
                 } catch (\Throwable $e) {
                     // 单个处理器失败不影响其他处理器
                     error_log('Logger handler failed: ' . $e->getMessage());
@@ -239,5 +243,25 @@ class Logger implements LoggerInterface
     public function emergency(string $message, array $context = []): void
     {
         $this->log(self::EMERGENCY, $message, $context);
+    }
+    
+    /**
+     * 刷新所有处理器的队列
+     * 
+     * 用于在脚本退出前确保所有日志都已写入
+     * 
+     * @return void
+     */
+    public function flush(): void
+    {
+        try {
+            foreach ($this->handlers as $handler) {
+                if (method_exists($handler, 'flush')) {
+                    $handler->flush();
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('Logger flush failed: ' . $e->getMessage());
+        }
     }
 }

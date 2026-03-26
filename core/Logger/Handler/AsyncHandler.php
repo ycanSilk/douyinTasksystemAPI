@@ -26,6 +26,11 @@ class AsyncHandler
     private array $queue = [];
     
     /**
+     * @var array 是否使用 JSON 格式的队列
+     */
+    private array $useJsonFormatQueue = [];
+    
+    /**
      * 构造函数
      * 
      * @param mixed $handler 内部处理器
@@ -44,12 +49,14 @@ class AsyncHandler
      * 处理日志记录（先放入队列）
      * 
      * @param array $record 日志记录
+     * @param bool $useJsonFormat 是否使用 JSON 格式（默认 true）
      * @return void
      */
-    public function handle(array $record): void
+    public function handle(array $record, bool $useJsonFormat = true): void
     {
         try {
             $this->queue[] = $record;
+            $this->useJsonFormatQueue[] = $useJsonFormat;
             
             // 队列满了就刷新
             if (count($this->queue) >= $this->queueLimit) {
@@ -72,15 +79,17 @@ class AsyncHandler
         }
         
         try {
-            foreach ($this->queue as $record) {
+            foreach ($this->queue as $index => $record) {
                 try {
-                    $this->handler->handle($record);
+                    $useJsonFormat = $this->useJsonFormatQueue[$index] ?? true;
+                    $this->handler->handle($record, $useJsonFormat);
                 } catch (\Throwable $e) {
                     error_log('AsyncHandler flush handler failed: ' . $e->getMessage());
                 }
             }
             
             $this->queue = [];
+            $this->useJsonFormatQueue = [];
         } catch (\Throwable $e) {
             error_log('AsyncHandler flush failed: ' . $e->getMessage());
         }

@@ -1,0 +1,1190 @@
+[2026-03-26 11:22:34.870] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 11:22:34.879] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 11:22:34.879] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 11:22:34.903] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 11:22:34.921] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 11:22:34.921] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 11:22:34.921] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 11:22:34.921] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 11:22:34.922] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 11:22:34.986] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 11:22:34.997] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 11:22:34.997] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 11:22:35.007] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 11:22:35.009] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 11:22:35.020] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 11:22:35.022] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 11:22:35.022] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 11:22:35.022] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 11:22:35.045] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 11:22:35.046] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 11:22:35.046] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 11:22:35.047] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 11:22:35.047] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 11:22:35.047] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 11:22:35.048] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 11:22:35.048] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 11:22:35.048] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 11:22:35.049] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 11:22:35.049] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 11:22:35.053] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 11:22:39.946] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 11:22:39.946] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 11:22:39.946] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 11:22:39.961] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 11:22:39.962] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 11:22:39.962] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 11:22:39.962] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 11:22:39.962] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 11:22:39.962] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 11:22:39.963] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 11:22:39.964] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 11:22:39.964] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 11:22:39.964] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 11:22:39.964] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 11:22:39.968] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 11:22:39.969] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 11:22:39.970] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 11:22:39.970] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 11:22:39.992] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 11:22:39.993] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 11:22:39.994] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 11:22:39.994] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 11:22:39.994] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 11:22:39.994] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 11:22:39.995] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 11:22:39.995] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 11:22:39.995] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 11:22:39.996] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 11:22:39.996] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 11:22:40.002] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 11:22:46.459] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 11:22:46.459] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 11:22:46.459] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 11:22:46.471] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 11:22:46.472] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 11:22:46.473] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 11:22:46.473] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 11:22:46.473] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 11:22:46.473] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 11:22:46.474] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 11:22:46.474] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 11:22:46.474] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 11:22:46.475] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 11:22:46.475] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 11:22:46.479] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:09:14.006] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:09:14.006] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:09:14.006] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:09:14.008] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:09:14.009] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:09:14.009] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:09:14.010] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:09:14.010] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:09:14.010] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:09:14.011] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:09:14.012] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:09:14.012] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:09:14.013] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:09:14.013] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:09:14.018] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:09:14.020] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:09:14.020] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:09:14.020] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:09:14.021] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:09:14.022] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:09:14.022] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:09:14.022] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:09:14.022] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:09:14.022] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:09:14.023] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:09:14.024] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:09:14.024] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:09:14.024] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:09:14.024] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:09:14.029] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:09:42.334] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:09:42.334] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:09:42.334] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:09:42.335] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:09:42.335] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:09:42.336] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:09:42.336] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:09:42.336] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:09:42.336] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:09:42.337] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:09:42.337] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:09:42.337] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:09:42.337] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:09:42.337] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:09:42.341] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:10:12.339] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:10:12.339] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:10:12.339] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:10:12.340] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:10:12.341] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:10:12.341] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:10:12.341] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:10:12.341] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:10:12.341] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:10:12.342] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:10:12.342] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:10:12.342] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:10:12.343] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:10:12.343] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:10:12.347] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:10:33.188] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:10:33.189] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:10:33.189] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:10:33.200] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:10:33.201] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:10:33.201] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:10:33.201] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:10:33.201] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:10:33.201] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:10:33.202] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:10:33.203] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:10:33.203] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:10:33.203] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:10:33.203] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:10:33.207] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:10:33.208] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:10:33.208] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:10:33.208] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:10:33.232] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:10:33.233] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:10:33.233] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:10:33.234] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:10:33.234] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:10:33.234] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:10:33.234] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:10:33.235] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:10:33.235] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:10:33.235] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:10:33.235] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:10:33.240] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:11:03.328] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:11:03.328] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:11:03.328] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:11:03.329] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:11:03.330] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:11:03.330] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:11:03.330] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:11:03.330] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:11:03.330] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:11:03.331] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:11:03.332] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:11:03.332] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:11:03.332] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:11:03.332] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:11:03.336] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:11:33.333] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:11:33.333] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:11:33.333] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:11:33.350] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:11:33.351] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:11:33.351] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:11:33.352] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:11:33.352] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:11:33.352] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:11:33.352] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:11:33.353] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:11:33.353] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:11:33.353] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:11:33.353] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:11:33.358] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:12:03.333] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:12:03.333] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:12:03.333] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:12:03.334] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:12:03.335] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:12:03.335] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:12:03.335] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:12:03.335] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:12:03.335] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:12:03.336] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:12:03.336] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:12:03.336] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:12:03.337] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:12:03.337] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:12:03.341] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:12:33.329] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:12:33.329] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:12:33.329] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:12:33.349] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:12:33.350] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:12:33.350] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:12:33.351] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:12:33.351] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:12:33.351] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:12:33.352] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:12:33.352] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:12:33.352] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:12:33.353] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:12:33.353] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:12:33.357] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:12:53.864] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:12:53.864] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:12:53.864] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:12:53.886] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:12:53.887] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:12:53.887] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:12:53.888] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:12:53.888] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:12:53.888] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:12:53.888] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:12:53.889] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:12:53.889] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:12:53.889] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:12:53.889] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:12:53.894] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:12:53.895] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:12:53.895] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:12:53.895] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:12:53.917] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:12:53.918] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:12:53.918] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:12:53.919] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:12:53.919] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:12:53.919] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:12:53.919] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:12:53.920] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:12:53.920] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:12:53.920] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:12:53.920] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:12:53.926] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:54:06.837] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:54:06.838] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:54:06.838] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:54:06.862] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:54:06.863] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:54:06.863] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:54:06.864] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:54:06.864] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:54:06.864] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:54:06.864] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:54:06.865] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:54:06.865] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:54:06.865] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:54:06.866] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:54:06.871] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 12:54:06.873] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 12:54:06.873] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 12:54:06.873] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 12:54:06.875] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 12:54:06.876] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 12:54:06.876] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 12:54:06.876] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 12:54:06.876] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 12:54:06.876] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 12:54:06.877] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 12:54:06.877] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 12:54:06.878] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 12:54:06.878] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 12:54:06.879] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 12:54:06.883] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:01:50.627] [request] INFO === C端用户更新新手指引状态接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/users/update-guide.php"} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 52
+[2026-03-26 13:01:50.655] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 79
+[2026-03-26 13:12:28.532] [request] INFO === C端用户更新新手指引状态接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/users/update-guide.php"} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 52
+[2026-03-26 13:12:28.547] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 79
+[2026-03-26 13:12:28.551] [request] DEBUG 用户认证成功 - {"user_id":134} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 96
+[2026-03-26 13:12:28.551] [request] DEBUG 查询用户新手指引状态 - {"user_id":134} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 111
+[2026-03-26 13:12:28.551] [request] DEBUG 更新新手指引状态 - {"user_id":134} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 142
+[2026-03-26 13:12:28.562] [request] INFO 新手指引状态更新成功 - {"user_id":134} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 147
+[2026-03-26 13:12:29.611] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:12:29.611] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:12:29.611] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:12:29.612] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:12:29.613] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:12:29.613] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:12:29.613] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:12:29.613] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:12:29.613] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:12:29.614] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:12:29.614] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:12:29.614] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:12:29.615] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:12:29.615] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:12:29.620] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:12:29.622] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:12:29.622] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:12:29.622] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:12:29.640] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:12:29.641] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:12:29.641] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:12:29.642] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:12:29.642] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:12:29.642] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:12:29.642] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:12:29.643] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:12:29.643] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:12:29.644] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:12:29.644] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:12:29.649] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:13:02.831] [request] INFO === C端用户更新新手指引状态接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/users/update-guide.php"} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 52
+[2026-03-26 13:13:02.856] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 79
+[2026-03-26 13:13:02.857] [request] DEBUG 用户认证成功 - {"user_id":135} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 96
+[2026-03-26 13:13:02.857] [request] DEBUG 查询用户新手指引状态 - {"user_id":135} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 111
+[2026-03-26 13:13:02.858] [request] DEBUG 更新新手指引状态 - {"user_id":135} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 142
+[2026-03-26 13:13:02.867] [request] INFO 新手指引状态更新成功 - {"user_id":135} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 147
+[2026-03-26 13:13:03.214] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:13:03.215] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:13:03.215] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:13:03.228] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:13:03.229] [request] DEBUG 认证成功 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:13:03.230] [request] DEBUG 查询用户新手状态 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:13:03.230] [request] DEBUG 请求参数 - {"user_id":135,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:13:03.230] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:13:03.230] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:13:03.244] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:13:03.244] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:13:03.244] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:13:03.244] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:13:03.245] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:13:03.250] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:13:03.251] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:13:03.251] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:13:03.251] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:13:03.276] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:13:03.277] [request] DEBUG 认证成功 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:13:03.277] [request] DEBUG 查询用户新手状态 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:13:03.278] [request] DEBUG 请求参数 - {"user_id":135,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:13:03.278] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:13:03.278] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:13:03.278] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:13:03.279] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:13:03.279] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:13:03.279] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:13:03.279] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:13:03.285] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:13:19.022] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:13:19.022] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:13:19.022] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:13:19.023] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:13:19.023] [request] DEBUG 认证成功 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:13:19.024] [request] DEBUG 查询用户新手状态 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:13:19.024] [request] DEBUG 请求参数 - {"user_id":135,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:13:19.024] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:13:19.024] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:13:19.025] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:13:19.025] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:13:19.025] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:13:19.025] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:13:19.026] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:13:19.031] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:13:19.032] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:13:19.032] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:13:19.032] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:13:19.048] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:13:19.049] [request] DEBUG 认证成功 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:13:19.049] [request] DEBUG 查询用户新手状态 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:13:19.050] [request] DEBUG 请求参数 - {"user_id":135,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:13:19.050] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:13:19.050] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:13:19.051] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:13:19.051] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:13:19.051] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:13:19.051] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:13:19.052] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:13:19.056] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:13:49.326] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:13:49.326] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:13:49.326] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:13:49.327] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:13:49.328] [request] DEBUG 认证成功 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:13:49.328] [request] DEBUG 查询用户新手状态 - {"user_id":135} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:13:49.328] [request] DEBUG 请求参数 - {"user_id":135,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:13:49.328] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:13:49.328] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:13:49.329] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:13:49.330] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:13:49.330] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:13:49.330] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:13:49.330] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:13:49.334] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:27:44.457] [request] INFO === C端用户更新新手指引状态接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/users/update-guide.php"} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 52
+[2026-03-26 13:27:44.458] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 79
+[2026-03-26 13:27:44.459] [request] DEBUG 用户认证成功 - {"user_id":136} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 96
+[2026-03-26 13:27:44.459] [request] DEBUG 查询用户新手指引状态 - {"user_id":136} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 111
+[2026-03-26 13:27:44.459] [request] DEBUG 更新新手指引状态 - {"user_id":136} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 142
+[2026-03-26 13:27:44.469] [request] INFO 新手指引状态更新成功 - {"user_id":136} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 147
+[2026-03-26 13:27:46.310] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:27:46.310] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:27:46.310] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:27:46.311] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:27:46.312] [request] DEBUG 认证成功 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:27:46.312] [request] DEBUG 查询用户新手状态 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:27:46.312] [request] DEBUG 请求参数 - {"user_id":136,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:27:46.312] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:27:46.312] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:27:46.313] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:27:46.314] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:27:46.314] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:27:46.314] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:27:46.314] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:27:46.320] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:27:46.322] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:27:46.322] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:27:46.322] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:27:46.337] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:27:46.339] [request] DEBUG 认证成功 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:27:46.339] [request] DEBUG 查询用户新手状态 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:27:46.339] [request] DEBUG 请求参数 - {"user_id":136,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:27:46.339] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:27:46.339] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:27:46.340] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:27:46.340] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:27:46.340] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:27:46.341] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:27:46.341] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:27:46.346] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:27:58.180] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:27:58.180] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:27:58.180] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:27:58.190] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:27:58.191] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:27:58.191] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:27:58.191] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:27:58.191] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:27:58.191] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:27:58.192] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:27:58.192] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:27:58.192] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:27:58.192] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:27:58.192] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:27:58.198] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:27:58.199] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:27:58.199] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:27:58.199] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:27:58.200] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:27:58.201] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:27:58.201] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:27:58.202] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:27:58.202] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:27:58.202] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:27:58.203] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:27:58.203] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:27:58.203] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:27:58.203] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:27:58.203] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:27:58.209] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:29:37.691] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:29:37.691] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:29:37.691] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:29:37.714] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:29:37.715] [request] DEBUG 认证成功 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:29:37.715] [request] DEBUG 查询用户新手状态 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:29:37.716] [request] DEBUG 请求参数 - {"user_id":136,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:29:37.716] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:29:37.716] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:29:37.716] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:29:37.717] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:29:37.717] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:29:37.717] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:29:37.717] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:29:37.723] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:29:37.724] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:29:37.724] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:29:37.725] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:29:37.745] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:29:37.746] [request] DEBUG 认证成功 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:29:37.746] [request] DEBUG 查询用户新手状态 - {"user_id":136} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:29:37.747] [request] DEBUG 请求参数 - {"user_id":136,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:29:37.747] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:29:37.747] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:29:37.748] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:29:37.748] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:29:37.748] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:29:37.748] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:29:37.748] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:29:37.754] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:30:09.616] [request] INFO === C端用户更新新手指引状态接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/users/update-guide.php"} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 52
+[2026-03-26 13:30:09.631] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 79
+[2026-03-26 13:30:09.631] [request] DEBUG 用户认证成功 - {"user_id":142} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 96
+[2026-03-26 13:30:09.632] [request] DEBUG 查询用户新手指引状态 - {"user_id":142} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 111
+[2026-03-26 13:30:09.632] [request] DEBUG 更新新手指引状态 - {"user_id":142} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 142
+[2026-03-26 13:30:09.640] [request] INFO 新手指引状态更新成功 - {"user_id":142} - request_uri: /api/c/v1/users/update-guide.php, request_method: POST, file: update-guide.php, line: 147
+[2026-03-26 13:30:10.285] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:30:10.285] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:30:10.285] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:30:10.286] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:30:10.287] [request] DEBUG 认证成功 - {"user_id":142} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:30:10.287] [request] DEBUG 查询用户新手状态 - {"user_id":142} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:30:10.287] [request] DEBUG 请求参数 - {"user_id":142,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:30:10.287] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:30:10.287] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:30:10.287] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:30:10.288] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:30:10.288] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:30:10.288] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:30:10.288] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:30:10.295] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 13:30:10.297] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 13:30:10.297] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 13:30:10.297] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 13:30:10.298] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 13:30:10.298] [request] DEBUG 认证成功 - {"user_id":142} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 13:30:10.299] [request] DEBUG 查询用户新手状态 - {"user_id":142} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 13:30:10.299] [request] DEBUG 请求参数 - {"user_id":142,"is_newbie":1,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 13:30:10.299] [request] DEBUG 选择任务表 - {"table":"b_newbie_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 13:30:10.299] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 13:30:10.300] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 13:30:10.300] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 13:30:10.300] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 13:30:10.300] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 13:30:10.300] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 13:30:10.306] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:33:45.878] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:33:45.888] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:33:45.888] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:33:45.891] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:33:45.900] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:33:45.900] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:33:45.901] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:33:45.901] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:33:45.901] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:33:45.926] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:33:45.936] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:33:45.936] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:33:45.937] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:33:45.938] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:33:45.946] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:33:45.947] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:33:45.947] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:33:45.947] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:33:45.962] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:33:45.963] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:33:45.964] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:33:45.964] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:33:45.964] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:33:45.964] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:33:45.965] [request] DEBUG 任务列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:33:45.965] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:33:45.965] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:33:45.966] [request] DEBUG 总数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:33:45.966] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:33:45.970] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:33:49.608] [request] INFO === C端接单接口请求开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/tasks/accept.php"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 76
+[2026-03-26 21:33:49.608] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 108
+[2026-03-26 21:33:49.608] [request] DEBUG 请求体内容 - {"body":"{\"b_task_id\":289}"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 110
+[2026-03-26 21:33:49.626] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 120
+[2026-03-26 21:33:49.627] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 148
+[2026-03-26 21:33:49.627] [request] DEBUG 查询用户封禁状态和新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 173
+[2026-03-26 21:33:49.627] [request] DEBUG 用户新手状态 - {"is_newbie":0} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 183
+[2026-03-26 21:33:49.627] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 186
+[2026-03-26 21:33:49.627] [request] DEBUG 用户封禁状态 - {"blocked_status":0} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 189
+[2026-03-26 21:33:49.627] [request] DEBUG 校验最后一次接单时间 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 236
+[2026-03-26 21:33:49.635] [request] DEBUG 最后接单时间 - {"last_accept_time":"2026-03-25 22:31:08","time_diff":"82961秒"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 245
+[2026-03-26 21:33:49.635] [request] DEBUG 接单间隔符合要求 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 268
+[2026-03-26 21:33:49.635] [request] DEBUG 获取任务ID - {"b_task_id":289} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 272
+[2026-03-26 21:33:49.635] [request] DEBUG 校验用户是否有进行中的任务 - {"user_id":134} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 280
+[2026-03-26 21:33:49.637] [request] DEBUG 无进行中任务 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 298
+[2026-03-26 21:33:49.638] [request] DEBUG 校验用户是否已接过该任务 - {"b_task_id":289} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 300
+[2026-03-26 21:33:49.638] [request] DEBUG 非重复接单 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 319
+[2026-03-26 21:33:49.638] [request] DEBUG 查询当日统计记录 - {"user_id":134,"stat_date":"2026-03-26"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 322
+[2026-03-26 21:33:49.647] [request] DEBUG 创建当日统计记录 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 332
+[2026-03-26 21:33:49.662] [request] DEBUG 当日统计创建成功 - {"id":"102"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 341
+[2026-03-26 21:33:49.662] [request] DEBUG 驳回次数未超限 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 369
+[2026-03-26 21:33:49.662] [request] DEBUG 校验弃单次数 - {"abandon_count":0} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 371
+[2026-03-26 21:33:49.662] [request] DEBUG 弃单次数未超限 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 386
+[2026-03-26 21:33:49.662] [request] DEBUG 查询任务信息 - {"b_task_id":289,"table":"b_tasks"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 388
+[2026-03-26 21:33:49.663] [request] DEBUG 任务信息查询成功 - {"b_task_id":289} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 414
+[2026-03-26 21:33:49.663] [request] DEBUG 校验任务开放状态 - {"stage_status":1} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 441
+[2026-03-26 21:33:49.663] [request] DEBUG 任务已开放 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 455
+[2026-03-26 21:33:49.663] [request] DEBUG 校验任务状态 - {"status":1} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 457
+[2026-03-26 21:33:49.663] [request] DEBUG 任务状态正常 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 471
+[2026-03-26 21:33:49.663] [request] DEBUG 任务剩余数量 - {"remaining":1,"total":1,"done":0,"doing":0,"reviewing":0} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 478
+[2026-03-26 21:33:49.663] [request] DEBUG 任务有剩余名额 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 498
+[2026-03-26 21:33:49.663] [request] DEBUG 解析推荐评论 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 500
+[2026-03-26 21:33:49.663] [request] DEBUG 推荐评论分配成功 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 507
+[2026-03-26 21:33:49.663] [request] DEBUG 开启数据库事务 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 510
+[2026-03-26 21:33:49.664] [request] DEBUG 查询模板佣金配置 - {"template_id":1} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 513
+[2026-03-26 21:33:49.664] [request] DEBUG 计算佣金 - {"stage":0,"reward_amount":"100分"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 526
+[2026-03-26 21:33:49.664] [request] DEBUG 任务阶段信息 - {"stage":0,"stage_text":"上评评论"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 553
+[2026-03-26 21:33:49.664] [request] DEBUG 插入C端任务记录 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 555
+[2026-03-26 21:33:49.667] [request] DEBUG C端任务记录插入成功 - {"record_id":"148"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 574
+[2026-03-26 21:33:49.667] [request] DEBUG 查询任务task_doing - {"b_task_id":289} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 576
+[2026-03-26 21:33:49.668] [request] DEBUG 计算task_doing - {"current":0,"new":1} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 582
+[2026-03-26 21:33:49.668] [request] DEBUG 更新B端任务doing数量 - {"b_task_id":289,"new_doing":1} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 584
+[2026-03-26 21:33:49.668] [request] DEBUG B端任务更新成功 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 591
+[2026-03-26 21:33:49.668] [request] DEBUG 更新当日接单统计 - {"daily_stats_id":"102"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 593
+[2026-03-26 21:33:49.669] [request] DEBUG 接单统计更新成功 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 600
+[2026-03-26 21:33:49.669] [request] DEBUG 更新用户静态记录 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 602
+[2026-03-26 21:33:49.670] [request] DEBUG 用户静态记录更新成功 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 612
+[2026-03-26 21:33:49.670] [request] DEBUG 提交数据库事务 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 614
+[2026-03-26 21:33:49.680] [request] DEBUG 事务提交成功 - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 616
+[2026-03-26 21:33:49.693] [request] INFO 接单成功 - {"record_id":"148","b_task_id":289,"reward_amount":"1.00"} - request_uri: /api/c/v1/tasks/accept.php, request_method: POST, file: accept.php, line: 634
+[2026-03-26 21:33:49.719] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:33:49.719] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:33:49.719] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:33:49.734] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:33:49.735] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:33:49.735] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:33:49.735] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:33:49.735] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:33:49.735] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:33:49.736] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:33:49.736] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:33:49.736] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:33:49.736] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:33:49.737] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:33:49.741] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:33:52.027] [request] INFO === C端我的任务列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1"} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 66
+[2026-03-26 21:33:52.027] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 98
+[2026-03-26 21:33:52.027] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 100
+[2026-03-26 21:33:52.045] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 111
+[2026-03-26 21:33:52.046] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 139
+[2026-03-26 21:33:52.046] [request] DEBUG 请求参数 - {"user_id":134,"status":1,"page":1,"page_size":20} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 169
+[2026-03-26 21:33:52.046] [request] DEBUG 查询总记录数 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 187
+[2026-03-26 21:33:52.046] [request] DEBUG 总记录数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 195
+[2026-03-26 21:33:52.046] [request] DEBUG 查询任务记录列表 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 197
+[2026-03-26 21:33:52.047] [request] DEBUG 任务记录列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 234
+[2026-03-26 21:33:52.047] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 308
+[2026-03-26 21:33:52.050] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 328
+[2026-03-26 21:33:52.052] [request] INFO === C端我的任务列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1"} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 66
+[2026-03-26 21:33:52.052] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 98
+[2026-03-26 21:33:52.052] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 100
+[2026-03-26 21:33:52.076] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 111
+[2026-03-26 21:33:52.077] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 139
+[2026-03-26 21:33:52.077] [request] DEBUG 请求参数 - {"user_id":134,"status":1,"page":1,"page_size":20} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 169
+[2026-03-26 21:33:52.077] [request] DEBUG 查询总记录数 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 187
+[2026-03-26 21:33:52.077] [request] DEBUG 总记录数查询成功 - {"total":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 195
+[2026-03-26 21:33:52.078] [request] DEBUG 查询任务记录列表 - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 197
+[2026-03-26 21:33:52.078] [request] DEBUG 任务记录列表查询成功 - {"count":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 234
+[2026-03-26 21:33:52.078] [request] DEBUG 任务列表格式化完成 - {"count":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 308
+[2026-03-26 21:33:52.082] [request] INFO C端获取任务列表成功 - {"total":1,"returned_count":1} - request_uri: /api/c/v1/tasks/my-tasks.php?page=1&size=20&status=1, request_method: GET, file: my-tasks.php, line: 328
+[2026-03-26 21:34:13.169] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:34:13.169] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:34:13.169] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:34:13.170] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:34:13.171] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:34:13.171] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:34:13.171] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:34:13.171] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:34:13.171] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:34:13.172] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:34:13.172] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:34:13.172] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:34:13.173] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:34:13.173] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:34:13.177] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:34:13.178] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:34:13.178] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:34:13.178] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:34:13.179] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:34:13.180] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:34:13.180] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:34:13.180] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:34:13.180] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:34:13.180] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:34:13.181] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:34:13.181] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:34:13.181] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:34:13.182] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:34:13.182] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:34:13.186] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:34:14.417] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:34:14.417] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:34:14.418] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:34:14.418] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:34:14.419] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:34:14.419] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:34:14.419] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:34:14.419] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:34:14.419] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:34:14.420] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:34:14.420] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:34:14.420] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:34:14.421] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:34:14.421] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:34:14.425] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:34:43.319] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:34:43.319] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:34:43.319] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:34:43.320] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:34:43.321] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:34:43.321] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:34:43.321] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:34:43.322] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:34:43.322] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:34:43.322] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:34:43.322] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:34:43.322] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:34:43.323] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:34:43.323] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:34:43.327] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:35:13.326] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:35:13.326] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:35:13.327] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:35:13.347] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:35:13.348] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:35:13.349] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:35:13.349] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:35:13.349] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:35:13.349] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:35:13.350] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:35:13.350] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:35:13.350] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:35:13.351] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:35:13.351] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:35:13.355] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:35:16.951] [request] INFO === B 端用户登录请求开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/b/v1/auth/login.php"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 80
+[2026-03-26 21:35:16.951] [request] DEBUG 请求体内容 - {"body":"{\n    \"account\": \"task\",\n    \"password\": \"abc123\",\n    \"device_id\":\"123213213\",\n    \"device_name\":\"windows\"\n}"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 109
+[2026-03-26 21:35:16.951] [request] DEBUG 请求参数 - {"account":"task","password":"***","device_id":"123213213","device_name":"windows"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 127
+[2026-03-26 21:35:16.969] [request] DEBUG 数据库连接成功 - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 219
+[2026-03-26 21:35:16.969] [request] DEBUG 开始查询用户信息 - {"account":"task"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 248
+[2026-03-26 21:35:16.970] [request] DEBUG 用户查询结果 - {"found":true} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 258
+[2026-03-26 21:35:16.970] [request] DEBUG 用户基本信息 - {"user_id":9,"username":"task","status":1} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 260
+[2026-03-26 21:35:17.155] [request] DEBUG 设备限制信息 - {"max_devices":3,"current_devices":3} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 338
+[2026-03-26 21:35:17.155] [request] DEBUG 设备检查结果 - {"exists":false} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 354
+[2026-03-26 21:35:17.155] [request] WARNING 登录失败：设备数量超限 - {"user_id":9,"max_devices":3,"current_devices":3} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 357
+[2026-03-26 21:35:43.327] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:35:43.327] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:35:43.327] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:35:43.352] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:35:43.353] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:35:43.353] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:35:43.353] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:35:43.353] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:35:43.353] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:35:43.354] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:35:43.354] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:35:43.354] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:35:43.354] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:35:43.354] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:35:43.358] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:36:13.315] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:36:13.315] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:36:13.315] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:36:13.328] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:36:13.329] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:36:13.329] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:36:13.329] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:36:13.329] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:36:13.329] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:36:13.330] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:36:13.330] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:36:13.330] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:36:13.330] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:36:13.330] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:36:13.334] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:36:43.323] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:36:43.323] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:36:43.323] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:36:43.324] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:36:43.325] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:36:43.325] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:36:43.325] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:36:43.326] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:36:43.326] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:36:43.326] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:36:43.326] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:36:43.326] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:36:43.327] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:36:43.327] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:36:43.330] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:37:13.331] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:37:13.331] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:37:13.331] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:37:13.353] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:37:13.354] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:37:13.354] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:37:13.355] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:37:13.355] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:37:13.355] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:37:13.356] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:37:13.356] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:37:13.356] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:37:13.356] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:37:13.356] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:37:13.361] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:37:13.363] [request] INFO === B 端用户登录请求开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/b/v1/auth/login.php"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 80
+[2026-03-26 21:37:13.363] [request] DEBUG 请求体内容 - {"body":"{\n    \"account\": \"task\",\n    \"password\": \"abc123\",\n    \"device_id\":\"123213213\",\n    \"device_name\":\"windows\"\n}"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 109
+[2026-03-26 21:37:13.363] [request] DEBUG 请求参数 - {"account":"task","password":"***","device_id":"123213213","device_name":"windows"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 127
+[2026-03-26 21:37:13.384] [request] DEBUG 数据库连接成功 - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 219
+[2026-03-26 21:37:13.384] [request] DEBUG 开始查询用户信息 - {"account":"task"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 248
+[2026-03-26 21:37:13.387] [request] DEBUG 用户查询结果 - {"found":true} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 258
+[2026-03-26 21:37:13.387] [request] DEBUG 用户基本信息 - {"user_id":9,"username":"task","status":1} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 260
+[2026-03-26 21:37:13.574] [request] DEBUG 设备限制信息 - {"max_devices":3,"current_devices":0} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 338
+[2026-03-26 21:37:13.574] [request] DEBUG 设备信息 - {"device_info":{"device_id":"123213213","device_name":"windows","login_time":"2026-03-26 21:37:13","last_activity":"2026-03-26 21:37:13"}} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 400
+[2026-03-26 21:37:13.574] [request] DEBUG 更新后设备列表 - {"device_list":[{"device_id":"123213213","device_name":"windows","login_time":"2026-03-26 21:37:13","last_activity":"2026-03-26 21:37:13"}]} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 416
+[2026-03-26 21:37:13.574] [request] DEBUG 开始生成 Token - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 419
+[2026-03-26 21:37:13.574] [request] DEBUG Token 生成成功 - {"expired_at":"2026-04-02 21:37:13"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 421
+[2026-03-26 21:37:13.574] [request] DEBUG 开始更新用户信息到数据库 - {"user_id":9} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 424
+[2026-03-26 21:37:13.592] [request] DEBUG 数据库更新结果 - {"success":true} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 440
+[2026-03-26 21:37:13.596] [request] INFO 登录成功 - {"user_id":9,"username":"task"} - request_uri: /api/b/v1/auth/login.php, request_method: POST, file: login.php, line: 479
+[2026-03-26 21:38:03.150] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:38:03.150] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:38:03.150] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:38:03.169] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:38:03.170] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:38:03.170] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:38:03.171] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:38:03.171] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:38:03.171] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:38:03.172] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:38:03.172] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:38:03.172] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:38:03.172] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:38:03.172] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:38:03.178] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:39:02.331] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:39:02.331] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:39:02.331] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:39:02.332] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:39:02.333] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:39:02.333] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:39:02.333] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:39:02.333] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:39:02.333] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:39:02.334] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:39:02.334] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:39:02.334] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:39:02.334] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:39:02.334] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:39:02.338] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:40:02.329] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:40:02.330] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:40:02.330] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:40:02.331] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:40:02.331] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:40:02.331] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:40:02.332] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:40:02.332] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:40:02.332] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:40:02.332] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:40:02.332] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:40:02.332] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:40:02.333] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:40:02.333] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:40:02.337] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:41:02.333] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:41:02.333] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:41:02.333] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:41:02.355] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:41:02.356] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:41:02.356] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:41:02.356] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:41:02.356] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:41:02.356] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:41:02.357] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:41:02.357] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:41:02.357] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:41:02.357] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:41:02.357] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:41:02.361] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:42:02.318] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:42:02.318] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:42:02.318] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:42:02.342] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:42:02.342] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:42:02.343] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:42:02.343] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:42:02.343] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:42:02.343] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:42:02.344] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:42:02.344] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:42:02.344] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:42:02.344] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:42:02.344] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:42:02.348] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:43:02.330] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:43:02.330] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:43:02.330] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:43:02.353] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:43:02.354] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:43:02.354] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:43:02.354] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:43:02.355] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:43:02.355] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:43:02.355] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:43:02.355] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:43:02.355] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:43:02.356] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:43:02.356] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:43:02.360] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:44:02.313] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:44:02.313] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:44:02.313] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:44:02.328] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:44:02.328] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:44:02.328] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:44:02.329] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:44:02.329] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:44:02.329] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:44:02.329] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:44:02.330] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:44:02.330] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:44:02.330] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:44:02.330] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:44:02.334] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:45:02.322] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:45:02.322] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:45:02.322] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:45:02.335] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:45:02.336] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:45:02.336] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:45:02.336] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:45:02.336] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:45:02.336] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:45:02.337] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:45:02.337] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:45:02.337] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:45:02.337] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:45:02.337] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:45:02.342] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:46:02.321] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:46:02.321] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:46:02.321] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:46:02.322] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:46:02.323] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:46:02.323] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:46:02.323] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:46:02.323] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:46:02.323] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:46:02.324] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:46:02.324] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:46:02.324] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:46:02.324] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:46:02.325] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:46:02.330] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:47:02.312] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:47:02.312] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:47:02.312] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:47:02.326] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:47:02.327] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:47:02.327] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:47:02.327] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:47:02.327] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:47:02.327] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:47:02.328] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:47:02.328] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:47:02.328] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:47:02.328] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:47:02.328] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:47:02.332] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:48:02.325] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:48:02.325] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:48:02.326] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:48:02.327] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:48:02.327] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:48:02.327] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:48:02.328] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:48:02.328] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:48:02.328] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:48:02.328] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:48:02.328] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:48:02.328] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:48:02.329] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:48:02.329] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:48:02.333] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:49:02.325] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:49:02.325] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:49:02.325] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:49:02.340] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:49:02.340] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:49:02.341] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:49:02.341] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:49:02.341] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:49:02.341] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:49:02.342] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:49:02.342] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:49:02.342] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:49:02.342] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:49:02.342] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:49:02.347] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:50:02.324] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:50:02.324] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:50:02.324] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:50:02.326] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:50:02.326] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:50:02.326] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:50:02.327] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:50:02.327] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:50:02.327] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:50:02.327] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:50:02.327] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:50:02.327] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:50:02.328] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:50:02.328] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:50:02.332] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:50:26.575] [request] INFO === C端获取任务池列表请求开始 === - {"method":"GET","ip":"127.0.0.1","uri":"/api/c/v1/tasks.php"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 75
+[2026-03-26 21:50:26.575] [request] DEBUG 读取请求体 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 107
+[2026-03-26 21:50:26.575] [request] DEBUG 请求体内容 - {"body":""} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 109
+[2026-03-26 21:50:26.589] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 119
+[2026-03-26 21:50:26.590] [request] DEBUG 认证成功 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 147
+[2026-03-26 21:50:26.590] [request] DEBUG 查询用户新手状态 - {"user_id":134} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 172
+[2026-03-26 21:50:26.590] [request] DEBUG 请求参数 - {"user_id":134,"is_newbie":0,"page":1,"limit":20,"status":1} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 183
+[2026-03-26 21:50:26.590] [request] DEBUG 选择任务表 - {"table":"b_tasks"} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 193
+[2026-03-26 21:50:26.590] [request] DEBUG 查询任务列表 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 195
+[2026-03-26 21:50:26.591] [request] DEBUG 任务列表查询成功 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 233
+[2026-03-26 21:50:26.591] [request] DEBUG 用户已接任务ID - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 246
+[2026-03-26 21:50:26.591] [request] DEBUG 统计总数 - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 248
+[2026-03-26 21:50:26.592] [request] DEBUG 总数查询成功 - {"total":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 259
+[2026-03-26 21:50:26.592] [request] DEBUG 任务列表格式化完成 - {"count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 309
+[2026-03-26 21:50:26.596] [request] INFO C端获取任务列表成功 - {"total":0,"returned_count":0} - request_uri: /api/c/v1/tasks.php, request_method: GET, file: tasks.php, line: 325
+[2026-03-26 21:50:52.509] [request] INFO === 发送验证码接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/sms/send-code.php"} - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 56
+[2026-03-26 21:50:52.520] [request] DEBUG 请求体 - {"body":"{\"phone_number\":\"13794719208\"}"} - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 103
+[2026-03-26 21:50:52.520] [request] DEBUG 生成验证码 - {"code":727534,"phone_number":"13794719208"} - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 137
+[2026-03-26 21:50:52.520] [request] DEBUG 创建阿里云客户端 - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 153
+[2026-03-26 21:50:52.540] [request] DEBUG 创建发送验证码请求 - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 155
+[2026-03-26 21:50:52.542] [request] DEBUG 发送验证码 - {"phone_number":"13794719208"} - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 164
+[2026-03-26 21:50:53.366] [request] INFO 验证码发送成功 - {"phone_number":"13794719208"} - request_uri: /api/sms/send-code.php, request_method: POST, file: send-code.php, line: 170
+[2026-03-26 21:51:03.450] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 76
+[2026-03-26 21:51:03.450] [request] DEBUG 请求体 - {"body":"{\"username\":\"ces111\",\"password\":\"abc12345678\",\"phone\":\"13794719208\"}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 100
+[2026-03-26 21:51:03.451] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 120
+[2026-03-26 21:51:03.451] [request] DEBUG 客户端IP: 127.0.0.1 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 204
+[2026-03-26 21:51:03.452] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 209
+[2026-03-26 21:51:03.452] [request] DEBUG 检查用户名是否已存在 - {"username":"ces111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 223
+[2026-03-26 21:51:03.453] [request] DEBUG 用户名可用 - {"username":"ces111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 236
+[2026-03-26 21:51:03.453] [request] DEBUG 检查手机号是否已存在 - {"phone":"137****9208"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 257
+[2026-03-26 21:51:03.455] [request] DEBUG 手机号可用 - {"phone":"137****9208"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 270
+[2026-03-26 21:51:03.455] [request] DEBUG 开启事务 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 318
+[2026-03-26 21:51:03.455] [request] DEBUG 生成密码哈希 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 322
+[2026-03-26 21:51:03.642] [request] DEBUG 密码哈希生成成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 324
+[2026-03-26 21:51:03.642] [request] DEBUG 生成唯一邀请码 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 327
+[2026-03-26 21:51:03.642] [request] DEBUG 邀请码生成成功 - {"invite_code":"A7S9EZ"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 329
+[2026-03-26 21:51:03.642] [request] DEBUG 查询 C端用户最大登录设备数配置 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 332
+[2026-03-26 21:51:03.643] [request] DEBUG C端用户最大登录设备数 - {"max_devices":3} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 337
+[2026-03-26 21:51:03.643] [request] DEBUG 创建 C端用户记录 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 340
+[2026-03-26 21:51:03.643] [request] DEBUG 执行用户插入 - {"username":"ces111","email":"***","phone":"137****9208","invite_code":"A7S9EZ","parent_id":null,"create_ip":"127.0.0.1","max_devices":3} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 348
+[2026-03-26 21:51:03.644] [request] INFO 用户创建成功 - {"user_id":"151"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 368
+[2026-03-26 21:51:03.644] [request] DEBUG 创建钱包记录 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 371
+[2026-03-26 21:51:03.647] [request] DEBUG 钱包创建成功 - {"wallet_id":"85"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 375
+[2026-03-26 21:51:03.648] [request] DEBUG 用户钱包ID更新成功 - {"wallet_id":"85"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 380
+[2026-03-26 21:51:03.648] [request] DEBUG 生成 Token - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 383
+[2026-03-26 21:51:03.648] [request] DEBUG Token生成成功 - {"token":"***"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 385
+[2026-03-26 21:51:03.648] [request] DEBUG 更新用户表的 token 字段 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 388
+[2026-03-26 21:51:03.648] [request] DEBUG Token更新成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 395
+[2026-03-26 21:51:03.648] [request] DEBUG 插入用户任务静态记录 - {"user_id":"151"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 428
+[2026-03-26 21:51:03.652] [request] DEBUG 用户任务静态记录创建成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 431
+[2026-03-26 21:51:03.652] [request] DEBUG 插入用户当日统计记录 - {"user_id":"151"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 434
+[2026-03-26 21:51:03.652] [request] DEBUG 用户当日统计记录创建成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 438
+[2026-03-26 21:51:03.652] [request] DEBUG 提交事务 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 441
+[2026-03-26 21:51:03.661] [request] DEBUG 事务提交成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 443
+[2026-03-26 21:51:03.661] [request] DEBUG 注册成功，返回响应 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 457
+[2026-03-26 21:59:06.794] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:06.795] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:06.795] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:06.795] [request] WARNING 团长邀请码不能为空 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 171
+[2026-03-26 21:59:17.661] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:17.661] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:17.661] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:17.661] [request] WARNING 团长邀请码格式错误 - {"code":"CJ7KD"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 183
+[2026-03-26 21:59:21.302] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:21.302] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7K1D\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:21.302] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:21.302] [request] WARNING 团长邀请码格式错误 - {"code":"CJ7K1D"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 183
+[2026-03-26 21:59:34.989] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:34.989] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7K1D\",\n  \"develop_invite_code\": \"H4S5PB\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:34.989] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:34.989] [request] WARNING 团长邀请码格式错误 - {"code":"CJ7K1D"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 183
+[2026-03-26 21:59:37.256] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:37.256] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"\",\n  \"develop_invite_code\": \"H4S5PB\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:37.256] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:37.256] [request] WARNING 团长邀请码不能为空 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 171
+[2026-03-26 21:59:47.721] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:47.721] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"H4S5P\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:47.722] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:47.722] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 21:59:47.722] [request] WARNING 发展人邀请码格式错误 - {"code":"H4S5P"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 200
+[2026-03-26 21:59:52.162] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 21:59:52.162] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"H4S5P1\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 21:59:52.162] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 21:59:52.162] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 21:59:52.162] [request] WARNING 发展人邀请码格式错误 - {"code":"H4S5P1"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 200
+[2026-03-26 22:01:03.451] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:03.451] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"H4S5P1\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:03.451] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:03.451] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 22:01:03.451] [request] WARNING 发展人邀请码格式错误 - {"code":"H4S5P1"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 200
+[2026-03-26 22:01:08.059] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:08.059] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:08.059] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:08.059] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 22:01:08.059] [request] DEBUG 客户端IP: 127.0.0.1 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 214
+[2026-03-26 22:01:08.060] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 219
+[2026-03-26 22:01:08.060] [request] DEBUG 检查用户名是否已存在 - {"username":"ces1"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 233
+[2026-03-26 22:01:08.061] [request] WARNING 用户名已被占用 - {"username":"ces1"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 237
+[2026-03-26 22:01:11.567] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:11.567] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1111\",\n  \"email\": \"ces1@example.com\",\n  \"phone\": \"13800138001\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:11.567] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:11.567] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 22:01:11.567] [request] DEBUG 客户端IP: 127.0.0.1 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 214
+[2026-03-26 22:01:11.582] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 219
+[2026-03-26 22:01:11.582] [request] DEBUG 检查用户名是否已存在 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 233
+[2026-03-26 22:01:11.583] [request] DEBUG 用户名可用 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 246
+[2026-03-26 22:01:11.583] [request] DEBUG 检查邮箱是否已存在 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 250
+[2026-03-26 22:01:11.583] [request] WARNING 邮箱已被注册 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 254
+[2026-03-26 22:01:18.188] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:18.188] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1111\",\n  \"email\": \"ces111@example.com\",\n  \"phone\": \"13800138111\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:18.188] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:18.188] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 22:01:18.188] [request] DEBUG 客户端IP: 127.0.0.1 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 214
+[2026-03-26 22:01:18.200] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 219
+[2026-03-26 22:01:18.201] [request] DEBUG 检查用户名是否已存在 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 233
+[2026-03-26 22:01:18.201] [request] DEBUG 用户名可用 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 246
+[2026-03-26 22:01:18.201] [request] DEBUG 检查邮箱是否已存在 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 250
+[2026-03-26 22:01:18.202] [request] DEBUG 邮箱可用 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 263
+[2026-03-26 22:01:18.202] [request] DEBUG 检查手机号是否已存在 - {"phone":"138****8111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 267
+[2026-03-26 22:01:18.202] [request] DEBUG 手机号可用 - {"phone":"138****8111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 280
+[2026-03-26 22:01:18.202] [request] DEBUG 查找团长用户 - {"invite_code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 284
+[2026-03-26 22:01:18.202] [request] WARNING 团长邀请码不存在 - {"invite_code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 290
+[2026-03-26 22:01:31.361] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:31.361] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1111\",\n  \"email\": \"ces111@example.com\",\n  \"phone\": \"13800138111\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"CJ7KD3\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:31.361] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:31.361] [request] DEBUG 团长邀请码格式校验通过 - {"code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 22:01:31.361] [request] DEBUG 客户端IP: 127.0.0.1 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 214
+[2026-03-26 22:01:31.378] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 219
+[2026-03-26 22:01:31.378] [request] DEBUG 检查用户名是否已存在 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 233
+[2026-03-26 22:01:31.379] [request] DEBUG 用户名可用 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 246
+[2026-03-26 22:01:31.379] [request] DEBUG 检查邮箱是否已存在 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 250
+[2026-03-26 22:01:31.380] [request] DEBUG 邮箱可用 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 263
+[2026-03-26 22:01:31.380] [request] DEBUG 检查手机号是否已存在 - {"phone":"138****8111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 267
+[2026-03-26 22:01:31.380] [request] DEBUG 手机号可用 - {"phone":"138****8111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 280
+[2026-03-26 22:01:31.380] [request] DEBUG 查找团长用户 - {"invite_code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 284
+[2026-03-26 22:01:31.380] [request] WARNING 团长邀请码不存在 - {"invite_code":"CJ7KD3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 290
+[2026-03-26 22:01:47.684] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:47.684] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1111\",\n  \"email\": \"ces111@example.com\",\n  \"phone\": \"13800138111\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"A7S9E1\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:47.684] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:47.684] [request] WARNING 团长邀请码格式错误 - {"code":"A7S9E1"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 183
+[2026-03-26 22:01:52.110] [request] INFO === C端用户注册接口调用开始 === - {"method":"POST","ip":"127.0.0.1","uri":"/api/c/v1/auth/register.php"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 77
+[2026-03-26 22:01:52.110] [request] DEBUG 请求体 - {"body":"{\n  \"username\": \"ces1111\",\n  \"email\": \"ces111@example.com\",\n  \"phone\": \"13800138111\",\n  \"password\": \"abc123\",\n  \"captain_invite_code\": \"A7S9EZ\",\n  \"develop_invite_code\": \"\"\n}"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 101
+[2026-03-26 22:01:52.110] [request] DEBUG 开始参数校验 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 121
+[2026-03-26 22:01:52.110] [request] DEBUG 团长邀请码格式校验通过 - {"code":"A7S9EZ"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 192
+[2026-03-26 22:01:52.110] [request] DEBUG 客户端IP: 127.0.0.1 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 214
+[2026-03-26 22:01:52.129] [request] DEBUG 数据库连接成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 219
+[2026-03-26 22:01:52.130] [request] DEBUG 检查用户名是否已存在 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 233
+[2026-03-26 22:01:52.130] [request] DEBUG 用户名可用 - {"username":"ces1111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 246
+[2026-03-26 22:01:52.130] [request] DEBUG 检查邮箱是否已存在 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 250
+[2026-03-26 22:01:52.130] [request] DEBUG 邮箱可用 - {"email":"c***1@example.com"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 263
+[2026-03-26 22:01:52.131] [request] DEBUG 检查手机号是否已存在 - {"phone":"138****8111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 267
+[2026-03-26 22:01:52.131] [request] DEBUG 手机号可用 - {"phone":"138****8111"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 280
+[2026-03-26 22:01:52.131] [request] DEBUG 查找团长用户 - {"invite_code":"A7S9EZ"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 284
+[2026-03-26 22:01:52.131] [request] DEBUG 团长用户找到 - {"captain_id":151} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 301
+[2026-03-26 22:01:52.131] [request] DEBUG 开启事务 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 328
+[2026-03-26 22:01:52.132] [request] DEBUG 生成密码哈希 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 332
+[2026-03-26 22:01:52.317] [request] DEBUG 密码哈希生成成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 334
+[2026-03-26 22:01:52.318] [request] DEBUG 生成唯一邀请码 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 337
+[2026-03-26 22:01:52.318] [request] DEBUG 邀请码生成成功 - {"invite_code":"GXSKX3"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 339
+[2026-03-26 22:01:52.318] [request] DEBUG 查询 C端用户最大登录设备数配置 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 342
+[2026-03-26 22:01:52.319] [request] DEBUG C端用户最大登录设备数 - {"max_devices":3} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 347
+[2026-03-26 22:01:52.319] [request] DEBUG 创建 C端用户记录 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 350
+[2026-03-26 22:01:52.319] [request] DEBUG 执行用户插入 - {"username":"ces1111","email":"c***1@example.com","phone":"138****8111","invite_code":"GXSKX3","parent_id":151,"create_ip":"127.0.0.1","max_devices":3} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 358
+[2026-03-26 22:01:52.320] [request] INFO 用户创建成功 - {"user_id":"152"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 378
+[2026-03-26 22:01:52.320] [request] DEBUG 创建钱包记录 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 381
+[2026-03-26 22:01:52.320] [request] DEBUG 钱包创建成功 - {"wallet_id":"86"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 385
+[2026-03-26 22:01:52.321] [request] DEBUG 用户钱包ID更新成功 - {"wallet_id":"86"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 390
+[2026-03-26 22:01:52.321] [request] DEBUG 生成 Token - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 393
+[2026-03-26 22:01:52.321] [request] DEBUG Token生成成功 - {"token":"***"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 395
+[2026-03-26 22:01:52.321] [request] DEBUG 更新用户表的 token 字段 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 398
+[2026-03-26 22:01:52.322] [request] DEBUG Token更新成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 405
+[2026-03-26 22:01:52.322] [request] DEBUG 创建团队关系 - {"user_id":"152","parent_id":151} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 409
+[2026-03-26 22:01:52.340] [request] DEBUG 一级代理关系创建成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 413
+[2026-03-26 22:01:52.341] [request] DEBUG 插入用户任务静态记录 - {"user_id":"152"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 438
+[2026-03-26 22:01:52.341] [request] DEBUG 用户任务静态记录创建成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 441
+[2026-03-26 22:01:52.341] [request] DEBUG 插入用户当日统计记录 - {"user_id":"152"} - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 444
+[2026-03-26 22:01:52.342] [request] DEBUG 用户当日统计记录创建成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 448
+[2026-03-26 22:01:52.342] [request] DEBUG 提交事务 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 451
+[2026-03-26 22:01:52.355] [request] DEBUG 事务提交成功 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 453
+[2026-03-26 22:01:52.355] [request] DEBUG 注册成功，返回响应 - request_uri: /api/c/v1/auth/register.php, request_method: POST, file: register.php, line: 467

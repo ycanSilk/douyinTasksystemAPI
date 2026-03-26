@@ -89,16 +89,45 @@ LoggerRouter::setContext('b/v1/tasks/list');
 
 // 获取日志实例
 $requestLogger = LoggerFactory::getLogger('request');
+$auditLogger = LoggerFactory::getLogger('audit');
 $errorLogger = LoggerFactory::getLogger('error');
 
 // 记录请求开始
-$requestLogger->info('=== B 端任务列表请求开始 ===', [
+$requestLogger->info('B端任务列表请求开始', [
     'method' => $_SERVER['REQUEST_METHOD'],
     'ip' => $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '未知',
     'uri' => $_SERVER['REQUEST_URI'] ?? '',
 ]);
 
 header('Content-Type: application/json; charset=utf-8');
+
+// 只允许 GET 请求
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    http_response_code(405);
+    $requestLogger->warning('请求方法错误', ['method' => $_SERVER['REQUEST_METHOD']]);
+    
+    // 记录审计日志
+    $auditLogger->warning('B端用户查询任务列表失败：请求方法错误', [
+        'method' => $_SERVER['REQUEST_METHOD'],
+        'reason' => '请求方法错误',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    
+    echo json_encode([
+        'code' => 1001,
+        'message' => '请求方法错误',
+        'data' => [],
+        'timestamp' => time()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 require_once __DIR__ . '/../../../../core/Database.php';
 require_once __DIR__ . '/../../../../core/AuthMiddleware.php';
@@ -112,8 +141,12 @@ try {
     $rawInput = '';
 }
 
-// 记录 GET 参数
-$requestLogger->debug('查询参数', ['get_params' => $_GET]);
+// 记录 GET 参数（使用源字段名）
+$requestLogger->debug('查询参数', [
+    'status' => $_GET['status'] ?? null,
+    'page' => $_GET['page'] ?? null,
+    'page_size' => $_GET['page_size'] ?? null
+]);
 
 try {
     // 数据库连接
@@ -122,6 +155,21 @@ try {
         $requestLogger->debug('数据库连接成功');
     } catch (Exception $e) {
         $errorLogger->error('数据库连接失败', ['exception' => $e->getMessage()]);
+        
+        // 记录审计日志
+        $auditLogger->error('B端用户查询任务列表失败：数据库连接失败', [
+            'exception' => $e->getMessage(),
+            'reason' => '数据库连接失败',
+        ]);
+        
+        // 手动刷新异步队列
+        if (method_exists($errorLogger, 'flush')) {
+            $errorLogger->flush();
+        }
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+        
         echo json_encode([
             'code' => 5001,
             'message' => '数据库连接失败',
@@ -138,6 +186,21 @@ try {
         $requestLogger->debug('认证成功', ['user_id' => $currentUser['user_id']]);
     } catch (Exception $e) {
         $errorLogger->error('Token 认证失败', ['exception' => $e->getMessage()]);
+        
+        // 记录审计日志
+        $auditLogger->warning('B端用户查询任务列表失败：Token 认证失败', [
+            'exception' => $e->getMessage(),
+            'reason' => 'Token 认证失败',
+        ]);
+        
+        // 手动刷新异步队列
+        if (method_exists($errorLogger, 'flush')) {
+            $errorLogger->flush();
+        }
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+        
         echo json_encode([
             'code' => 4012,
             'message' => '用户认证失败',
@@ -153,8 +216,9 @@ try {
     $pageSize = isset($_GET['page_size']) ? max(1, min(100, intval($_GET['page_size']))) : 20;
     $offset = ($page - 1) * $pageSize;
     
-    // 记录请求参数
+    // 记录请求参数（使用源字段名）
     $requestLogger->debug('请求参数', [
+        'user_id' => $currentUser['user_id'],
         'status' => $status,
         'page' => $page,
         'page_size' => $pageSize,
@@ -194,97 +258,86 @@ try {
     // 3. 计算总数
     $total = $totalBTasks + $totalNewbieTasks;
     
-    // 4. 查询 b_tasks 表任务列表（分页）
+    // 3. 使用 UNION ALL 一次查询两个表，并在数据库层完成分页
+    // 注意：UNION ALL 中需要分别写完整的 SELECT 语句，但可以使用相同的参数
     $stmt = $db->prepare("
-        SELECT 
-            bt.id AS task_id,
-            bt.template_id,
-            tt.title AS template_title,
-            bt.video_url,
-            bt.deadline,
-            bt.task_count,
-            bt.task_done,
-            bt.task_doing,
-            bt.task_reviewing,
-            bt.unit_price,
-            bt.total_price,
-            bt.status,
-            bt.created_at,
-            bt.updated_at,
-            bt.completed_at,
-            tt.type AS template_type,
-            tt.stage1_title,
-            tt.stage1_price,
-            tt.stage2_title,
-            tt.stage2_price,
-            bt.stage,
-            bt.stage_status,
-            bt.combo_task_id,
-            bt.parent_task_id,
-            0 AS is_newbie
-        FROM b_tasks bt
-        INNER JOIN task_templates tt ON bt.template_id = tt.id
-        WHERE {$whereClause}
-        ORDER BY bt.created_at DESC
+        SELECT * FROM (
+            SELECT 
+                bt.id AS task_id,
+                bt.template_id,
+                tt.title AS template_title,
+                bt.video_url,
+                bt.deadline,
+                bt.task_count,
+                bt.task_done,
+                bt.task_doing,
+                bt.task_reviewing,
+                bt.unit_price,
+                bt.total_price,
+                bt.status,
+                bt.created_at,
+                bt.updated_at,
+                bt.completed_at,
+                tt.type AS template_type,
+                tt.stage1_title,
+                tt.stage1_price,
+                tt.stage2_title,
+                tt.stage2_price,
+                bt.stage,
+                bt.stage_status,
+                bt.combo_task_id,
+                bt.parent_task_id,
+                0 AS is_newbie
+            FROM b_tasks bt
+            INNER JOIN task_templates tt ON bt.template_id = tt.id
+            WHERE {$whereClause}
+            
+            UNION ALL
+            
+            SELECT 
+                bt.id AS task_id,
+                bt.template_id,
+                tt.title AS template_title,
+                bt.video_url,
+                bt.deadline,
+                bt.task_count,
+                bt.task_done,
+                bt.task_doing,
+                bt.task_reviewing,
+                bt.unit_price,
+                bt.total_price,
+                bt.status,
+                bt.created_at,
+                bt.updated_at,
+                bt.completed_at,
+                tt.type AS template_type,
+                tt.stage1_title,
+                tt.stage1_price,
+                tt.stage2_title,
+                tt.stage2_price,
+                bt.stage,
+                bt.stage_status,
+                bt.combo_task_id,
+                bt.parent_task_id,
+                1 AS is_newbie
+            FROM b_newbie_tasks bt
+            INNER JOIN task_templates tt ON bt.template_id = tt.id
+            WHERE {$whereClause}
+        ) AS combined_tasks
+        ORDER BY created_at DESC
         LIMIT ? OFFSET ?
     ");
     
-    $params[] = $pageSize;
-    $params[] = $offset;
-    $stmt->execute($params);
-    $bTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $requestLogger->debug('b_tasks 表任务列表查询成功', ['count' => count($bTasks)]);
+    // UNION ALL 的参数：第一个表的 WHERE 参数 + 第二个表的 WHERE 参数 + LIMIT + OFFSET
+    // WHERE 参数都是 b_user_id 和 status（如果有）
+    $listParams = $params; // b_user_id 和 status（如果有）
+    $listParams = array_merge($listParams, $params); // 第二个表相同的参数
+    $listParams[] = $pageSize;
+    $listParams[] = $offset;
     
-    // 5. 查询 b_newbie_tasks 表任务列表（分页）
-    $stmtNewbie = $db->prepare("
-        SELECT 
-            bt.id AS task_id,
-            bt.template_id,
-            tt.title AS template_title,
-            bt.video_url,
-            bt.deadline,
-            bt.task_count,
-            bt.task_done,
-            bt.task_doing,
-            bt.task_reviewing,
-            bt.unit_price,
-            bt.total_price,
-            bt.status,
-            bt.created_at,
-            bt.updated_at,
-            bt.completed_at,
-            tt.type AS template_type,
-            tt.stage1_title,
-            tt.stage1_price,
-            tt.stage2_title,
-            tt.stage2_price,
-            bt.stage,
-            bt.stage_status,
-            bt.combo_task_id,
-            bt.parent_task_id,
-            1 AS is_newbie
-        FROM b_newbie_tasks bt
-        INNER JOIN task_templates tt ON bt.template_id = tt.id
-        WHERE {$whereClause}
-        ORDER BY bt.created_at DESC
-        LIMIT ? OFFSET ?
-    ");
-    
-    $paramsNewbie = $params;
-    $stmtNewbie->execute($paramsNewbie);
-    $newbieTasks = $stmtNewbie->fetchAll(PDO::FETCH_ASSOC);
-    $requestLogger->debug('b_newbie_tasks 表任务列表查询成功', ['count' => count($newbieTasks)]);
-    
-    // 6. 合并两个表的结果
-    $tasks = array_merge($bTasks, $newbieTasks);
-    
-    // 7. 对合并后的结果按 created_at 降序排序
-    usort($tasks, function($a, $b) {
-        return strtotime($b['created_at']) - strtotime($a['created_at']);
-    });
-    
-    // 8. 对排序后的结果进行分页
-    $tasks = array_slice($tasks, $offset, $pageSize);
+    $stmt->execute($listParams);
+    $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $requestLogger->debug('合并查询任务列表成功', ['count' => count($tasks)]);
     
     // 9. 格式化任务列表
     $statusTexts = [
@@ -384,14 +437,31 @@ try {
     
     $requestLogger->debug('任务列表格式化完成', ['formatted_count' => count($formattedTasks)]);
     
-    // 10. 返回结果
-    $requestLogger->info('任务列表获取成功', [
+    // 10. 记录审计日志
+    $auditLogger->notice('B端用户查询任务列表成功', [
+        'user_id' => $currentUser['user_id'],
         'total' => $total,
         'page' => $page,
         'page_size' => $pageSize,
         'returned_count' => count($formattedTasks)
     ]);
     
+    // 11. 手动刷新异步队列
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
+    if (method_exists($requestLogger, 'flush')) {
+        $requestLogger->flush();
+    }
+    
+    // 12. 返回结果
+    $requestLogger->info('任务列表获取成功', [
+        'total' => $total,
+        'page' => $page,
+        'page_size' => $pageSize,
+        'returned_count' => count($formattedTasks)
+    ]);
+
     echo json_encode([
         'code' => 0,
         'message' => '获取成功',
@@ -420,6 +490,22 @@ try {
         'file' => $e->getFile(),
         'line' => $e->getLine(),
     ]);
+    
+    // 记录审计日志
+    $auditLogger->error('B端用户查询任务列表失败：系统异常', [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'reason' => '系统异常',
+    ]);
+    
+    // 手动刷新异步队列
+    if (method_exists($errorLogger, 'flush')) {
+        $errorLogger->flush();
+    }
+    if (method_exists($auditLogger, 'flush')) {
+        $auditLogger->flush();
+    }
     
     echo json_encode([
         'code' => 5002,

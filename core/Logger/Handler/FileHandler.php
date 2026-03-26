@@ -5,6 +5,7 @@ namespace Core\Logger\Handler;
  * 文件处理器
  * 
  * 将日志写入到文件
+ * 默认使用行内输出格式
  * 
  * @package Core\Logger\Handler
  */
@@ -58,26 +59,187 @@ class FileHandler
      * 处理日志记录
      * 
      * @param array $record 日志记录
+     * @param bool $useJsonFormat 是否使用 JSON 格式（默认 false，使用行内格式）
      * @return void
      */
-    public function handle(array $record): void
+    public function handle(array $record, bool $useJsonFormat = false): void
     {
-        $formatted = $this->format($record);
+        if ($useJsonFormat) {
+            // JSON 格式：数据日志（有 context）
+            $formatted = $this->formatJson($record);
+        } else {
+            // 行内格式：信息日志（默认）
+            $formatted = $this->formatLine($record);
+        }
+        
         $this->write($formatted);
+    }
+    
+    /**
+     * 格式化为行内输出格式
+     * 
+     * 示例格式：
+     * [2026-03-24 11:20:23.411] POST_SUCCESS /b/v1/auth/login.php - {"code":0,"message":"登录成功"}
+     * [Tue Mar 24 14:00:27 2026] [B端通知列表] 请求开始 - /api/b/v1/notifications/list.php
+     * 
+     * @param array $record 日志记录
+     * @return string 行内格式的日志
+     */
+    protected function formatLine(array $record): string
+    {
+        try {
+            // 获取时间戳（带毫秒）
+            $timestamp = $this->getTimestamp($record);
+            
+            // 获取日志级别名称
+            $levelName = $this->getLevelName($record['level'] ?? 200);
+            
+            // 获取消息
+            $message = $record['message'] ?? '';
+            
+            // 获取通道名称
+            $channel = $record['channel'] ?? '';
+            
+            // 构建基础格式：[timestamp] [channel] [level] message
+            $formatted = "[{$timestamp}]";
+            
+            // 如果有通道名称，添加通道
+            if (!empty($channel)) {
+                $formatted .= " [{$channel}]";
+            }
+            
+            // 添加日志级别
+            $formatted .= " {$levelName} {$message}";
+            
+            // 如果有 context 数据，添加到行尾
+            if (!empty($record['context'] ?? [])) {
+                $contextJson = json_encode($record['context'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                if ($contextJson !== false) {
+                    $formatted .= " - {$contextJson}";
+                }
+            }
+            
+            // 如果有 extra 信息，添加到行尾
+            if (!empty($record['extra'] ?? [])) {
+                $extraParts = [];
+                foreach ($record['extra'] as $key => $value) {
+                    if ($key !== 'memory_usage' && $key !== 'server') {
+                        $extraParts[] = "{$key}: {$value}";
+                    }
+                }
+                if (!empty($extraParts)) {
+                    $formatted .= ' - ' . implode(', ', $extraParts);
+                }
+            }
+            
+            return $formatted . PHP_EOL;
+        } catch (\Throwable $e) {
+            error_log('FileHandler formatLine failed: ' . $e->getMessage());
+            return date('Y-m-d H:i:s') . ' [ERROR] Failed to format log record: ' . $e->getMessage() . PHP_EOL;
+        }
+    }
+    
+    /**
+     * 获取时间戳（带毫秒）
+     * 
+     * @param array $record 日志记录
+     * @return string 时间戳字符串
+     */
+    protected function getTimestamp(array $record): string
+    {
+        try {
+            // 尝试从 record 中获取 datetime 对象
+            if (isset($record['datetime']) && $record['datetime'] instanceof \DateTimeInterface) {
+                return $record['datetime']->format('Y-m-d H:i:s.v');
+            }
+            
+            // 尝试从 record 中获取 timestamp
+            if (isset($record['timestamp'])) {
+                $timestamp = $record['timestamp'];
+                if (is_numeric($timestamp)) {
+                    // 毫秒时间戳
+                    if ($timestamp > 1000000000000) {
+                        $microseconds = $timestamp % 1000;
+                        $seconds = floor($timestamp / 1000);
+                        return date('Y-m-d H:i:s', $seconds) . '.' . sprintf('%03d', $microseconds);
+                    }
+                    // 秒时间戳
+                    return date('Y-m-d H:i:s.v', $timestamp);
+                }
+                // 字符串时间戳
+                return $timestamp;
+            }
+            
+            // 默认使用当前时间
+            $microtime = microtime(true);
+            $microseconds = sprintf('%03d', ($microtime - floor($microtime)) * 1000);
+            return date('Y-m-d H:i:s', (int)$microtime) . '.' . $microseconds;
+        } catch (\Throwable $e) {
+            return date('Y-m-d H:i:s');
+        }
+    }
+    
+    /**
+     * 获取日志级别名称
+     * 
+     * @param int $level 日志级别
+     * @return string
+     */
+    protected function getLevelName(int $level): string
+    {
+        $levels = [
+            10 => 'DEBUG',
+            20 => 'INFO',
+            30 => 'NOTICE',
+            40 => 'WARNING',
+            50 => 'ERROR',
+            60 => 'CRITICAL',
+            70 => 'ALERT',
+            80 => 'EMERGENCY',
+        ];
+        return $levels[$level] ?? 'UNKNOWN';
     }
     
     /**
      * 格式化日志记录为 JSON
      * 
      * @param array $record 日志记录
-     * @return string 格式化后的日志
+     * @return string JSON 格式的日志
      */
-    protected function format(array $record): string
+    protected function formatJson(array $record): string
     {
-        // 移除不能序列化的对象
-        $record = $this->normalize($record);
-        
-        return json_encode($record, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
+        try {
+            // 标准化数据（移除不能序列化的对象）
+            $record = $this->normalize($record);
+            
+            // 移除 datetime 对象（已经转换为 timestamp）
+            unset($record['datetime']);
+            
+            // 格式化为 JSON
+            $json = json_encode($record, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+            
+            if ($json === false) {
+                error_log('Failed to encode log record: ' . json_last_error_msg());
+                return json_encode([
+                    'timestamp' => date('c'),
+                    'channel' => $record['channel'] ?? 'unknown',
+                    'level' => $record['level'] ?? 200,
+                    'level_name' => $record['level_name'] ?? 'UNKNOWN',
+                    'message' => 'Failed to encode log record',
+                ], JSON_UNESCAPED_UNICODE);
+            }
+            
+            return $json . PHP_EOL;
+        } catch (\Throwable $e) {
+            error_log('FileHandler formatJson failed: ' . $e->getMessage());
+            return json_encode([
+                'timestamp' => date('c'),
+                'channel' => 'error',
+                'level' => 500,
+                'level_name' => 'ERROR',
+                'message' => 'Failed to format log record: ' . $e->getMessage(),
+            ], JSON_UNESCAPED_UNICODE) . PHP_EOL;
+        }
     }
     
     /**
