@@ -45,11 +45,11 @@ $input = json_decode(file_get_contents('php://input'), true);
 $maxDevices = intval($input['max_devices'] ?? 0);
 
 // 验证参数
-if ($maxDevices < 1 || $maxDevices > 10) {
+if ($maxDevices < 0) {
     http_response_code(400);
     echo json_encode([
         'code' => 1002,
-        'message' => '设备数量必须在1-10之间',
+        'message' => '设备数量不能小于0',
         'data' => [],
         'timestamp' => time()
     ], JSON_UNESCAPED_UNICODE);
@@ -68,20 +68,21 @@ try {
     // 开启事务
     $db->beginTransaction();
     
-    // 更新B端用户的最大设备数量
-    $stmt = $db->prepare("UPDATE b_users SET max_devices = ?");
-    $stmt->execute([$maxDevices]);
+    // 设置B端用户的最大设备数量为0（不限制）
+    $stmt = $db->prepare("UPDATE b_users SET max_devices = 0");
+    $stmt->execute();
     
-    // 更新 app_config 表中的配置值
-    $stmt = $db->prepare("UPDATE app_config SET config_value = ? WHERE config_key = 'b_user_login_max_devices'");
-    $stmt->execute([$maxDevices]);
+    // 更新 app_config 表中的配置值为0（不限制）
+    $stmt = $db->prepare("UPDATE app_config SET config_value = 0 WHERE config_key = 'b_user_login_max_devices'");
+    $stmt->execute();
     
     // 提交事务
     $db->commit();
     
     // 返回成功响应
     Response::success([
-        'max_devices' => $maxDevices
+        'max_devices' => 0,
+        'message' => '已设置为不限制登录设备数量'
     ], 'B端用户设备配置更新成功');
     
 } catch (PDOException $e) {

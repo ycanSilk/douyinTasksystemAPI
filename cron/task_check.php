@@ -3,13 +3,13 @@
  * 任务系统定时检测脚本
  *
  * 功能：
- * 1. 检测过期的B端任务，自动下架
+ * 1. 检测过期的B端任务（包括普通任务和新手任务），自动下架
  * 2. 检测C端超时未提交的任务，自动释放回任务池
  *
  * 执行频率：建议每分钟执行一次
  *
  * Crontab 示例：
- * * * * * * /usr/bin/php /path/to/cron/task_check.php >> /path/to/logs/task_check.log 2>&1
+ * * * * * /usr/bin/php /path/to/cron/task_check.php >> /path/to/logs/task_check.log 2>&1
  */
 
 // 设置时区
@@ -36,7 +36,7 @@ try {
     // ============================================
     log_message('正在检测过期的B端任务...');
     
-    // 查询所有进行中且已过期的任务
+    // 1.1 查询所有进行中且已过期的普通任务
     $stmt = $db->prepare("
         SELECT 
             bt.id,
@@ -50,7 +50,8 @@ try {
             bt.combo_task_id,
             bt.stage,
             tt.title as template_title,
-            bu.username as b_username
+            bu.username as b_username,
+            'normal' as task_type
         FROM b_tasks bt
         INNER JOIN task_templates tt ON bt.template_id = tt.id
         INNER JOIN b_users bu ON bt.b_user_id = bu.id
@@ -60,11 +61,39 @@ try {
     $stmt->execute([$currentTime]);
     $expiredTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // 1.2 查询所有进行中且已过期的新手任务
+    $stmt = $db->prepare("
+        SELECT 
+            bt.id,
+            bt.b_user_id,
+            bt.template_id,
+            bt.task_count,
+            bt.task_done,
+            bt.task_doing,
+            bt.task_reviewing,
+            bt.deadline,
+            bt.combo_task_id,
+            bt.stage,
+            tt.title as template_title,
+            bu.username as b_username,
+            'newbie' as task_type
+        FROM b_newbie_tasks bt
+        INNER JOIN task_templates tt ON bt.template_id = tt.id
+        INNER JOIN b_users bu ON bt.b_user_id = bu.id
+        WHERE bt.status = 1 
+        AND bt.deadline < ?
+    ");
+    $stmt->execute([$currentTime]);
+    $expiredNewbieTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // 合并普通任务和新手任务
+    $allExpiredTasks = array_merge($expiredTasks, $expiredNewbieTasks);
+    
     $successCount = 0;
     $failCount = 0;
     $notifications = []; // 收集通知，批量发送
     
-    foreach ($expiredTasks as $task) {
+    foreach ($allExpiredTasks as $task) {
         try {
             $db->beginTransaction();
             
@@ -76,10 +105,12 @@ try {
             $taskDoing = $task['task_doing'];
             $taskReviewing = $task['task_reviewing'];
             $deadlineText = date('Y-m-d H:i:s', $task['deadline']);
+            $taskType = $task['task_type'] ?? 'normal'; // 'normal' 或 'newbie'
             
             // 1. 更新任务状态为已过期 (status=0)
+            $tableName = $taskType === 'newbie' ? 'b_newbie_tasks' : 'b_tasks';
             $updateStmt = $db->prepare("
-                UPDATE b_tasks 
+                UPDATE {$tableName} 
                 SET status = 0, updated_at = NOW()
                 WHERE id = ? AND status = 1
             ");
@@ -96,10 +127,13 @@ try {
             
             // 3. 计算未完成任务数量和退款金额
             $unfinishedCount = $taskCount - $taskDone;
-            log_message("任务 #{$taskId} 未完成数量：{$unfinishedCount}");
+            $taskTypeText = $taskType === 'newbie' ? '新手任务' : '普通任务';
+            log_message("任务 #{$taskId} ({$taskTypeText}) 未完成数量：{$unfinishedCount}");
             if ($unfinishedCount > 0) {
+                // 根据任务类型选择表名
+                $priceTable = $taskType === 'newbie' ? 'b_newbie_tasks' : 'b_tasks';
                 // 查询任务的单位价格
-                $priceStmt = $db->prepare("SELECT unit_price FROM b_tasks WHERE id = ?");
+                $priceStmt = $db->prepare("SELECT unit_price FROM {$priceTable} WHERE id = ?");
                 $priceStmt->execute([$taskId]);
                 $priceInfo = $priceStmt->fetch(PDO::FETCH_ASSOC);
                 
@@ -194,7 +228,8 @@ try {
             
             // 4. 准备通知B端用户
             $completionRate = $taskCount > 0 ? round(($taskDone / $taskCount) * 100, 2) : 0;
-            $notificationContent = "您发布的任务「{$templateTitle}」已到期自动下架。\n";
+            $taskTypeText = $taskType === 'newbie' ? '新手任务' : '普通任务';
+            $notificationContent = "您发布的{$taskTypeText}「{$templateTitle}」已到期自动下架。\n";
             $notificationContent .= "任务进度：{$taskDone}/{$taskCount}（{$completionRate}%）\n";
             $notificationContent .= "截止时间：{$deadlineText}\n";
             
@@ -231,7 +266,7 @@ try {
             $db->commit();
             $successCount++;
             
-            log_message("成功：任务 #{$taskId} ({$templateTitle}) 已过期下架，完成率 {$completionRate}%");
+            log_message("成功：任务 #{$taskId} ({$templateTitle}) ({$taskTypeText}) 已过期下架，完成率 {$completionRate}%");
             
         } catch (Exception $e) {
             $db->rollBack();
@@ -240,7 +275,7 @@ try {
         }
     }
     
-    log_message("过期任务检测完成: 共 " . count($expiredTasks) . " 个，成功 {$successCount} 个，失败 {$failCount} 个");
+    log_message("过期任务检测完成: 共 " . count($allExpiredTasks) . " 个（普通任务: " . count($expiredTasks) . " 个，新手任务: " . count($expiredNewbieTasks) . " 个），成功 {$successCount} 个，失败 {$failCount} 个");
 
     // ============================================
     // 2. 检测C端超时未提交的任务，自动释放

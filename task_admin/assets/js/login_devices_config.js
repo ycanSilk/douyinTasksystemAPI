@@ -60,8 +60,8 @@ if (typeof window.LoginDevicesConfig === 'undefined') {
                 const result = await response.json();
                 
                 if (result && result.code === 0 && result.data && result.data.current_config) {
-                    const cCurrentDevices = result.data.current_config.c_user_login_max_devices || 1;
-                    const bCurrentDevices = result.data.current_config.b_user_login_max_devices || 1;
+                    const cCurrentDevices = result.data.current_config.c_user_login_max_devices || 0;
+                    const bCurrentDevices = result.data.current_config.b_user_login_max_devices || 0;
                     
                     // 更新输入框值
                     if (this.cMaxDevicesInput) {
@@ -81,10 +81,10 @@ if (typeof window.LoginDevicesConfig === 'undefined') {
                 } else {
                     // 使用默认值
                     if (this.cMaxDevicesInput) {
-                        this.cMaxDevicesInput.value = 1;
+                        this.cMaxDevicesInput.value = 0;
                     }
                     if (this.bMaxDevicesInput) {
-                        this.bMaxDevicesInput.value = 1;
+                        this.bMaxDevicesInput.value = 0;
                     }
                     
                     // 显示默认配置数量
@@ -99,10 +99,10 @@ if (typeof window.LoginDevicesConfig === 'undefined') {
                 console.error('加载配置失败:', error);
                 // 出错时使用默认值
                 if (this.cMaxDevicesInput) {
-                    this.cMaxDevicesInput.value = 1;
+                    this.cMaxDevicesInput.value = 0;
                 }
                 if (this.bMaxDevicesInput) {
-                    this.bMaxDevicesInput.value = 1;
+                    this.bMaxDevicesInput.value = 0;
                 }
                 
                 // 显示默认配置数量
@@ -124,8 +124,8 @@ if (typeof window.LoginDevicesConfig === 'undefined') {
                 const input = type === 'c' ? this.cMaxDevicesInput : this.bMaxDevicesInput;
                 const maxDevices = parseInt(input.value);
                 
-                if (isNaN(maxDevices) || maxDevices < 1 || maxDevices > 10) {
-                    this.showMessage('设备数量必须在1-10之间', 'error');
+                if (isNaN(maxDevices) > 10) {
+                    this.showMessage('设备数量不能大于10', 'error');
                     return;
                 }
                 

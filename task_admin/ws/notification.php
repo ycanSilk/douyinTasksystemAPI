@@ -45,7 +45,7 @@ class WebSocketServer {
         
         // 绑定到本地地址和端口
         $address = '0.0.0.0';
-        $port = 8080;
+        $port = 9999;
         
         if (!socket_bind($this->server, $address, $port)) {
             die('绑定 socket 失败: ' . socket_strerror(socket_last_error()));
@@ -186,7 +186,7 @@ class WebSocketServer {
         try {
             // 调用 detect.php 接口获取真实的审核任务数据
             // 使用正确的HTTP服务器端口（8000）
-            $url = 'http://localhost:8000/task_admin/api/admin_notifications/detect.php';
+            $url = 'http://localhost:28806/task_admin/api/admin_notifications/detect.php';
             
             // 添加WebSocket服务器标识
             $url .= '?ws_server=true';

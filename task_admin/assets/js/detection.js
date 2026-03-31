@@ -81,7 +81,7 @@ if (typeof window.WebSocketManager === 'undefined') {
     connect() {
         try {
             // 直接使用固定的WebSocket URL
-            const wsUrl = 'ws://localhost:8080';
+            const wsUrl = 'ws://localhost:9999';
             
             // 创建WebSocket连接
             this.socket = new WebSocket(wsUrl);

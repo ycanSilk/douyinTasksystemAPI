@@ -64,13 +64,13 @@ try {
     $stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = 'c_user_login_max_devices'");
     $stmt->execute();
     $cUserMaxDevices = $stmt->fetchColumn();
-    $cUserMaxDevices = $cUserMaxDevices ? (int)$cUserMaxDevices : 1; // 默认值为1
+    $cUserMaxDevices = $cUserMaxDevices ? (int)$cUserMaxDevices : 0; // 默认值为1
     
     // 查询 B端用户最大登录设备数配置
     $stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = 'b_user_login_max_devices'");
     $stmt->execute();
     $bUserMaxDevices = $stmt->fetchColumn();
-    $bUserMaxDevices = $bUserMaxDevices ? (int)$bUserMaxDevices : 1; // 默认值为1
+    $bUserMaxDevices = $bUserMaxDevices ? (int)$bUserMaxDevices : 0; // 默认值为1
     
     // 返回成功响应
     Response::success([
