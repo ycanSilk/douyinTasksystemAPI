@@ -493,7 +493,7 @@ try {
             wallet_id, user_id, username, user_type, type,
             amount, before_balance, after_balance,
             related_type, related_id, remark
-        ) VALUES (?, ?, ?, 1, 2, ?, ?, ?, 'withdraw', 0, ?)
+        ) VALUES (?, ?, ?, 1, 2, ?, ?, ?, '提现', 0, ?)
     ");
 
     $stmt->execute([

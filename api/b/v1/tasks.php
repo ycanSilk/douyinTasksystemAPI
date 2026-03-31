@@ -618,7 +618,7 @@ try {
             wallet_id, user_id, username, user_type, type, 
             amount, before_balance, after_balance, 
             related_type, related_id, task_types, task_types_text, remark
-        ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, 'task', ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, 2, 2, ?, ?, ?, '任务发布', ?, ?, ?, ?)
     ");
     $stmt->execute([
         $bUser['wallet_id'],

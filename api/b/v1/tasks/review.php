@@ -51,11 +51,6 @@
  *       "agent_amount": "0.50",
  *       "second_agent_amount": "0.30"
  *     },
- *     "newbie_info": {
- *       "is_newbie": true,
- *       "completed_tasks": 5,
- *       "is_promoted": true
- *     },
  *     "reviewed_at": "2026-03-25 10:30:00"
  *   },
  *   "timestamp": 1711267200
@@ -375,97 +370,49 @@ try {
         
         // 8. 更新B端任务统计
         $requestLogger->debug('步骤8: 更新B端任务统计，任务ID: ' . $bTaskId);
-        // 先检查是普通任务还是新手任务
-        $stmt = $db->prepare("SELECT id FROM b_tasks WHERE id = ?");
+        // 先检查当前 task_reviewing 和 task_done 值
+        $stmt = $db->prepare("SELECT task_reviewing, task_done FROM b_tasks WHERE id = ?");
         $stmt->execute([$bTaskId]);
-        $isNormalTask = $stmt->fetch(PDO::FETCH_ASSOC) !== false;
-        $requestLogger->debug('任务类型: ' . ($isNormalTask ? '普通任务' : '新手任务'));
+        $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($isNormalTask) {
-            // 更新普通任务统计
-            $requestLogger->debug('更新普通任务统计');
-            // 先检查当前 task_reviewing 和 task_done 值
-            $stmt = $db->prepare("SELECT task_reviewing, task_done FROM b_tasks WHERE id = ?");
-            $stmt->execute([$bTaskId]);
-            $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            // 计算新的 task_reviewing 和 task_done 值
-            $newTaskReviewing = max((int)$taskInfo['task_reviewing'] - 1, 0);
-            $newTaskDone = (int)$taskInfo['task_done'] + 1;
-            $requestLogger->debug('当前 task_reviewing: ' . $taskInfo['task_reviewing'] . ', 新值：' . $newTaskReviewing);
-            $requestLogger->debug('当前 task_done: ' . $taskInfo['task_done'] . ', 新值：' . $newTaskDone);
-            
-            // 更新任务统计
-            $stmt = $db->prepare("                UPDATE b_tasks 
-                SET task_reviewing = ?, task_done = ?
+        // 计算新的 task_reviewing 和 task_done 值
+        $newTaskReviewing = max((int)$taskInfo['task_reviewing'] - 1, 0);
+        $newTaskDone = (int)$taskInfo['task_done'] + 1;
+        $requestLogger->debug('当前 task_reviewing: ' . $taskInfo['task_reviewing'] . ', 新值：' . $newTaskReviewing);
+        $requestLogger->debug('当前 task_done: ' . $taskInfo['task_done'] . ', 新值：' . $newTaskDone);
+        
+        // 更新任务统计
+        $stmt = $db->prepare("
+            UPDATE b_tasks 
+            SET task_reviewing = ?, task_done = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$newTaskReviewing, $newTaskDone, $bTaskId]);
+        $requestLogger->debug('任务统计更新成功');
+        
+        // 8.1 检查任务是否全部完成，如果完成则更新状态为"已完成"
+        $requestLogger->debug('检查任务是否全部完成');
+        $stmt = $db->prepare("
+            SELECT task_count, task_done
+            FROM b_tasks 
+            WHERE id = ?
+        ");
+        $stmt->execute([$bTaskId]);
+        $taskProgress = $stmt->fetch(PDO::FETCH_ASSOC);
+        $requestLogger->debug('当前任务完成数: ' . $taskProgress['task_done'] . ', 总任务数: ' . $taskProgress['task_count']);
+        
+        if ($taskProgress && (int)$taskProgress['task_done'] >= (int)$taskProgress['task_count']) {
+            // 任务全部完成，更新状态为已完成(status=2)
+            $requestLogger->debug('任务全部完成，更新状态为已完成');
+            $stmt = $db->prepare("
+                UPDATE b_tasks 
+                SET status = 2, stage_status = 2, completed_at = ?
                 WHERE id = ?
             ");
-            $stmt->execute([$newTaskReviewing, $newTaskDone, $bTaskId]);
-            $requestLogger->debug('普通任务统计更新成功');
-            
-            // 8.1 检查任务是否全部完成，如果完成则更新状态为"已完成"
-            $requestLogger->debug('检查任务是否全部完成');
-            $stmt = $db->prepare("                SELECT task_count, task_done
-                FROM b_tasks 
-                WHERE id = ?
-            ");
-            $stmt->execute([$bTaskId]);
-            $taskProgress = $stmt->fetch(PDO::FETCH_ASSOC);
-            $requestLogger->debug('当前任务完成数: ' . $taskProgress['task_done'] . ', 总任务数: ' . $taskProgress['task_count']);
-            
-            if ($taskProgress && (int)$taskProgress['task_done'] >= (int)$taskProgress['task_count']) {
-                // 任务全部完成，更新状态为已完成(status=2)
-                $requestLogger->debug('任务全部完成，更新状态为已完成');
-                $stmt = $db->prepare("                    UPDATE b_tasks 
-                    SET status = 2, stage_status = 2, completed_at = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([$reviewedAt, $bTaskId]);
-                $requestLogger->debug('任务状态更新为已完成');
-            } else {
-                $requestLogger->debug('任务未全部完成，当前完成: ' . $taskProgress['task_done'] . ', 总任务数: ' . $taskProgress['task_count']);
-            }
+            $stmt->execute([$reviewedAt, $bTaskId]);
+            $requestLogger->debug('任务状态更新为已完成');
         } else {
-            // 更新新手任务统计
-            $requestLogger->debug('更新新手任务统计');
-            // 先检查当前task_reviewing值
-            $stmt = $db->prepare("SELECT task_reviewing FROM b_newbie_tasks WHERE id = ?");
-            $stmt->execute([$bTaskId]);
-            $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            // 计算新的task_reviewing值
-            $newTaskReviewing = max((int)$taskInfo['task_reviewing'] - 1, 0);
-            $requestLogger->debug('当前task_reviewing: ' . $taskInfo['task_reviewing'] . ', 新值: ' . $newTaskReviewing);
-            
-            // 更新任务统计
-            $stmt = $db->prepare("                UPDATE b_newbie_tasks 
-                SET task_reviewing = ?, task_done = task_done + 1
-                WHERE id = ?
-            ");
-            $stmt->execute([$newTaskReviewing, $bTaskId]);
-            $requestLogger->debug('新手任务统计更新成功');
-            
-            // 8.1 检查任务是否全部完成，如果完成则更新状态为"已完成"
-            $requestLogger->debug('检查任务是否全部完成');
-            $stmt = $db->prepare("                SELECT task_count, task_done
-                FROM b_newbie_tasks 
-                WHERE id = ?
-            ");
-            $stmt->execute([$bTaskId]);
-            $taskProgress = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($taskProgress && (int)$taskProgress['task_done'] >= (int)$taskProgress['task_count']) {
-                // 任务全部完成，更新状态为已完成(status=2)
-                $requestLogger->debug('任务全部完成，更新状态为已完成');
-                $stmt = $db->prepare("                    UPDATE b_newbie_tasks 
-                    SET status = 2, stage_status = 2, completed_at = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([$reviewedAt, $bTaskId]);
-                $requestLogger->debug('任务状态更新为已完成');
-            } else {
-                $requestLogger->debug('任务未全部完成，当前完成: ' . $taskProgress['task_done'] . ', 总任务数: ' . $taskProgress['task_count']);
-            }
+            $requestLogger->debug('任务未全部完成，当前完成: ' . $taskProgress['task_done'] . ', 总任务数: ' . $taskProgress['task_count']);
         }
         
         // 8.5 检查组合任务是否需要开放第二阶段
@@ -517,7 +464,7 @@ try {
         }
         
         // 9. 更新当日统计
-        $stmt = $db->prepare(" 
+        $stmt = $db->prepare("
             UPDATE c_user_daily_stats 
             SET approved_count = approved_count + 1 
             WHERE id = ?
@@ -536,23 +483,16 @@ try {
         $stmt->execute([$bTaskId]);
         $bTaskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // 如果b_tasks表中没有记录，查询b_newbie_tasks表
         if (!$bTaskInfo) {
-            $stmt = $db->prepare("SELECT template_id, stage, unit_price FROM b_newbie_tasks WHERE id = ?");
-            $stmt->execute([$bTaskId]);
-            $bTaskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$bTaskInfo) {
-                $db->rollBack();
-                $errorLogger->error('任务信息不存在', ['b_task_id' => $bTaskId]);
-                echo json_encode([
-                    'code' => 4009,
-                    'message' => '任务信息不存在',
-                    'data' => [],
-                    'timestamp' => time()
-                ], JSON_UNESCAPED_UNICODE);
-                exit;
-            }
+            $db->rollBack();
+            $errorLogger->error('任务信息不存在', ['b_task_id' => $bTaskId]);
+            echo json_encode([
+                'code' => 4009,
+                'message' => '任务信息不存在',
+                'data' => [],
+                'timestamp' => time()
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
         }
 
         // 获取派单单价
@@ -640,46 +580,17 @@ try {
         $stmt = $db->prepare("UPDATE wallets SET balance = ? WHERE id = ?");
         $stmt->execute([$cAfterBalance, $cUser['wallet_id']]);
         
-        // 13. 记录C端用户钱包流水
-        $cRemark = "完成任务获得佣金，任务ID：{$bTaskId}";
-        // 根据任务模板ID确定任务类型
+        // 13. 记录 C 端用户钱包流水
+        $cRemark = "完成任务获得佣金，任务 ID：{$bTaskId}";
+        // 根据任务模板获取任务类型信息
         $taskType = 0;
-        $taskTypeText = '';
-        if ($template) {
-            $templateId = (int)($template['id'] ?? 0);
-            switch ($templateId) {
-                case 1:
-                    $taskType = 1;
-                    $taskTypeText = '上评评论';
-                    break;
-                case 2:
-                    $taskType = 2;
-                    $taskTypeText = '中评评论';
-                    break;
-                case 3:
-                    $taskType = 3;
-                    $taskTypeText = '放大镜搜索词';
-                    break;
-                case 4:
-                    $taskType = 4;
-                    $taskTypeText = '上中评评论';
-                    break;
-                case 5:
-                    $taskType = 5;
-                    $taskTypeText = '上中评快捷派单';
-                    break;
-                case 6:
-                    $taskType = 6;
-                    $taskTypeText = '中下评快捷派单';
-                    break;
-            }
-        }
+        $taskTypeText = $template['title'] ?? '';
         $stmt = $db->prepare("
             INSERT INTO wallets_log (
                 wallet_id, user_id, username, user_type, type, 
                 amount, before_balance, after_balance, 
                 related_type, related_id, task_types, task_types_text, remark
-            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'commission', ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, '任务奖励佣金', ?, ?, ?, ?)
         ");
         $stmt->execute([
             $cUser['wallet_id'],
@@ -694,9 +605,9 @@ try {
             $cRemark
         ]);
         
-        // 13.1 记录C端任务统计
+        // 13.1 记录 C 端任务统计
         try {
-            // 优化remark字段
+            // 优化 remark 字段
             $userAgentType = '普通用户';
             $userAgentLevel = $cUser['is_agent'] ?? 0;
             if ($userAgentLevel === 1) {
@@ -706,26 +617,26 @@ try {
             } elseif ($userAgentLevel === 3) {
                 $userAgentType = '大团团长';
             }
-            $cRemark = "用户 {$cUser['username']} 完成任务，{$userAgentType}获得佣金，任务ID：{$bTaskId}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，获得奖励：" . ($cUserCommission / 100) . "元";
+            $cRemark = "当前用户{$cUser['username']}是（{$userAgentType}）：  完成任务，获得任务佣金，任务 ID：{$bTaskId}，任务类型：{$taskTypeText}，任务阶段{$stage}：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，获得奖励：" . ($cUserCommission / 100) . "元";
             
             // 获取任务阶段文本
             $taskStageText = '';
             if ($template) {
                 if ($stage === 0) {
-                    $taskStageText = $template['title'] ?? '';
+                    $taskStageText = $template['description1'] ?? '';
                 } elseif ($stage === 1) {
-                    $taskStageText = ($template['title'] ?? '') . '，' . ($template['stage1_title'] ?? '');
+                    $taskStageText = $template['stage1_title'] ?? '';
                 } elseif ($stage === 2) {
-                    $taskStageText = ($template['title'] ?? '') . '，' . ($template['stage2_title'] ?? '');
+                    $taskStageText = $template['stage2_title'] ?? '';
                 }
             }
             
-            $stmt = $db->prepare(" 
+            $stmt = $db->prepare("
                 INSERT INTO c_task_statistics (
                     c_user_id, username, flow_type, amount, before_balance, after_balance, 
                     related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, 
                     record_status, record_status_text, remark
-                ) VALUES (?, ?, 1, ?, ?, ?, 'commission', ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, 1, ?, ?, ?, '任务佣金', ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $cUser['id'],
@@ -765,7 +676,7 @@ try {
         $maxLevel = 2; // 最多查找两级
         
         while (!empty($currentUserId) && $level < $maxLevel) {
-            $stmt = $db->prepare(" 
+            $stmt = $db->prepare("
                 SELECT id, username, wallet_id, is_agent, parent_id
                 FROM c_users
                 WHERE id = ?
@@ -833,12 +744,12 @@ try {
                                 // 普通团长佣金记录
                                 $agentRemark = "下级用户 {$cUser['username']} 完成任务，获得普通团长佣金，任务ID：{$bTaskId}";
                             }
-                            $stmt = $db->prepare(" 
+                            $stmt = $db->prepare("
                                 INSERT INTO wallets_log (
                                     wallet_id, user_id, username, user_type, type, 
                                     amount, before_balance, after_balance, 
                                     related_type, related_id, task_types, task_types_text, remark
-                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?)
+                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, '一级代理佣金奖励', ?, ?, ?, ?)
                             ");
                             $stmt->execute([
                                 $user['wallet_id'],
@@ -853,7 +764,7 @@ try {
                                 $agentRemark
                             ]);
                             
-                            // 优化remark字段
+                            // 优化 remark 字段
                             $agentType = '普通用户';
                             if ($agentLevel === 1) {
                                 $agentType = '普通团长';
@@ -862,9 +773,9 @@ try {
                             } elseif ($agentLevel === 3) {
                                 $agentType = '大团团长';
                             }
-                            $agentRemark = "当前用户 {$user['username']} 的邀请用户完成任务，{$agentType}获得一级团长佣金，任务ID：{$bTaskId}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
+                            $agentRemark = "当前用户： {$user['username']},用户等级是{$agentType}； 当前用户的邀请用户:{$cUser['username']},完成任务，获得一级团长佣金，任务 ID：{$bTaskId}，任务类型：{$taskTypeText}，当前任务阶段：{$task_stage}：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
                             
-                            // 记录一级代理C端任务统计
+                            // 记录一级代理 C 端任务统计
                             try {
                                 // 只给团长级别以上的代理用户（is_agent >= 1）插入任务统计记录
                                 if ($agentLevel >= 1) {
@@ -872,20 +783,20 @@ try {
                                     $taskStageText = '';
                                     if ($template) {
                                         if ($stage === 0) {
-                                            $taskStageText = $template['title'] ?? '';
+                                            $taskStageText = $template['description1'] ?? '';
                                         } elseif ($stage === 1) {
-                                            $taskStageText = ($template['title'] ?? '') . '，' . ($template['stage1_title'] ?? '');
+                                            $taskStageText = $template['stage1_title'] ?? '';
                                         } elseif ($stage === 2) {
-                                            $taskStageText = ($template['title'] ?? '') . '，' . ($template['stage2_title'] ?? '');
+                                            $taskStageText = $template['stage2_title'] ?? '';
                                         }
                                     }
                                     
-                                    $stmt = $db->prepare(" 
+                                    $stmt = $db->prepare("
                                         INSERT INTO c_task_statistics (
                                             c_user_id, username, flow_type, amount, before_balance, after_balance, 
                                             related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, 
                                             record_status, record_status_text, remark
-                                        ) VALUES (?, ?, 1, ?, ?, ?, 'agent_commission', ?, ?, ?, ?, ?, ?, ?, ?)
+                                        ) VALUES (?, ?, 1, ?, ?, ?, '一级代理佣金', ?, ?, ?, ?, ?, ?, ?, ?)
                                     ");
                                     $stmt->execute([
                                         $user['id'],
@@ -959,12 +870,12 @@ try {
                             } elseif ($agentLevel === 1) {
                                 $secondAgentRemark = "团队成员 {$cUser['username']} 完成任务，获得二级普通团长佣金，任务ID：{$bTaskId}";
                             }
-                            $stmt = $db->prepare(" 
+                            $stmt = $db->prepare("
                                 INSERT INTO wallets_log (
                                     wallet_id, user_id, username, user_type, type, 
                                     amount, before_balance, after_balance, 
                                     related_type, related_id, task_types, task_types_text, remark
-                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?)
+                                ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, '二级代理佣金奖励', ?, ?, ?, ?)
                             ");
                             $stmt->execute([
                                 $user['wallet_id'],
@@ -979,7 +890,7 @@ try {
                                 $secondAgentRemark
                             ]);
                             
-                            // 优化remark字段
+                            // 优化 remark 字段
                             $secondAgentType = '普通用户';
                             if ($agentLevel === 1) {
                                 $secondAgentType = '普通团长';
@@ -988,9 +899,9 @@ try {
                             } elseif ($agentLevel === 3) {
                                 $secondAgentType = '大团团长';
                             }
-                            $secondAgentRemark = "当前用户 {$user['username']} 的邀请用户的团队成员完成任务，{$secondAgentType}获得二级团长佣金，任务ID：{$bTaskId}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
+                            $secondAgentRemark = "当前用户 {$user['username']} 的邀请用户的团队成员完成任务，{$secondAgentType}获得二级团长佣金，任务 ID：{$bTaskId}，任务类型：{$taskTypeText}，任务阶段：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
                             
-                            // 记录二级代理C端任务统计
+                            // 记录二级代理 C 端任务统计
                             try {
                                 // 只给团长级别以上的代理用户（is_agent >= 1）插入任务统计记录
                                 if ($agentLevel >= 1) {
@@ -998,20 +909,20 @@ try {
                                     $taskStageText = '';
                                     if ($template) {
                                         if ($stage === 0) {
-                                            $taskStageText = $template['title'] ?? '';
+                                            $taskStageText = $template['description1'] ?? '';
                                         } elseif ($stage === 1) {
-                                            $taskStageText = ($template['title'] ?? '') . '，' . ($template['stage1_title'] ?? '');
+                                            $taskStageText = $template['stage1_title'] ?? '';
                                         } elseif ($stage === 2) {
-                                            $taskStageText = ($template['title'] ?? '') . '，' . ($template['stage2_title'] ?? '');
+                                            $taskStageText = $template['stage2_title'] ?? '';
                                         }
                                     }
                                     
-                                    $stmt = $db->prepare(" 
+                                    $stmt = $db->prepare("
                                         INSERT INTO c_task_statistics (
                                             c_user_id, username, flow_type, amount, before_balance, after_balance, 
                                             related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, 
                                             record_status, record_status_text, remark
-                                        ) VALUES (?, ?, 1, ?, ?, ?, 'second_agent_commission', ?, ?, ?, ?, ?, ?, ?, ?)
+                                        ) VALUES (?, ?, 1, ?, ?, ?, '二级代理佣金', ?, ?, ?, ?, ?, ?, ?, ?)
                                     ");
                                     $stmt->execute([
                                         $user['id'],
@@ -1093,6 +1004,18 @@ try {
                 
                 $agentBeforeAmount = $summary ? (float)$summary['total_team_revenue'] : 0;
                 $agentAfterAmount = $agentBeforeAmount + $agentCommAmount;
+                
+                // 获取任务阶段文本
+                $taskStageText = '';
+                if ($template) {
+                    if ($stage === 0) {
+                        $taskStageText = $template['description1'] ?? '';
+                    } elseif ($stage === 1) {
+                        $taskStageText = $template['stage1_title'] ?? '';
+                    } elseif ($stage === 2) {
+                        $taskStageText = $template['stage2_title'] ?? '';
+                    }
+                }
                 
                 // 插入团队收益记录
                 $requestLogger->debug('准备插入团队收益记录', [
@@ -1248,100 +1171,36 @@ try {
             $errorLogger->error('插入team_revenue_statistics_breakdown失败', ['exception' => $e->getMessage()]);
         }
 
-        // 15. 检查并处理新手转正
-        $isNewbie = false;
-        $hasCompletedTasks = 0;
-        $isPromoted = false;
-        
-        // 无论用户是否是新手，都更新 c_user_task_records_static 表
-        if ($action === 'approve') {
-            // 审核通过时增加完成任务数量计数
-            // 先查询是否存在记录
-            $requestLogger->debug('步骤10: 查询 c_user_task_records_static 表是否存在用户记录', ['user_id' => $cUser['id']]);
-            $stmt = $db->prepare("SELECT id FROM c_user_task_records_static WHERE user_id = ?");
-            $stmt->execute([$cUser['id']]);
-            $existingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($existingRecord) {
-                // 存在记录，更新
-                $requestLogger->debug('存在记录，更新 completed_task_count', ['user_id' => $cUser['id']]);
-                $stmt = $db->prepare("UPDATE c_user_task_records_static SET completed_task_count = completed_task_count + 1 WHERE user_id = ?");
-                $stmt->execute([$cUser['id']]);
-                $requestLogger->debug('更新 completed_task_count 成功', ['user_id' => $cUser['id']]);
-            } else {
-                // 不存在记录，插入
-                $requestLogger->debug('不存在记录，插入新记录', ['user_id' => $cUser['id']]);
-                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, completed_task_count) VALUES (?, 1)");
-                $stmt->execute([$cUser['id']]);
-                $requestLogger->debug('插入新记录成功', ['user_id' => $cUser['id']]);
-            }
-            
-            // 查询更新后的完成任务数量
-            $stmt = $db->prepare("SELECT completed_task_count FROM c_user_task_records_static WHERE user_id = ?");
-            $stmt->execute([$cUser['id']]);
-            $updatedStatic = $stmt->fetch(PDO::FETCH_ASSOC);
-            $completedCount = $updatedStatic ? (int)$updatedStatic['completed_task_count'] : 0;
-            
-            $requestLogger->debug('c_user_task_records_static表已更新', ['user_id' => $cUser['id'], 'completed_task_count' => $completedCount]);
-            $requestLogger->debug('审核通过，增加完成任务数量计数');
-        } elseif ($action === 'reject') {
-            // 驳回任务时增加驳回任务数量计数
-            // 先查询是否存在记录
-            $requestLogger->debug('步骤10: 查询 c_user_task_records_static 表是否存在用户记录', ['user_id' => $cUser['id']]);
-            $stmt = $db->prepare("SELECT id FROM c_user_task_records_static WHERE user_id = ?");
-            $stmt->execute([$cUser['id']]);
-            $existingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($existingRecord) {
-                // 存在记录，更新
-                $requestLogger->debug('存在记录，更新 rejected_task_count', ['user_id' => $cUser['id']]);
-                $stmt = $db->prepare("UPDATE c_user_task_records_static SET rejected_task_count = rejected_task_count + 1 WHERE user_id = ?");
-                $stmt->execute([$cUser['id']]);
-                $requestLogger->debug('更新 rejected_task_count 成功', ['user_id' => $cUser['id']]);
-            } else {
-                // 不存在记录，插入
-                $requestLogger->debug('不存在记录，插入新记录', ['user_id' => $cUser['id']]);
-                $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, rejected_task_count) VALUES (?, 1)");
-                $stmt->execute([$cUser['id']]);
-                $requestLogger->debug('插入新记录成功', ['user_id' => $cUser['id']]);
-            }
-            
-            // 查询更新后的驳回任务数量
-            $stmt = $db->prepare("SELECT rejected_task_count FROM c_user_task_records_static WHERE user_id = ?");
-            $stmt->execute([$cUser['id']]);
-            $updatedStatic = $stmt->fetch(PDO::FETCH_ASSOC);
-            $rejectedCount = $updatedStatic ? (int)$updatedStatic['rejected_task_count'] : 0;
-            
-            $requestLogger->debug('c_user_task_records_static表已更新', ['user_id' => $cUser['id'], 'rejected_task_count' => $rejectedCount]);
-            $requestLogger->debug('审核驳回，增加驳回任务数量计数');
-        }
-        
-        // 查询用户的新手状态
-        $stmt = $db->prepare("SELECT is_newbie FROM c_users WHERE id = ?");
+        // 15. 更新用户任务统计
+        // 审核通过时增加完成任务数量计数
+        // 先查询是否存在记录
+        $requestLogger->debug('步骤15: 查询 c_user_task_records_static 表是否存在用户记录', ['user_id' => $cUser['id']]);
+        $stmt = $db->prepare("SELECT id FROM c_user_task_records_static WHERE user_id = ?");
         $stmt->execute([$cUser['id']]);
-        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-        $requestLogger->debug('C端用户新手状态', [
-            'c_user' => $cUser['username'],
-            'c_user_id' => $cUser['id'],
-            'is_newbie' => (int)$userInfo['is_newbie']
-        ]);
+        $existingRecord = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($userInfo && (int)$userInfo['is_newbie'] === 1) {
-            $isNewbie = true;
-            
-            // 查询用户已完成的任务数量
-            $stmt = $db->prepare("SELECT COUNT(*) as completed_count FROM c_task_records WHERE c_user_id = ? AND status = 3");
+        if ($existingRecord) {
+            // 存在记录，更新
+            $requestLogger->debug('存在记录，更新 completed_task_count', ['user_id' => $cUser['id']]);
+            $stmt = $db->prepare("UPDATE c_user_task_records_static SET completed_task_count = completed_task_count + 1 WHERE user_id = ?");
             $stmt->execute([$cUser['id']]);
-            $completedInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            $hasCompletedTasks = (int)$completedInfo['completed_count'];
-            
-            // 如果完成任务数 >= 5，自动转正
-            if ($hasCompletedTasks >= 2) {
-                $stmt = $db->prepare("UPDATE c_users SET is_newbie = 0 WHERE id = ?");
-                $stmt->execute([$cUser['id']]);
-                $isPromoted = true;
-            }
+            $requestLogger->debug('更新 completed_task_count 成功', ['user_id' => $cUser['id']]);
+        } else {
+            // 不存在记录，插入
+            $requestLogger->debug('不存在记录，插入新记录', ['user_id' => $cUser['id']]);
+            $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, completed_task_count) VALUES (?, 1)");
+            $stmt->execute([$cUser['id']]);
+            $requestLogger->debug('插入新记录成功', ['user_id' => $cUser['id']]);
         }
+        
+        // 查询更新后的完成任务数量
+        $stmt = $db->prepare("SELECT completed_task_count FROM c_user_task_records_static WHERE user_id = ?");
+        $stmt->execute([$cUser['id']]);
+        $updatedStatic = $stmt->fetch(PDO::FETCH_ASSOC);
+        $completedCount = $updatedStatic ? (int)$updatedStatic['completed_task_count'] : 0;
+        
+        $requestLogger->debug('c_user_task_records_static表已更新', ['user_id' => $cUser['id'], 'completed_task_count' => $completedCount]);
+        $requestLogger->debug('审核通过，增加完成任务数量计数');
 
         // 16. 提交事务
         $db->commit();
@@ -1354,20 +1213,18 @@ try {
             'b_task_id' => $bTaskId,
             'c_user_commission' => $cUserCommission,
             'agent_commission' => $agentCommission,
-            'is_promoted' => $isPromoted,
         ]);
         
         $requestLogger->info('审核通过处理完成', [
             'record_id' => $recordId,
             'b_task_id' => $bTaskId,
             'c_user_commission' => $cUserCommission,
-            'is_promoted' => $isPromoted,
         ]);
         
-        // 16. 返回成功响应
+        // 17. 返回成功响应
         echo json_encode([
             'code' => 0,
-            'message' => $isPromoted ? '审核通过，佣金已发放，用户已转正' : '审核通过，佣金已发放',
+            'message' => '审核通过，佣金已发放',
             'data' => [
                 'record_id' => (int)$recordId,
                 'b_task_id' => (int)$bTaskId,
@@ -1385,12 +1242,6 @@ try {
                     'c_user_amount' => number_format($cUserCommission / 100, 2),
                     'agent_amount' => $agentUserId ? number_format($cUserCommission / 100, 2) : '0.00',
                     'second_agent_amount' => $secondAgentUserId ? number_format($cUserCommission / 100, 2) : '0.00'
-                ],
-                // 新增：新手转正信息
-                'newbie_info' => [
-                    'is_newbie' => $isNewbie,
-                    'completed_tasks' => $hasCompletedTasks,
-                    'is_promoted' => $isPromoted
                 ],
                 'reviewed_at' => $reviewedAt
             ],
@@ -1411,46 +1262,22 @@ try {
         $requestLogger->debug('c_task_records表任务记录状态已更新', ['record_id' => $recordId, 'reject_reason' => $rejectReason, 'reviewed_at' => $reviewedAt]);
         
         // 8. 更新B端任务统计（释放名额）
-        // 先检查是普通任务还是新手任务
-        $stmt = $db->prepare("SELECT id FROM b_tasks WHERE id = ?");
+        // 先检查当前task_reviewing值
+        $stmt = $db->prepare("SELECT task_reviewing FROM b_tasks WHERE id = ?");
         $stmt->execute([$bTaskId]);
-        $isNormalTask = $stmt->fetch(PDO::FETCH_ASSOC) !== false;
+        $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if ($isNormalTask) {
-            // 更新普通任务统计
-            // 先检查当前task_reviewing值
-            $stmt = $db->prepare("SELECT task_reviewing FROM b_tasks WHERE id = ?");
-            $stmt->execute([$bTaskId]);
-            $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            // 计算新的task_reviewing值
-            $newTaskReviewing = max((int)$taskInfo['task_reviewing'] - 1, 0);
-            
-            // 更新任务统计
-            $stmt = $db->prepare("                UPDATE b_tasks 
-                SET task_reviewing = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$newTaskReviewing, $bTaskId]);
-            $requestLogger->debug('b_tasks表任务统计已更新', ['task_id' => $bTaskId, 'new_task_reviewing' => $newTaskReviewing]);
-        } else {
-            // 更新新手任务统计
-            // 先检查当前task_reviewing值
-            $stmt = $db->prepare("SELECT task_reviewing FROM b_newbie_tasks WHERE id = ?");
-            $stmt->execute([$bTaskId]);
-            $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            // 计算新的task_reviewing值
-            $newTaskReviewing = max((int)$taskInfo['task_reviewing'] - 1, 0);
-            
-            // 更新任务统计
-            $stmt = $db->prepare("                UPDATE b_newbie_tasks 
-                SET task_reviewing = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$newTaskReviewing, $bTaskId]);
-            $requestLogger->debug('b_newbie_tasks表任务统计已更新', ['task_id' => $bTaskId, 'new_task_reviewing' => $newTaskReviewing]);
-        }
+        // 计算新的task_reviewing值
+        $newTaskReviewing = max((int)$taskInfo['task_reviewing'] - 1, 0);
+        
+        // 更新任务统计
+        $stmt = $db->prepare("
+            UPDATE b_tasks 
+            SET task_reviewing = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$newTaskReviewing, $bTaskId]);
+        $requestLogger->debug('b_tasks表任务统计已更新', ['task_id' => $bTaskId, 'new_task_reviewing' => $newTaskReviewing]);
         
         // 9. 更新当日统计
         // 先查询当前的驳回次数
@@ -1472,19 +1299,12 @@ try {
         
         $requestLogger->debug('c_user_daily_stats表当日统计已更新', ['task_id' => $bTaskId, 'rejected_count' => $newRejectedCount]);
         
-        // 10. 记录C端任务统计（审核驳回）
+        // 10. 记录 C 端任务统计（审核驳回）
         try {
-            // 查询b_task获取template_id、stage和unit_price
+            // 查询 b_task 获取 template_id、stage 和 unit_price
             $stmt = $db->prepare("SELECT template_id, stage, unit_price FROM b_tasks WHERE id = ?");
             $stmt->execute([$bTaskId]);
             $bTaskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            // 如果b_tasks表中没有记录，查询b_newbie_tasks表
-            if (!$bTaskInfo) {
-                $stmt = $db->prepare("SELECT template_id, stage, unit_price FROM b_newbie_tasks WHERE id = ?");
-                $stmt->execute([$bTaskId]);
-                $bTaskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
 
             $taskType = 0;
             $taskTypeText = '';
@@ -1499,50 +1319,28 @@ try {
                 $template = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($template) {
-                    // 根据模板ID确定任务类型
-                    $templateId = (int)($template['id'] ?? 0);
-                    switch ($templateId) {
-                        case 1:
-                            $taskType = 1;
-                            $taskTypeText = '上评评论';
-                            break;
-                        case 2:
-                            $taskType = 2;
-                            $taskTypeText = '中评评论';
-                            break;
-                        case 3:
-                            $taskType = 3;
-                            $taskTypeText = '放大镜搜索词';
-                            break;
-                        case 4:
-                            $taskType = 4;
-                            $taskTypeText = '上中评评论';
-                            break;
-                        case 5:
-                            $taskType = 5;
-                            $taskTypeText = '中下评评论';
-                            break;
-                    }
+                    // 从模板获取任务类型文本
+                    $taskTypeText = $template['title'] ?? '';
 
                     // 获取任务阶段文本
                     if ($stage === 0) {
-                        $taskStageText = $template['title'] ?? '';
+                        $taskStageText = $template['description1'] ?? '';
                     } elseif ($stage === 1) {
-                        $taskStageText = $template['title'] ?? '' . '，' . ($template['stage1_title'] ?? '');
+                        $taskStageText = $template['stage1_title'] ?? '';
                     } elseif ($stage === 2) {
-                        $taskStageText = $template['title'] ?? '' . '，' . ($template['stage2_title'] ?? '');
+                        $taskStageText = $template['stage2_title'] ?? '';
                     }
                 }
             }
 
-            $cRemark = "用户 {$cUser['username']} 任务被驳回，任务ID：{$bTaskId}，驳回原因：{$rejectReason}";
+            $cRemark = "用户 {$cUser['username']} 任务被驳回，任务 ID：{$bTaskId}，驳回原因：{$rejectReason}";
             
-            $stmt = $db->prepare(" 
+            $stmt = $db->prepare("
                 INSERT INTO c_task_statistics (
                     c_user_id, username, flow_type, amount, before_balance, after_balance, 
                     related_type, related_id, task_types, task_types_text, task_stage, task_stage_text, 
                     record_status, record_status_text, remark
-                ) VALUES (?, ?, 0, 0, 0, 0, 'commission', ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, 0, 0, 0, 0, '任务佣金', ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $cUser['id'],
@@ -1556,7 +1354,7 @@ try {
                 '审核拒绝', // record_status_text
                 $cRemark
             ]);
-            $requestLogger->debug('c_task_statistics表任务统计已记录', [
+            $requestLogger->debug('c_task_statistics 表任务统计已记录', [
                 'task_id' => $bTaskId, 
                 'task_type' => $taskTypeText, 
                 'task_stage' => $taskStageText, 
@@ -1566,15 +1364,10 @@ try {
             ]);
         } catch (Exception $e) {
             // 记录插入失败时的错误日志，但不影响主流程
-            $errorLogger->error('插入c_task_statistics失败', ['exception' => $e->getMessage()]);
+            $errorLogger->error('插入 c_task_statistics 失败', ['exception' => $e->getMessage()]);
         }
 
-        // 11. 检查并处理新手转正
-        $isNewbie = false;
-        $hasCompletedTasks = 0;
-
-        // 无论用户是否是新手，都更新 c_user_task_records_static 表
-        // 驳回任务时增加驳回任务数量计数
+        // 11. 更新用户任务统计（驳回任务时增加驳回任务数量计数）
         // 先查询是否存在记录
         $requestLogger->debug('步骤11: 查询 c_user_task_records_static 表是否存在用户记录，用户ID: ' . $cUser['id']);
         $stmt = $db->prepare("SELECT id FROM c_user_task_records_static WHERE user_id = ?");
@@ -1602,22 +1395,8 @@ try {
         $rejectedCount = $updatedStatic ? (int)$updatedStatic['rejected_task_count'] : 0;
         
         $requestLogger->debug('c_user_task_records_static表已更新', ['user_id' => $cUser['id'], 'rejected_task_count' => $rejectedCount]);
-        
-        // 查询用户的新手状态
-        $stmt = $db->prepare("SELECT is_newbie FROM c_users WHERE id = ?");
-        $stmt->execute([$cUser['id']]);
-        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-        $requestLogger->debug('C端用户新手状态', [
-            'c_user' => $cUser['username'],
-            'c_user_id' => $cUser['id'],
-            'is_newbie' => (int)$userInfo['is_newbie']
-        ]);
-        
-        if ($userInfo && (int)$userInfo['is_newbie'] === 1) {
-            $isNewbie = true;
-        }
 
-        // 16. 提交事务
+        // 12. 提交事务
         $db->commit();
         
         // 记录审计日志

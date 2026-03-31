@@ -102,7 +102,7 @@ try {
             wallet_id, user_id, username, user_type, type, 
             amount, before_balance, after_balance, 
             related_type, related_id, remark
-        ) VALUES (?, ?, ?, 2, 1, 0, ?, ?, 'recharge', 0, ?)
+        ) VALUES (?, ?, ?, 2, 1, 0, ?, ?, '充值', 0, ?)
     ");
     $stmt->execute([
         $bUser['wallet_id'],

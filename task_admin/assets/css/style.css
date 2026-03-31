@@ -808,6 +808,12 @@ input:focus, select:focus, textarea:focus {
     to { transform: translateY(0); }
 }
 
+/* Wide Modal (for Deletion Logs) */
+.modal-wide .modal-content {
+    width: 80%;
+    max-width: none;
+}
+
 @keyframes modalPop {
     to { transform: scale(1); }
 }

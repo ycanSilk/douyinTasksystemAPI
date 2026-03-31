@@ -369,45 +369,45 @@ function editTaskTemplate(task) {
                 </div>
             ` : ''}
             ${isCombo ? `
-                <h4 style="margin: 16px 0 8px; color: #666; border-top: 1px solid #eee; padding-top: 16px;">阶段1佣金配置（元）</h4>
+                <h4 style="margin: 16px 0 8px; color: #666; border-top: 1px solid #eee; padding-top: 16px;">阶段 1 佣金配置（元）</h4>
                 <div class="form-group">
-                    <label>阶段1-普通用户佣金（元）</label>
-                    <input type="number" name="stage1_c_user_commission" value="${((task.stage1_c_user_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 2.00">
+                    <label>阶段 1-普通用户佣金（元）</label>
+                    <input type="number" name="stage1_c_user_commission" value="${Number(((task.stage1_c_user_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 2.00">
                 </div>
                 <div class="form-group">
-                    <label>阶段1-普通团长佣金（元）</label>
-                    <input type="number" name="stage1_agent_commission" value="${((task.stage1_agent_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 0.50">
+                    <label>阶段 1-普通团长佣金（元）</label>
+                    <input type="number" name="stage1_agent_commission" value="${Number(((task.stage1_agent_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 0.50">
                 </div>
                 <div class="form-group">
-                    <label>阶段1-高级团长佣金（元）</label>
-                    <input type="number" name="stage1_senior_agent_commission" value="${((task.stage1_senior_agent_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 1.00">
+                    <label>阶段 1-高级团长佣金（元）</label>
+                    <input type="number" name="stage1_senior_agent_commission" value="${Number(((task.stage1_senior_agent_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 1.00">
                 </div>
-                <h4 style="margin: 16px 0 8px; color: #666; border-top: 1px solid #eee; padding-top: 16px;">阶段2佣金配置（元）</h4>
+                <h4 style="margin: 16px 0 8px; color: #666; border-top: 1px solid #eee; padding-top: 16px;">阶段 2 佣金配置（元）</h4>
                 <div class="form-group">
-                    <label>阶段2-普通用户佣金（元）</label>
-                    <input type="number" name="stage2_c_user_commission" value="${((task.stage2_c_user_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 2.00">
-                </div>
-                <div class="form-group">
-                    <label>阶段2-普通团长佣金（元）</label>
-                    <input type="number" name="stage2_agent_commission" value="${((task.stage2_agent_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 0.50">
+                    <label>阶段 2-普通用户佣金（元）</label>
+                    <input type="number" name="stage2_c_user_commission" value="${Number(((task.stage2_c_user_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 2.00">
                 </div>
                 <div class="form-group">
-                    <label>阶段2-高级团长佣金（元）</label>
-                    <input type="number" name="stage2_senior_agent_commission" value="${((task.stage2_senior_agent_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 1.00">
+                    <label>阶段 2-普通团长佣金（元）</label>
+                    <input type="number" name="stage2_agent_commission" value="${Number(((task.stage2_agent_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 0.50">
+                </div>
+                <div class="form-group">
+                    <label>阶段 2-高级团长佣金（元）</label>
+                    <input type="number" name="stage2_senior_agent_commission" value="${Number(((task.stage2_senior_agent_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 1.00">
                 </div>
             ` : `
                 <h4 style="margin: 16px 0 8px; color: #666; border-top: 1px solid #eee; padding-top: 16px;">佣金配置（元）</h4>
                 <div class="form-group">
                     <label>普通用户佣金（元）</label>
-                    <input type="number" name="c_user_commission" value="${((task.c_user_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 2.00">
+                    <input type="number" name="c_user_commission" value="${Number(((task.c_user_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 2.00">
                 </div>
                 <div class="form-group">
                     <label>普通团长佣金（元）</label>
-                    <input type="number" name="agent_commission" value="${((task.agent_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 0.50">
+                    <input type="number" name="agent_commission" value="${Number(((task.agent_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 0.50">
                 </div>
                 <div class="form-group">
                     <label>高级团长佣金（元）</label>
-                    <input type="number" name="senior_agent_commission" value="${((task.senior_agent_commission || 0) / 100).toFixed(2)}" step="0.01" placeholder="如 1.00">
+                    <input type="number" name="senior_agent_commission" value="${Number(((task.senior_agent_commission || 0) / 100)).toFixed(2)}" step="0.01" placeholder="如 1.00">
                 </div>
             `}
             <div class="form-group">

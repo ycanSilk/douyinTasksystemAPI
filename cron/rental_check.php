@@ -106,7 +106,7 @@ try {
                 INSERT INTO wallets_log 
                 (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at) 
                 VALUES 
-                (?, ?, ?, ?, 1, ?, ?, ?, 'rental_unfreeze', ?, ?, NOW())
+                (?, ?, ?, ?, 1, ?, ?, ?, '求租到期退回预算', ?, ?, NOW())
             ");
             $insertLogStmt->execute([
                 $walletId,
@@ -254,7 +254,7 @@ try {
                 INSERT INTO wallets_log 
                 (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at) 
                 VALUES 
-                (?, ?, ?, ?, 1, ?, ?, ?, 'rental_order_settlement', ?, ?, NOW())
+                (?, ?, ?, ?, 1, ?, ?, ?, '求租到期退回预算', ?, ?, NOW())
             ");
             $insertLogStmt->execute([
                 $sellerWalletId,
@@ -300,7 +300,7 @@ try {
                             INSERT INTO wallets_log
                             (wallet_id, user_id, username, user_type, type, amount, before_balance, after_balance, related_type, related_id, remark, created_at)
                             VALUES
-                            (?, ?, ?, 1, 1, ?, ?, ?, 'rental_agent_commission', ?, ?, NOW())
+                            (?, ?, ?, 1, 1, ?, ?, ?, '租赁团长佣金', ?, ?, NOW())
                         ");
                         $insertAgentLogStmt->execute([
                             $agentWalletId,
@@ -584,7 +584,7 @@ try {
                                             wallet_id, user_id, username, user_type, type, 
                                             amount, before_balance, after_balance, 
                                             related_type, related_id, remark, created_at
-                                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, 'rental_agent_commission', ?, ?, NOW())
+                                        ) VALUES (?, ?, ?, 1, 1, ?, ?, ?, '租赁团长佣金', ?, ?, NOW())
                                     ");
                                     $stmt->execute([
                                         $agentUser['wallet_id'],

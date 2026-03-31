@@ -169,12 +169,6 @@ try {
     exit;
 }
 
-$requestLogger->debug('查询用户新手状态', ['user_id' => $currentUser['user_id']]);
-$userStmt = $db->prepare("SELECT is_newbie FROM c_users WHERE id = ?");
-$userStmt->execute([$currentUser['user_id']]);
-$userInfo = $userStmt->fetch(PDO::FETCH_ASSOC);
-$isNewbie = (int)($userInfo['is_newbie'] ?? 1);
-
 $page = max(1, (int)($_GET['page'] ?? 1));
 $limit = min(100, max(1, (int)($_GET['limit'] ?? 20)));
 $statusFilter = (int)($_GET['status'] ?? 1);
@@ -182,15 +176,14 @@ $offset = ($page - 1) * $limit;
 
 $requestLogger->debug('请求参数', [
     'user_id' => $currentUser['user_id'],
-    'is_newbie' => $isNewbie,
     'page' => $page,
     'limit' => $limit,
     'status' => $statusFilter,
 ]);
 
 try {
-    $taskTable = $isNewbie ? 'b_newbie_tasks' : 'b_tasks';
-    $requestLogger->debug('选择任务表', ['table' => $taskTable]);
+    $taskTable = 'b_tasks';
+    $requestLogger->debug('从b_tasks表查询任务');
 
     $requestLogger->debug('查询任务列表');
     $stmt = $db->prepare("
@@ -310,7 +303,6 @@ try {
 
     $auditLogger->notice('C端用户获取任务列表成功', [
         'user_id' => $currentUser['user_id'],
-        'is_newbie' => $isNewbie,
         'total' => $total,
         'returned_count' => count($taskList),
     ]);

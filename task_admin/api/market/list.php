@@ -49,15 +49,33 @@ try {
     
     $where = $whereClause ? 'WHERE ' . implode(' AND ', $whereClause) : '';
     
-    // 查询总数
+    // 1. 查询 b_tasks 表的总数
     $stmt = $db->prepare("SELECT COUNT(*) as total FROM b_tasks b $where");
     $stmt->execute($params);
     $total = (int)$stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
-    // 查询列表
+    // 2. 查询 b_tasks 表数据（分页）
     $stmt = $db->prepare("
         SELECT 
-            b.*,
+            b.id,
+            b.b_user_id,
+            b.template_id,
+            b.video_url,
+            b.deadline,
+            b.task_count,
+            b.task_done,
+            b.task_doing,
+            b.task_reviewing,
+            b.unit_price,
+            b.total_price,
+            b.status,
+            b.created_at,
+            b.updated_at,
+            b.completed_at,
+            b.stage,
+            b.stage_status,
+            b.parent_task_id,
+            b.combo_task_id,
             bu.username as b_username,
             t.title as template_title,
             t.type as template_type
@@ -68,7 +86,12 @@ try {
         ORDER BY b.created_at DESC
         LIMIT ? OFFSET ?
     ");
-    $stmt->execute(array_merge($params, [$pageSize, $offset]));
+    
+    $listParams = $params;
+    $listParams[] = $pageSize;
+    $listParams[] = $offset;
+    
+    $stmt->execute($listParams);
     $list = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // 格式化数据
@@ -79,6 +102,7 @@ try {
         $item['stage'] = (int)$item['stage'];
         $item['stage_status'] = (int)$item['stage_status'];
         $item['parent_task_id'] = $item['parent_task_id'] ? (int)$item['parent_task_id'] : null;
+        $item['combo_task_id'] = $item['combo_task_id'] ? (int)$item['combo_task_id'] : null;
         $item['task_count'] = (int)$item['task_count'];
         $item['task_done'] = (int)$item['task_done'];
         $item['task_doing'] = (int)$item['task_doing'];
@@ -96,7 +120,7 @@ try {
         $item['status_text'] = $statusMap[$item['status']] ?? '未知';
         
         // 阶段文本
-        $stageMap = [0 => '单任务', 1 => '阶段1', 2 => '阶段2'];
+        $stageMap = [0 => '单任务', 1 => '阶段 1', 2 => '阶段 2'];
         $item['stage_text'] = $stageMap[$item['stage']] ?? '未知';
         
         // 阶段状态文本
@@ -121,5 +145,5 @@ try {
     
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['code' => 5000, 'message' => '查询失败', 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['code' => 5000, 'message' => '查询失败: ' . $e->getMessage(), 'data' => [], 'timestamp' => time()], JSON_UNESCAPED_UNICODE);
 }

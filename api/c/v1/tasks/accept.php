@@ -118,10 +118,21 @@ $errorCodes = require __DIR__ . '/../../../../config/error_codes.php';
 try {
     $db = Database::connect();
     $requestLogger->debug('数据库连接成功');
+    
+    // 从 app_config 表获取弃单次数和驳回次数限制
+    require_once __DIR__ . '/../../../../core/AppConfig.php';
+    $abandonCountLimit = AppConfig::get('abandon_count', 6); // 默认值为 6
+    $rejectedCountLimit = AppConfig::get('rejected_count', 6); // 默认值为 6
+    $acceptCoolingTime = AppConfig::get('accept_cooling_time', 180); // 默认值为 180 秒（3 分钟）
+    $requestLogger->debug('获取配置限制', [
+        'abandon_count_limit' => $abandonCountLimit,
+        'rejected_count_limit' => $rejectedCountLimit,
+        'accept_cooling_time' => $acceptCoolingTime
+    ]);
 } catch (Exception $e) {
     $errorLogger->error('数据库连接失败', ['exception' => $e->getMessage()]);
 
-    $auditLogger->error('C端用户接单失败：数据库连接失败', [
+    $auditLogger->error('C 端用户接单失败：数据库连接失败', [
         'exception' => $e->getMessage(),
         'reason' => '数据库连接失败',
     ]);
@@ -170,20 +181,17 @@ try {
     exit;
 }
 
-$requestLogger->debug('查询用户封禁状态和新手状态', ['user_id' => $currentUser['user_id']]);
+$requestLogger->debug('查询用户封禁状态', ['user_id' => $currentUser['user_id']]);
 $stmt = $db->prepare("
-    SELECT blocked_status, blocked_start_time, blocked_duration, blocked_end_time, is_newbie
+    SELECT blocked_status, blocked_start_time, blocked_duration, blocked_end_time
     FROM c_users
     WHERE id = ?
 ");
 $stmt->execute([$currentUser['user_id']]);
 $userInfo = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$isNewbie = (int)($userInfo['is_newbie'] ?? 1);
-$requestLogger->debug('用户新手状态', ['is_newbie' => $isNewbie]);
-
-$taskTable = $isNewbie ? 'b_newbie_tasks' : 'b_tasks';
-$requestLogger->debug('选择任务表', ['table' => $taskTable]);
+$taskTable = 'b_tasks';
+$requestLogger->debug('从b_tasks表获取任务');
 
 if ($userInfo) {
     $requestLogger->debug('用户封禁状态', ['blocked_status' => $userInfo['blocked_status']]);
@@ -233,39 +241,59 @@ if ($userInfo) {
     }
 }
 
-$requestLogger->debug('校验最后一次接单时间');
-$stmt = $db->prepare("SELECT accept_task_update_at FROM c_user_task_records_static WHERE user_id = ?");
+$requestLogger->debug('查询用户冷却时间限制设置');
+$stmt = $db->prepare("SELECT cooling_time_limit FROM c_users WHERE id = ?");
 $stmt->execute([$currentUser['user_id']]);
-$staticRecord = $stmt->fetch(PDO::FETCH_ASSOC);
+$userCoolingSetting = $stmt->fetch(PDO::FETCH_ASSOC);
+$coolingTimeLimit = $userCoolingSetting['cooling_time_limit'] ?? 1; // 默认值为 1（开启限制，包括 NULL 情况）
+$requestLogger->debug('用户冷却时间限制设置', ['cooling_time_limit' => $coolingTimeLimit]);
 
-if ($staticRecord && !empty($staticRecord['accept_task_update_at'])) {
-    $lastAcceptTime = strtotime($staticRecord['accept_task_update_at']);
-    $currentTime = time();
-    $timeDiff = $currentTime - $lastAcceptTime;
-    $requestLogger->debug('最后接单时间', [
-        'last_accept_time' => $staticRecord['accept_task_update_at'],
-        'time_diff' => $timeDiff . '秒'
-    ]);
+// 只有当 cooling_time_limit=0 时，才跳过冷却时间检查；其他情况（1 或 NULL）都开启限制
+if ($coolingTimeLimit === 0) {
+    $requestLogger->info('冷却时间限制已关闭，跳过接单间隔检查', ['cooling_time_limit' => $coolingTimeLimit]);
+} else {
+    $requestLogger->debug('冷却时间限制已开启（值为 1 或 NULL），检查接单间隔');
+    $stmt = $db->prepare("SELECT accept_task_update_at FROM c_user_task_records_static WHERE user_id = ?");
+    $stmt->execute([$currentUser['user_id']]);
+    $staticRecord = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($timeDiff < 180) {
-        $requestLogger->warning('接单间隔不足3分钟', ['time_diff' => $timeDiff]);
-
-        $auditLogger->warning('C端用户接单失败：接单间隔不足', [
-            'user_id' => $currentUser['user_id'],
-            'time_diff' => $timeDiff,
+    if ($staticRecord && !empty($staticRecord['accept_task_update_at'])) {
+        $lastAcceptTime = strtotime($staticRecord['accept_task_update_at']);
+        $currentTime = time();
+        $timeDiff = $currentTime - $lastAcceptTime;
+        $requestLogger->debug('最后接单时间', [
+            'last_accept_time' => $staticRecord['accept_task_update_at'],
+            'time_diff' => $timeDiff . '秒',
+            'cooling_time_seconds' => $acceptCoolingTime
         ]);
 
-        if (method_exists($requestLogger, 'flush')) {
-            $requestLogger->flush();
-        }
-        if (method_exists($auditLogger, 'flush')) {
-            $auditLogger->flush();
-        }
+        if ($timeDiff < $acceptCoolingTime) {
+            $waitSeconds = $acceptCoolingTime - $timeDiff;
+            $waitMinutes = round($waitSeconds / 60, 1);
+            $requestLogger->warning('接单间隔不足', [
+                'time_diff' => $timeDiff,
+                'required_cooling_time' => $acceptCoolingTime,
+                'wait_seconds' => $waitSeconds
+            ]);
 
-        Response::error('请稍后再试，接单间隔需至少3分钟', 9012);
+            $auditLogger->warning('C 端用户接单失败：接单间隔不足', [
+                'user_id' => $currentUser['user_id'],
+                'time_diff' => $timeDiff,
+                'required_cooling_time' => $acceptCoolingTime,
+            ]);
+
+            if (method_exists($requestLogger, 'flush')) {
+                $requestLogger->flush();
+            }
+            if (method_exists($auditLogger, 'flush')) {
+                $auditLogger->flush();
+            }
+
+            Response::error("请稍后再试，接单间隔需至少" . ($acceptCoolingTime / 60) . "分钟（还需等待{$waitMinutes}分钟）", 9012);
+        }
     }
+    $requestLogger->debug('接单间隔符合要求或无历史记录');
 }
-$requestLogger->debug('接单间隔符合要求');
 
 $input = json_decode($requestBody, true);
 $bTaskId = $input['b_task_id'] ?? 0;
@@ -352,38 +380,52 @@ try {
         ]);
     }
 
-    if ($rejectedCount >= 3) {
-        $requestLogger->warning('用户驳回次数超限', ['rejected_count' => $rejectedCount]);
+    if ($rejectedCount >= $rejectedCountLimit) {
+        $requestLogger->warning('用户驳回次数超限', [
+            'rejected_count' => $rejectedCount,
+            'rejected_count_limit' => $rejectedCountLimit
+        ]);
 
-        $auditLogger->notice('C端用户接单失败：驳回次数超限', [
+        $auditLogger->notice('C 端用户接单失败：驳回次数超限', [
             'user_id' => $currentUser['user_id'],
             'rejected_count' => $rejectedCount,
+            'rejected_count_limit' => $rejectedCountLimit,
         ]);
 
         if (method_exists($auditLogger, 'flush')) {
             $auditLogger->flush();
         }
 
-        Response::error('您今日已被驳回3次，暂时无法接单，请明天再试', $errorCodes['TASK_ACCEPT_REJECT_LIMIT']);
+        Response::error("您今日已被驳回{$rejectedCountLimit}次，暂时无法接单，请明天再试", $errorCodes['TASK_ACCEPT_REJECT_LIMIT']);
     }
-    $requestLogger->debug('驳回次数未超限');
+    $requestLogger->debug('驳回次数未超限', [
+        'rejected_count' => $rejectedCount,
+        'rejected_count_limit' => $rejectedCountLimit
+    ]);
 
     $requestLogger->debug('校验弃单次数', ['abandon_count' => $abandonCount]);
-    if ($abandonCount >= 3) {
-        $requestLogger->warning('用户弃单次数超限', ['abandon_count' => $abandonCount]);
+    if ($abandonCount >= $abandonCountLimit) {
+        $requestLogger->warning('用户弃单次数超限', [
+            'abandon_count' => $abandonCount,
+            'abandon_count_limit' => $abandonCountLimit
+        ]);
 
-        $auditLogger->notice('C端用户接单失败：弃单次数超限', [
+        $auditLogger->notice('C 端用户接单失败：弃单次数超限', [
             'user_id' => $currentUser['user_id'],
             'abandon_count' => $abandonCount,
+            'abandon_count_limit' => $abandonCountLimit,
         ]);
 
         if (method_exists($auditLogger, 'flush')) {
             $auditLogger->flush();
         }
 
-        Response::error('您今日已弃单超过3次，暂时无法接单，请明天再试', $errorCodes['TASK_ACCEPT_REJECT_LIMIT']);
+        Response::error("您今日已弃单超过{$abandonCountLimit}次，暂时无法接单，请明天再试", $errorCodes['TASK_ACCEPT_REJECT_LIMIT']);
     }
-    $requestLogger->debug('弃单次数未超限');
+    $requestLogger->debug('弃单次数未超限', [
+        'abandon_count' => $abandonCount,
+        'abandon_count_limit' => $abandonCountLimit
+    ]);
 
     $requestLogger->debug('查询任务信息', ['b_task_id' => $bTaskId, 'table' => $taskTable]);
     $stmt = $db->prepare("
@@ -526,44 +568,39 @@ try {
     $requestLogger->debug('计算佣金', ['stage' => $stage, 'reward_amount' => $rewardAmount . '分']);
 
     $taskStage = (int)$bTask['stage'];
-    $taskStageText = '';
     $templateId = (int)$bTask['template_id'];
+    $templateTitle = $template['title'] ?? '';
 
+    // 根据stage获取task_stage_text
     if ($taskStage === 0) {
-        $taskStageText = $template['title'] ?? '';
+        // 单任务：使用description1字段
+        $taskStageText = $template['description1'] ?? '';
+    } elseif ($taskStage === 1) {
+        // 组合任务阶段1：使用stage1_title字段
+        $taskStageText = $template['stage1_title'] ?? '';
+    } elseif ($taskStage === 2) {
+        // 组合任务阶段2：使用stage2_title字段
+        $taskStageText = $template['stage2_title'] ?? '';
     } else {
-        switch ($templateId) {
-            case 1:
-                $taskStageText = '上评评论';
-                break;
-            case 2:
-                $taskStageText = '中评评论';
-                break;
-            case 3:
-                $taskStageText = '放大镜搜索词';
-                break;
-            case 4:
-                $taskStageText = $taskStage === 1 ? '上评评论' : '中评评论';
-                break;
-            case 5:
-                $taskStageText = $taskStage === 1 ? '中评评论' : '下评评论';
-                break;
-        }
+        $taskStageText = '';
     }
-    $requestLogger->debug('任务阶段信息', ['stage' => $taskStage, 'stage_text' => $taskStageText]);
+    $requestLogger->debug('任务阶段信息', ['stage' => $taskStage, 'stage_text' => $taskStageText, 'template_title' => $templateTitle]);
 
     $requestLogger->debug('插入C端任务记录');
+
+    // 插入到c_task_records表
     $stmt = $db->prepare("
         INSERT INTO c_task_records (
-            c_user_id, b_task_id, b_user_id, template_id,
+            c_user_id, b_task_id, b_user_id, template_id, template_title,
             video_url, recommend_mark, reward_amount, status, task_stage, task_stage_text
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
     ");
     $stmt->execute([
         $currentUser['user_id'],
         $bTaskId,
         $bTask['b_user_id'],
         $bTask['template_id'],
+        $templateTitle,
         $bTask['video_url'],
         json_encode($recommendMark, JSON_UNESCAPED_UNICODE),
         $rewardAmount,

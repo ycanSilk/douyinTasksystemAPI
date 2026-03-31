@@ -351,23 +351,24 @@ try {
     $stmt = $db->prepare("
         INSERT INTO c_users (
             username, email, phone, password_hash, invite_code, 
-            parent_id, is_agent, wallet_id, create_ip, status, max_devices
+            parent_id, is_agent, is_newbie, wallet_id, create_ip, status, max_devices
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?, 1, ?)
+        VALUES (?, ?, ?, ?, ?, ?, 0, NULL, NULL, ?, 1, ?)
     ");
     $requestLogger->debug('执行用户插入', [
         'username' => $username,
-        'email' => $email, 
-        'phone' => $phone, 
+        'email' => $email,
+        'phone' => $phone,
         'invite_code' => $inviteCode,
         'parent_id' => $parentId,
+        'is_newbie' => null,
         'create_ip' => $createIp,
         'max_devices' => $maxDevices
     ]);
     $stmt->execute([
         $username,
-        $email, 
-        $phone, 
+        $email,
+        $phone,
         $passwordHash,
         $inviteCode,
         $parentId,
