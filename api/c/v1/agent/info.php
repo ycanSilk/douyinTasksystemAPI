@@ -80,7 +80,12 @@ try {
         'username' => $user['username'],
         'invite_code' => $user['invite_code'],
         'is_agent' => (int)$user['is_agent'],
-        'is_agent_text' => [0 => '普通用户', 1 => '团长', 2 => '高级团长'][(int)$user['is_agent']] ?? '普通用户',
+        'is_agent_text' => [
+            0 => '普通用户',
+            1 => '普通团长',
+            2 => '高级团长',
+            3 => '大团团长'
+        ][(int)$user['is_agent']] ?? '普通用户',
         'parent_id' => $user['parent_id'] ? (int)$user['parent_id'] : null,
         'parent_username' => $user['parent_username'],
         'created_at' => $user['created_at']
