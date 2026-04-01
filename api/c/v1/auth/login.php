@@ -32,13 +32,6 @@ require_once __DIR__ . '/../../../../core/Response.php';
 $input = json_decode(file_get_contents('php://input'), true);
 $account = trim($input['account'] ?? '');
 $password = trim($input['password'] ?? '');
-$deviceId = trim($input['device_id'] ?? '');
-$deviceName = trim($input['device_name'] ?? '');
-
-// 设备ID不能为空
-if (empty($deviceId)) {
-    Response::error('设备ID不能为空', 401);
-}
 
 // 参数校验
 if (empty($account)) {
@@ -85,71 +78,18 @@ try {
         Response::error($message, 2005);
     }
     
-    // 从 app_config 表中查询 C端用户最大登录设备数配置
-    $stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = 'c_user_login_max_devices'");
-    $stmt->execute();
-    $maxDevicesConfig = $stmt->fetchColumn();
-    $maxDevices = $maxDevicesConfig ? (int)$maxDevicesConfig : 1; // 默认值为1
-    
-    $deviceList = [];
-    if (!empty($user['device_list'])) {
-        $deviceList = json_decode($user['device_list'], true) ?: [];
-    }
-    
-    // 检查设备数量限制
-    if ($maxDevices > 0 && count($deviceList) >= $maxDevices) {
-        // 检查当前设备是否已在列表中
-        $deviceExists = false;
-        foreach ($deviceList as $device) {
-            if ($device['device_id'] == $deviceId) {
-                $deviceExists = true;
-                break;
-            }
-        }
-        
-        if (!$deviceExists) {
-            Response::error('登录设备数量已达到限制', 401);
-        }
-    }
-    
-    // 更新设备列表
-    $deviceInfo = [
-        'device_id' => $deviceId,
-        'device_name' => $deviceName,
-        'login_time' => date('Y-m-d H:i:s'),
-        'last_activity' => date('Y-m-d H:i:s')
-    ];
-    
-    // 检查设备是否已存在，存在则更新，不存在则添加
-    $deviceExists = false;
-    foreach ($deviceList as &$device) {
-        if ($device['device_id'] == $deviceId) {
-            $device = $deviceInfo;
-            $deviceExists = true;
-            break;
-        }
-    }
-    
-    if (!$deviceExists) {
-        $deviceList[] = $deviceInfo;
-    }
-    
     // 生成新 Token（覆盖旧 Token，实现踢下线）
     $tokenData = Token::generate($user['id'], Token::TYPE_C);
     
-    // 更新数据库中的 token、过期时间和设备信息
+    // 更新数据库中的 token 和过期时间
     $stmt = $db->prepare(" 
         UPDATE c_users 
-        SET token = ?, token_expired_at = ?, device_id = ?, device_name = ?, last_login_device = ?, device_list = ? 
+        SET token = ?, token_expired_at = ? 
         WHERE id = ?
     ");
     $stmt->execute([
         $tokenData['token'], 
         $tokenData['expired_at'],
-        $deviceId,
-        $deviceName,
-        json_encode($deviceInfo),
-        json_encode($deviceList),
         $user['id']
     ]);
     
@@ -163,11 +103,7 @@ try {
         'invite_code' => $user['invite_code'],
         'parent_id' => $user['parent_id'],
         'is_agent' => (int)$user['is_agent'],
-        'wallet_id' => $user['wallet_id'],
-        'device_id' => $deviceId,
-        'device_name' => $deviceName,
-        'max_devices' => $maxDevices,
-        'device_list' => $deviceList
+        'wallet_id' => $user['wallet_id']
     ], '登录成功');
     
 } catch (PDOException $e) {

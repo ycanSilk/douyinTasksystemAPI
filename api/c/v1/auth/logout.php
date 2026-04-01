@@ -10,6 +10,7 @@
  * 功能：
  * - 清除数据库中的token
  * - 使当前token失效
+ * - 清空设备相关字段（device_id, device_name, last_login_device, device_list）
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -45,36 +46,16 @@ try {
     $result = Token::clearFromDatabase($currentUser['user_id'], Token::TYPE_C, $db);
     
     if ($result) {
-        // 清理设备信息：从 device_list 中移除当前设备
-        $currentDeviceId = $currentUser['device_id'] ?? null;
-        if ($currentDeviceId) {
-            // 获取当前 device_list
-            $deviceList = !empty($currentUser['device_list']) 
-                ? json_decode($currentUser['device_list'], true) 
-                : [];
-            
-            // 过滤掉当前设备
-            $deviceList = array_filter($deviceList, function($device) use ($currentDeviceId) {
-                return $device['device_id'] !== $currentDeviceId;
-            });
-            
-            // 重新索引数组
-            $deviceList = array_values($deviceList);
-            
-            // 更新用户设备信息
-            $updateStmt = $db->prepare("
-                UPDATE c_users 
-                SET device_list = ?, 
-                    device_id = NULL,
-                    device_name = NULL,
-                    last_login_device = NULL
-                WHERE id = ?
-            ");
-            $updateStmt->execute([
-                count($deviceList) > 0 ? json_encode($deviceList, JSON_UNESCAPED_UNICODE) : '[]',
-                $currentUser['user_id']
-            ]);
-        }
+        // 清空设备相关字段
+        $updateStmt = $db->prepare("
+            UPDATE c_users 
+            SET device_id = NULL,
+                device_name = NULL,
+                last_login_device = NULL,
+                device_list = '[]'
+            WHERE id = ?
+        ");
+        $updateStmt->execute([$currentUser['user_id']]);
         
         Response::success([
             'user_id' => $currentUser['user_id'],

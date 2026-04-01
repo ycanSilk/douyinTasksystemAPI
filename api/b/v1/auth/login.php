@@ -7,17 +7,13 @@
  * 请求体：
  * {
  *   "account": "string (必填，支持邮箱或手机号)",
- *   "password": "string (必填)",
- *   "device_id": "string (必填)",
- *   "device_name": "string (选填)"
+ *   "password": "string (必填)"
  * }
  * 
  * 请求示例：
  * {
  *   "account": "test@example.com",
- *   "password": "123456",
- *   "device_id": "device_12345",
- *   "device_name": "iPhone 15"
+ *   "password": "123456"
  * }
  * 
  * 成功响应示例：
@@ -32,30 +28,17 @@
  *     "phone": "13800138000",
  *     "organization_name": "测试组织",
  *     "organization_leader": "张三",
- *     "wallet_id": 1,
- *     "device_id": "device_12345",
- *     "device_name": "iPhone 15",
- *     "max_devices": 1,
- *     "device_list": [
- *       {
- *         "device_id": "device_12345",
- *         "device_name": "iPhone 15",
- *         "login_time": "2026-03-24 10:00:00",
- *         "last_activity": "2026-03-24 10:00:00"
- *       }
- *     ]
+ *     "wallet_id": 1
  *   },
  *   "timestamp": 1711267200
  * }
  * 
  * 错误码说明：
  * 1001 - 请求方法错误
- * 4001 - 设备 ID 不能为空
  * 4002 - 账号不能为空
  * 4003 - 密码不能为空
  * 4004 - 账号或密码错误
  * 4005 - 账号已被禁用
- * 4006 - 登录设备数量已达到限制
  * 5001 - 数据库错误
  * 5002 - 系统错误
  */
@@ -120,43 +103,12 @@ require_once __DIR__ . '/../../../../core/Response.php';
 $input = json_decode($rawInput, true);
 $account = trim($input['account'] ?? '');
 $password = trim($input['password'] ?? '');
-$deviceId = trim($input['device_id'] ?? '');
-$deviceName = trim($input['device_name'] ?? '');
 
 // 记录请求参数（敏感信息会自动脱敏）
 $requestLogger->debug('请求参数', [
     'account' => $account,
     'password' => $password,
-    'device_id' => $deviceId,
-    'device_name' => $deviceName,
 ]);
-
-// 设备 ID 不能为空
-if (empty($deviceId)) {
-    $requestLogger->warning('设备 ID 为空', ['device_id' => $deviceId]);
-    
-    // 记录审计日志
-    $auditLogger->warning('B 端用户登录失败：设备 ID 为空', [
-        'device_id' => $deviceId,
-        'reason' => '设备 ID 不能为空',
-    ]);
-    
-    // 手动刷新异步队列
-    if (method_exists($requestLogger, 'flush')) {
-        $requestLogger->flush();
-    }
-    if (method_exists($auditLogger, 'flush')) {
-        $auditLogger->flush();
-    }
-    
-    echo json_encode([
-        'code' => 4001,
-        'message' => '设备 ID 不能为空',
-        'data' => [],
-        'timestamp' => time()
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
 
 // 参数校验
 if (empty($account)) {
@@ -165,7 +117,6 @@ if (empty($account)) {
     // 记录审计日志
     $auditLogger->warning('B 端用户登录失败：账号为空', [
         'account' => $account,
-        'device_id' => $deviceId,
         'reason' => '账号不能为空',
     ]);
     
@@ -192,7 +143,6 @@ if (empty($password)) {
     // 记录审计日志
     $auditLogger->warning('B 端用户登录失败：密码为空', [
         'account' => $account,
-        'device_id' => $deviceId,
         'reason' => '密码不能为空',
     ]);
     
@@ -248,7 +198,7 @@ try {
     $requestLogger->debug('开始查询用户信息', ['account' => $account]);
     $stmt = $db->prepare(" 
         SELECT id, username, email, phone, password_hash, organization_name, 
-               organization_leader, wallet_id, status, reason, max_devices, device_list
+               organization_leader, wallet_id, status, reason
         FROM b_users 
         WHERE username = ? OR email = ? OR phone = ?
     ");
@@ -271,8 +221,6 @@ try {
         // 记录审计日志
         $auditLogger->warning('B 端用户登录失败：账号或密码错误', [
             'account' => $account,
-            'device_id' => $deviceId,
-            'device_name' => $deviceName,
             'reason' => '账号或密码错误',
         ]);
         
@@ -306,8 +254,6 @@ try {
         $auditLogger->warning('B 端用户登录失败：账号已被禁用', [
             'user_id' => $user['id'],
             'username' => $user['username'],
-            'device_id' => $deviceId,
-            'device_name' => $deviceName,
             'reason' => $reason,
         ]);
         
@@ -328,112 +274,21 @@ try {
         exit;
     }
     
-    // 检查设备限制
-    $maxDevices = isset($user['max_devices']) ? (int)$user['max_devices'] : 1;
-    $deviceList = [];
-    if (!empty($user['device_list'])) {
-        $deviceList = json_decode($user['device_list'], true) ?: [];
-    }
-    
-    $requestLogger->debug('设备限制信息', [
-        'max_devices' => $maxDevices,
-        'current_devices' => count($deviceList),
-    ]);
-    
-    // 检查设备数量限制
-    if ($maxDevices > 0 && count($deviceList) >= $maxDevices) {
-        // 检查当前设备是否已在列表中
-        $deviceExists = false;
-        foreach ($deviceList as $device) {
-            if ($device['device_id'] == $deviceId) {
-                $deviceExists = true;
-                break;
-            }
-        }
-        
-        $requestLogger->debug('设备检查结果', ['exists' => $deviceExists]);
-        
-        if (!$deviceExists) {
-            $requestLogger->warning('登录失败：设备数量超限', [
-                'user_id' => $user['id'],
-                'max_devices' => $maxDevices,
-                'current_devices' => count($deviceList),
-            ]);
-            
-            // 记录审计日志
-            $auditLogger->warning('B 端用户登录失败：设备数量超限', [
-                'user_id' => $user['id'],
-                'username' => $user['username'],
-                'device_id' => $deviceId,
-                'device_name' => $deviceName,
-                'max_devices' => $maxDevices,
-                'current_devices' => count($deviceList),
-                'reason' => '设备数量已达到限制',
-            ]);
-            
-            // 手动刷新异步队列
-            if (method_exists($requestLogger, 'flush')) {
-                $requestLogger->flush();
-            }
-            if (method_exists($auditLogger, 'flush')) {
-                $auditLogger->flush();
-            }
-            
-            echo json_encode([
-                'code' => 4006,
-                'message' => '登录设备数量已达到限制，最多只能登录' . $maxDevices . '个设备',
-                'data' => [],
-                'timestamp' => time()
-            ], JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-    }
-    
-    // 更新设备列表
-    $deviceInfo = [
-        'device_id' => $deviceId,
-        'device_name' => $deviceName,
-        'login_time' => date('Y-m-d H:i:s'),
-        'last_activity' => date('Y-m-d H:i:s')
-    ];
-    
-    $requestLogger->debug('设备信息', ['device_info' => $deviceInfo]);
-    
-    // 检查设备是否已存在，存在则更新，不存在则添加
-    $deviceExists = false;
-    foreach ($deviceList as &$device) {
-        if ($device['device_id'] == $deviceId) {
-            $device = $deviceInfo;
-            $deviceExists = true;
-            break;
-        }
-    }
-    
-    if (!$deviceExists) {
-        $deviceList[] = $deviceInfo;
-    }
-    
-    $requestLogger->debug('更新后设备列表', ['device_list' => $deviceList]);
-    
     // 生成新 Token（覆盖旧 Token，实现踢下线）
     $requestLogger->debug('开始生成 Token');
     $tokenData = Token::generate($user['id'], Token::TYPE_B);
     $requestLogger->debug('Token 生成成功', ['expired_at' => $tokenData['expired_at']]);
     
-    // 更新数据库中的 token、过期时间和设备信息
+    // 更新数据库中的 token 和过期时间
     $requestLogger->debug('开始更新用户信息到数据库', ['user_id' => $user['id']]);
     $stmt = $db->prepare(" 
         UPDATE b_users 
-        SET token = ?, token_expired_at = ?, device_id = ?, device_name = ?, last_login_device = ?, device_list = ? 
+        SET token = ?, token_expired_at = ?
         WHERE id = ?
     ");
     $result = $stmt->execute([
         $tokenData['token'], 
         $tokenData['expired_at'],
-        $deviceId,
-        $deviceName,
-        json_encode($deviceInfo),
-        json_encode($deviceList),
         $user['id']
     ]);
     
@@ -443,8 +298,6 @@ try {
     $auditLogger->notice('B 端用户登录成功', [
         'user_id' => $user['id'],
         'username' => $user['username'],
-        'device_id' => $deviceId,
-        'device_name' => $deviceName,
     ]);
     echo "\n";
     
@@ -468,11 +321,7 @@ try {
             'phone' => $user['phone'],
             'organization_name' => $user['organization_name'],
             'organization_leader' => $user['organization_leader'],
-            'wallet_id' => $user['wallet_id'],
-            'device_id' => $deviceId,
-            'device_name' => $deviceName,
-            'max_devices' => $maxDevices,
-            'device_list' => $deviceList
+            'wallet_id' => $user['wallet_id']
         ]
     ];
     

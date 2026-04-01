@@ -34,10 +34,11 @@
  *
  * 接单规则：
  * 1. 一个C端用户同一时间只能有1条doing状态任务
- * 2. 如果用户当日rejected_count >= 6，则禁止接单
- * 3. 如果用户当日abandon_count >= 6，则禁止接单
- * 4. 如果任务剩余数量 <= 0，则禁止接单
- * 5. 只能接开放状态的任务（stage_status=1）
+ * 2. 同一个b_tasks id，每个C用户只能接一次（组合任务内同一用户只能接一次，接了阶段1就不能接阶段2）
+ * 3. 如果用户当日rejected_count >= 6，则禁止接单
+ * 4. 如果用户当日abandon_count >= 6，则禁止接单
+ * 5. 如果任务剩余数量 <= 0，则禁止接单
+ * 6. 只能接开放状态的任务（stage_status=1）
  *
  * 错误码说明：
  * 1001  - 请求方法错误
@@ -49,6 +50,7 @@
  * 4005  - 任务未开放
  * 5000  - 系统错误
  * 9000  - 您当前有进行中的任务，请先完成或提交后再接新任务
+ * 9001  - 您已接过该任务，不能重复接单
  * 9002  - 您今日已被驳回6次，暂时无法接单，请明天再试
  * 9003  - 您今日已弃单超过6次，暂时无法接单，请明天再试
  * 9004  - 接单失败
@@ -267,6 +269,27 @@ try {
     }
     $requestLogger->debug('无进行中任务');
 
+    $requestLogger->debug('校验用户是否已接过该任务', ['b_task_id' => $bTaskId]);
+    $stmt = $db->prepare("
+        SELECT id FROM c_task_records
+        WHERE c_user_id = ? AND b_task_id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$currentUser['user_id'], $bTaskId]);
+    if ($stmt->fetch()) {
+        $auditLogger->notice('C端用户接单失败：重复接单', [
+            'user_id' => $currentUser['user_id'],
+            'b_task_id' => $bTaskId,
+        ]);
+
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+
+        Response::error('您已接过该任务，不能重复接单', $errorCodes['TASK_ACCEPT_ALREADY_ACCEPTED']);
+    }
+    $requestLogger->debug('非重复接单');
+
     $today = date('Y-m-d');
     $requestLogger->debug('查询当日统计记录', ['user_id' => $currentUser['user_id'], 'stat_date' => $today]);
     $stmt = $db->prepare("
@@ -378,7 +401,27 @@ try {
 
     $comboTaskId = $bTask['combo_task_id'];
     if (!empty($comboTaskId)) {
-        $requestLogger->debug('任务为组合任务', ['combo_task_id' => $comboTaskId]);
+        $requestLogger->debug('校验组合任务', ['combo_task_id' => $comboTaskId]);
+        $stmt = $db->prepare("
+            SELECT ctr.id FROM c_task_records ctr
+            INNER JOIN $taskTable bt ON bt.id = ctr.b_task_id
+            WHERE ctr.c_user_id = ? AND bt.combo_task_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$currentUser['user_id'], $comboTaskId]);
+        if ($stmt->fetch()) {
+            $auditLogger->notice('C端用户接单失败：重复接组合任务', [
+                'user_id' => $currentUser['user_id'],
+                'combo_task_id' => $comboTaskId,
+            ]);
+
+            if (method_exists($auditLogger, 'flush')) {
+                $auditLogger->flush();
+            }
+
+            Response::error('您已接过该组合任务，不能重复接单', $errorCodes['TASK_ACCEPT_ALREADY_ACCEPTED']);
+        }
+        $requestLogger->debug('非重复接组合任务');
     }
 
     $requestLogger->debug('校验任务开放状态', ['stage_status' => $bTask['stage_status']]);
