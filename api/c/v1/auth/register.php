@@ -25,7 +25,7 @@
  *     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
  *     "user_id": 123,
  *     "username": "testuser",
- *     "email": "test@example.com",
+ *     "email": "test.com",
  *     "phone": "13800138000",
  *     "invite_code": "ABC123",
  *     "captain_id": 456,
@@ -351,18 +351,21 @@ try {
     $stmt = $db->prepare("
         INSERT INTO c_users (
             username, email, phone, password_hash, invite_code, 
-            parent_id, is_agent, is_newbie, wallet_id, create_ip, status, max_devices
+            parent_id, is_agent, wallet_id, create_ip, status, max_devices
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, 0, NULL, NULL, ?, 1, ?)
+        VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?, 1, ?)
     ");
     $requestLogger->debug('执行用户插入', [
         'username' => $username,
         'email' => $email,
         'phone' => $phone,
+        'password_hash' => $passwordHash,
         'invite_code' => $inviteCode,
         'parent_id' => $parentId,
-        'is_newbie' => null,
+        'is_agent' => 0,
+        'wallet_id' => null,
         'create_ip' => $createIp,
+        'status' => 1,
         'max_devices' => $maxDevices
     ]);
     $stmt->execute([

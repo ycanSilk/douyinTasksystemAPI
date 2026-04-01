@@ -773,7 +773,7 @@ try {
                             } elseif ($agentLevel === 3) {
                                 $agentType = '大团团长';
                             }
-                            $agentRemark = "当前用户： {$user['username']},用户等级是{$agentType}； 当前用户的邀请用户:{$cUser['username']},完成任务，获得一级团长佣金，任务 ID：{$bTaskId}，任务类型：{$taskTypeText}，当前任务阶段：{$task_stage}：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
+                            $agentRemark = "当前用户： {$user['username']},用户等级是{$agentType}； 当前用户的邀请用户:{$cUser['username']},完成任务，获得一级团长佣金，任务 ID：{$bTaskId}，任务类型：{$taskTypeText}，当前任务阶段：{$stage}：{$record['task_stage_text']}，任务单价：{$taskUnitPrice}元，完成任务用户：{$cUser['username']}，用户获得奖励：" . ($cUserCommission / 100) . "元";
                             
                             // 记录一级代理 C 端任务统计
                             try {

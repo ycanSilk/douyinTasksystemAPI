@@ -57,8 +57,7 @@ try {
     $stmt = $db->prepare(" 
         SELECT id, username, email, phone, password_hash, 
                invite_code, parent_id, is_agent, wallet_id, status, reason, 
-               blocked_status, blocked_start_time, blocked_duration, blocked_end_time, 
-               has_completed_newbie_guide, is_newbie
+               blocked_status, blocked_start_time, blocked_duration, blocked_end_time
         FROM c_users 
         WHERE username = ? OR email = ? OR phone = ?
     ");
@@ -164,13 +163,11 @@ try {
         'invite_code' => $user['invite_code'],
         'parent_id' => $user['parent_id'],
         'is_agent' => (int)$user['is_agent'],
-        'is_newbie' => (int)($user['is_newbie'] ?? 1),
         'wallet_id' => $user['wallet_id'],
         'device_id' => $deviceId,
         'device_name' => $deviceName,
         'max_devices' => $maxDevices,
-        'device_list' => $deviceList,
-        'has_completed_newbie_guide' => (int)($user['has_completed_newbie_guide'] ?? 0)
+        'device_list' => $deviceList
     ], '登录成功');
     
 } catch (PDOException $e) {

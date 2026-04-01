@@ -253,14 +253,62 @@ async function viewMagnifierTaskDetail(taskId) {
 
 // 复制链接到剪贴板
 function copyLink(link) {
-    navigator.clipboard.writeText(link)
-        .then(() => {
+    // 检查 navigator.clipboard 是否可用
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(link)
+            .then(() => {
+                showToast('链接已复制到剪贴板', 'success');
+            })
+            .catch(err => {
+                console.error('复制链接失败:', err);
+                fallbackCopyTextToClipboard(link);
+            });
+    } else {
+        // 回退到传统方法
+        fallbackCopyTextToClipboard(link);
+    }
+}
+
+// 确保 URL 是完整的格式
+function ensureFullUrl(url) {
+    if (!url) return '';
+    
+    // 检查是否已经是完整的 URL
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+    
+    // 添加 http:// 前缀
+    return 'http://' + url;
+}
+
+// 传统复制方法（兼容旧浏览器和非HTTPS环境）
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    
+    // 确保文本区域不在可视区域内
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
             showToast('链接已复制到剪贴板', 'success');
-        })
-        .catch(err => {
-            console.error('复制链接失败:', err);
+        } else {
             showToast('复制失败，请手动复制', 'error');
-        });
+        }
+    } catch (err) {
+        console.error('复制链接失败:', err);
+        showToast('复制失败，请手动复制', 'error');
+    } finally {
+        document.body.removeChild(textArea);
+    }
 }
 
 // 显示放大镜任务详情模态框
@@ -346,7 +394,7 @@ function showMagnifierTaskDetailModal(data) {
                             <label>视频链接</label>
                             <div>
                                 ${task.video_url ? 
-                                    `<a href="${task.video_url.replace(/`/g, '')}" target="_blank" class="text-primary" style="display: inline-flex; align-items: center; gap: 6px;"><i class="ri-play-circle-line"></i> 查看视频</a>` : 
+                                    `<a href="${ensureFullUrl(task.video_url.replace(/`/g, ''))}" target="_blank" class="text-primary" style="display: inline-flex; align-items: center; gap: 6px;"><i class="ri-play-circle-line"></i> 查看视频</a>` : 
                                     '<span style="color: var(--text-secondary);">无</span>'
                                 }
                             </div>

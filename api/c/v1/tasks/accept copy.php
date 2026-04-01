@@ -34,10 +34,12 @@
  *
  * 接单规则：
  * 1. 一个C端用户同一时间只能有1条doing状态任务
- * 2. 如果用户当日rejected_count >= 6，则禁止接单
- * 3. 如果用户当日abandon_count >= 6，则禁止接单
- * 4. 如果任务剩余数量 <= 0，则禁止接单
- * 5. 只能接开放状态的任务（stage_status=1）
+ * 2. 同一个b_tasks id，每个C用户只能接一次（组合任务内同一用户只能接一次，接了阶段1就不能接阶段2）
+ * 3. 如果用户当日rejected_count >= 3，则禁止接单
+ * 4. 如果用户当日abandon_count >= 4，则禁止接单
+ * 5. 如果任务剩余数量 <= 0，则禁止接单
+ * 6. 只能接开放状态的任务（stage_status=1）
+ * 7. 接单间隔需至少3分钟
  *
  * 错误码说明：
  * 1001  - 请求方法错误
@@ -49,11 +51,13 @@
  * 4005  - 任务未开放
  * 5000  - 系统错误
  * 9000  - 您当前有进行中的任务，请先完成或提交后再接新任务
- * 9002  - 您今日已被驳回6次，暂时无法接单，请明天再试
- * 9003  - 您今日已弃单超过6次，暂时无法接单，请明天再试
+ * 9001  - 您已接过该任务，不能重复接单
+ * 9002  - 您今日已被驳回3次，暂时无法接单，请明天再试
+ * 9003  - 您今日已弃单超过4次，暂时无法接单，请明天再试
  * 9004  - 接单失败
  * 9005  - 该任务暂未开放，无法接单
  * 9011  - 账号已被禁止接单
+ * 9012  - 请稍后再试，接单间隔需至少3分钟
  * 9013  - 该任务已无剩余名额，无法接单
  */
 
@@ -119,9 +123,11 @@ try {
     require_once __DIR__ . '/../../../../core/AppConfig.php';
     $abandonCountLimit = AppConfig::get('abandon_count', 6); // 默认值为 6
     $rejectedCountLimit = AppConfig::get('rejected_count', 6); // 默认值为 6
+    $acceptCoolingTime = AppConfig::get('accept_cooling_time', 180); // 默认值为 180 秒（3 分钟）
     $requestLogger->debug('获取配置限制', [
         'abandon_count_limit' => $abandonCountLimit,
-        'rejected_count_limit' => $rejectedCountLimit
+        'rejected_count_limit' => $rejectedCountLimit,
+        'accept_cooling_time' => $acceptCoolingTime
     ]);
 } catch (Exception $e) {
     $errorLogger->error('数据库连接失败', ['exception' => $e->getMessage()]);
@@ -235,7 +241,59 @@ if ($userInfo) {
     }
 }
 
-$requestLogger->info('移除接单冷却时间限制，跳过接单间隔检查');
+$requestLogger->debug('查询用户冷却时间限制设置');
+$stmt = $db->prepare("SELECT cooling_time_limit FROM c_users WHERE id = ?");
+$stmt->execute([$currentUser['user_id']]);
+$userCoolingSetting = $stmt->fetch(PDO::FETCH_ASSOC);
+$coolingTimeLimit = $userCoolingSetting['cooling_time_limit'] ?? 1; // 默认值为 1（开启限制，包括 NULL 情况）
+$requestLogger->debug('用户冷却时间限制设置', ['cooling_time_limit' => $coolingTimeLimit]);
+
+// 只有当 cooling_time_limit=0 时，才跳过冷却时间检查；其他情况（1 或 NULL）都开启限制
+if ($coolingTimeLimit === 0) {
+    $requestLogger->info('冷却时间限制已关闭，跳过接单间隔检查', ['cooling_time_limit' => $coolingTimeLimit]);
+} else {
+    $requestLogger->debug('冷却时间限制已开启（值为 1 或 NULL），检查接单间隔');
+    $stmt = $db->prepare("SELECT accept_task_update_at FROM c_user_task_records_static WHERE user_id = ?");
+    $stmt->execute([$currentUser['user_id']]);
+    $staticRecord = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($staticRecord && !empty($staticRecord['accept_task_update_at'])) {
+        $lastAcceptTime = strtotime($staticRecord['accept_task_update_at']);
+        $currentTime = time();
+        $timeDiff = $currentTime - $lastAcceptTime;
+        $requestLogger->debug('最后接单时间', [
+            'last_accept_time' => $staticRecord['accept_task_update_at'],
+            'time_diff' => $timeDiff . '秒',
+            'cooling_time_seconds' => $acceptCoolingTime
+        ]);
+
+        if ($timeDiff < $acceptCoolingTime) {
+            $waitSeconds = $acceptCoolingTime - $timeDiff;
+            $waitMinutes = round($waitSeconds / 60, 1);
+            $requestLogger->warning('接单间隔不足', [
+                'time_diff' => $timeDiff,
+                'required_cooling_time' => $acceptCoolingTime,
+                'wait_seconds' => $waitSeconds
+            ]);
+
+            $auditLogger->warning('C 端用户接单失败：接单间隔不足', [
+                'user_id' => $currentUser['user_id'],
+                'time_diff' => $timeDiff,
+                'required_cooling_time' => $acceptCoolingTime,
+            ]);
+
+            if (method_exists($requestLogger, 'flush')) {
+                $requestLogger->flush();
+            }
+            if (method_exists($auditLogger, 'flush')) {
+                $auditLogger->flush();
+            }
+
+            Response::error("请稍后再试，接单间隔需至少" . ($acceptCoolingTime / 60) . "分钟（还需等待{$waitMinutes}分钟）", 9012);
+        }
+    }
+    $requestLogger->debug('接单间隔符合要求或无历史记录');
+}
 
 $input = json_decode($requestBody, true);
 $bTaskId = $input['b_task_id'] ?? 0;
@@ -266,6 +324,27 @@ try {
         Response::error('您当前有进行中的任务，请先完成或提交后再接新任务', $errorCodes['TASK_ACCEPT_ALREADY_DOING']);
     }
     $requestLogger->debug('无进行中任务');
+
+    $requestLogger->debug('校验用户是否已接过该任务', ['b_task_id' => $bTaskId]);
+    $stmt = $db->prepare("
+        SELECT id FROM c_task_records
+        WHERE c_user_id = ? AND b_task_id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$currentUser['user_id'], $bTaskId]);
+    if ($stmt->fetch()) {
+        $auditLogger->notice('C端用户接单失败：重复接单', [
+            'user_id' => $currentUser['user_id'],
+            'b_task_id' => $bTaskId,
+        ]);
+
+        if (method_exists($auditLogger, 'flush')) {
+            $auditLogger->flush();
+        }
+
+        Response::error('您已接过该任务，不能重复接单', $errorCodes['TASK_ACCEPT_ALREADY_ACCEPTED']);
+    }
+    $requestLogger->debug('非重复接单');
 
     $today = date('Y-m-d');
     $requestLogger->debug('查询当日统计记录', ['user_id' => $currentUser['user_id'], 'stat_date' => $today]);
@@ -378,7 +457,27 @@ try {
 
     $comboTaskId = $bTask['combo_task_id'];
     if (!empty($comboTaskId)) {
-        $requestLogger->debug('任务为组合任务', ['combo_task_id' => $comboTaskId]);
+        $requestLogger->debug('校验组合任务', ['combo_task_id' => $comboTaskId]);
+        $stmt = $db->prepare("
+            SELECT ctr.id FROM c_task_records ctr
+            INNER JOIN $taskTable bt ON bt.id = ctr.b_task_id
+            WHERE ctr.c_user_id = ? AND bt.combo_task_id = ?
+            LIMIT 1
+        ");
+        $stmt->execute([$currentUser['user_id'], $comboTaskId]);
+        if ($stmt->fetch()) {
+            $auditLogger->notice('C端用户接单失败：重复接组合任务', [
+                'user_id' => $currentUser['user_id'],
+                'combo_task_id' => $comboTaskId,
+            ]);
+
+            if (method_exists($auditLogger, 'flush')) {
+                $auditLogger->flush();
+            }
+
+            Response::error('您已接过该组合任务，不能重复接单', $errorCodes['TASK_ACCEPT_ALREADY_ACCEPTED']);
+        }
+        $requestLogger->debug('非重复接组合任务');
     }
 
     $requestLogger->debug('校验任务开放状态', ['stage_status' => $bTask['stage_status']]);
@@ -537,7 +636,17 @@ try {
     $stmt->execute([$dailyStatsId]);
     $requestLogger->debug('接单统计更新成功');
 
-    $requestLogger->info('移除接单冷却时间限制，跳过更新用户静态记录');
+    $requestLogger->debug('更新用户静态记录');
+    $currentDatetime = date('Y-m-d H:i:s');
+    $stmt = $db->prepare("UPDATE c_user_task_records_static SET accept_task_update_at = ? WHERE user_id = ?");
+    $result = $stmt->execute([$currentDatetime, $currentUser['user_id']]);
+
+    if ($result === false || $stmt->rowCount() === 0) {
+        $requestLogger->debug('创建用户静态记录');
+        $stmt = $db->prepare("INSERT INTO c_user_task_records_static (user_id, accept_task_update_at) VALUES (?, ?)");
+        $stmt->execute([$currentUser['user_id'], $currentDatetime]);
+    }
+    $requestLogger->debug('用户静态记录更新成功');
 
     $requestLogger->debug('提交数据库事务');
     $db->commit();

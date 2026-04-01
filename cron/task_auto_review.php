@@ -61,13 +61,6 @@ function hasLargeGroupAgent($db, $userId, $maxLevel = 2)
 customLog('=== 自动审核任务脚本开始 ===');
 customLog('当前时间：' . date('Y-m-d H:i:s'));
 
-// 定义自动审核时间阈值（5 分钟，用于测试）
-$autoReviewThreshold = 5 * 60; // 秒
-$currentTime = time();
-$thresholdTime = $currentTime - $autoReviewThreshold;
-customLog('自动审核时间阈值：' . $autoReviewThreshold . '秒');
-customLog('阈值时间：' . date('Y-m-d H:i:s', $thresholdTime));
-
 // 数据库连接
 customLog('步骤 1: 连接数据库');
 $db = Database::connect();
@@ -77,8 +70,21 @@ if (!$db) {
 }
 customLog('数据库连接成功');
 
+// 从 app_config 表读取自动审核时间阈值
+customLog('步骤 1.1: 读取自动审核时间阈值配置');
+$stmt = $db->prepare("SELECT config_value FROM app_config WHERE config_key = 'task_review_timeout'");
+$stmt->execute();
+$configValue = $stmt->fetchColumn();
+
+// 如果没有配置，使用默认值 5 分钟
+$autoReviewThreshold = $configValue ? (int)$configValue : 5 * 60; // 秒
+$currentTime = time();
+$thresholdTime = $currentTime - $autoReviewThreshold;
+customLog('自动审核时间阈值：' . $autoReviewThreshold . '秒');
+customLog('阈值时间：' . date('Y-m-d H:i:s', $thresholdTime));
+
 try {
-    // 查询超过 10 分钟未审核的任务
+    // 查询超过时间阈值未审核的任务
     customLog('步骤 2: 查询超过时间阈值未审核的任务');
     $stmt = $db->prepare("        
         SELECT 
@@ -184,7 +190,7 @@ function autoApproveTask($db, $record, $errorCodes)
         // 5. 更新 B 端任务统计
         customLog('步骤 5: 更新 B 端任务统计，任务 ID: ' . $record['b_task_id']);
         // 先检查当前 task_reviewing 和 task_done 值
-        $stmt = $db->prepare("SELECT task_reviewing, task_done FROM b_tasks WHERE id = ?");
+        $stmt = $db->prepare("SELECT * FROM b_tasks WHERE id = ?");
         $stmt->execute([$record['b_task_id']]);
         $taskInfo = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -493,7 +499,7 @@ function autoApproveTask($db, $record, $errorCodes)
         $maxLevel = 2; // 最多查找两级
         
         while (!empty($currentUserId) && $level < $maxLevel) {
-            customLog('查找代理，当前 level: ' . $level . ', currentUserId: ' . $currentUserId);
+            customLog('查找代理，当前层级: ' . ($level + 1) . ', currentUserId: ' . $currentUserId);
             $stmt = $db->prepare(" 
                 SELECT id, username, wallet_id, is_agent, parent_id
                 FROM c_users
@@ -787,7 +793,7 @@ function autoApproveTask($db, $record, $errorCodes)
             $maxLevel = 2; // 最多查找两级
             
             while (!empty($currentUserId) && $level < $maxLevel) {
-                customLog('循环开始，当前 level: ' . $level . ', currentUserId: ' . $currentUserId);
+                customLog('循环开始，当前层级: ' . ($level + 1) . ', currentUserId: ' . $currentUserId);
                 $stmt = $db->prepare("SELECT id, username FROM c_users WHERE id = ?");
                 $stmt->execute([$currentUserId]);
                 $agentUser = $stmt->fetch(PDO::FETCH_ASSOC);
