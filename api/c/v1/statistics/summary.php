@@ -6,7 +6,7 @@
  * 
  * 请求参数：
  * - b_user_id: B端用户ID或用户名（可选）
- * - period: 统计周期：today, 7days, 15days, 30days, 12months（默认：7days）
+ * - period: 统计周期：yesterday, today, 7days, 15days, 30days, 12months（默认：7days）
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -49,13 +49,17 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 100;
 
 // 验证周期参数
-$validPeriods = ['today', '7days', '15days', '30days', '12months'];
+$validPeriods = ['yesterday', 'today', '7days', '15days', '30days', '12months'];
 if (!in_array($period, $validPeriods)) {
     Response::error('无效的统计周期', $errorCodes['INVALID_PARAMS']);
 }
 
 // 根据周期计算日期范围
 switch ($period) {
+    case 'yesterday':
+        $startDate = date('Y-m-d', strtotime('-1 day'));
+        $endDate = date('Y-m-d', strtotime('-1 day'));
+        break;
     case 'today':
         $startDate = date('Y-m-d');
         $endDate = date('Y-m-d');

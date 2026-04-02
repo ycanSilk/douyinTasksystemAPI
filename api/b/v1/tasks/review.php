@@ -336,8 +336,8 @@ try {
     if (!$dailyStats) {
         $requestLogger->debug('当日统计记录不存在，创建新记录');
         $stmt = $db->prepare("
-            INSERT INTO c_user_daily_stats (c_user_id, stat_date)
-            VALUES (?, ?)
+            INSERT INTO c_user_daily_stats (c_user_id, stat_date, accept_count, submit_count, approved_count, abandon_count, rejected_count)
+            VALUES (?, ?, 0, 0, 0, 0, 0)
         ");
         $stmt->execute([$record['c_user_id'], $today]);
         $dailyStatsId = $db->lastInsertId();

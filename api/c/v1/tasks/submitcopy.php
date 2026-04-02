@@ -11,7 +11,7 @@
  * {
  *   "b_task_id": 123,
  *   "record_id": 456,
- *   "comment_url": "https://douyin.com/comment/xxx",
+ *   "comment_url": "https://douyin.com/comment/",
  *   "screenshots": [
  *     "http://example.com/img/screenshot1.jpg",
  *     "http://example.com/img/screenshot2.jpg",
@@ -39,8 +39,8 @@
  * 4. 提交成功后：
  *    - c_task_records.status: 1 → 2
  *    - b_tasks.task_doing -1, task_reviewing +1
+ *    - c_user_daily_stats.submit_count +1
  *    - 用户可以继续接其他任务
- * 5. 注意：弃单次数和驳回次数限制功能已注释，不再影响用户接单
  *
  * 错误码说明：
  * 1001 - 请求方法错误
@@ -421,8 +421,6 @@ try {
         ");
         $stmt->execute([$newTaskDoing, $bTaskId]);
 
-        // ========== 注释掉弃单次数统计更新功能 ==========
-        /*
         // 更新当日弃单统计
         $today = date('Y-m-d');
         $stmt = $db->prepare("
@@ -432,8 +430,6 @@ try {
         ");
         $stmt->execute([$currentUser['user_id'], $today]);
         $requestLogger->debug('当日弃单统计更新成功', ['user_id' => $currentUser['user_id']]);
-        */
-        $requestLogger->info('已跳过弃单次数统计更新');
 
         $db->commit();
         $requestLogger->debug('事务提交成功（超时处理）');
@@ -458,8 +454,6 @@ try {
 
     $requestLogger->debug('任务未超时，继续处理');
 
-    // ========== 注释掉提交次数统计更新功能 ==========
-    /*
     // 5. 查询或创建当日统计记录
     $today = date('Y-m-d');
     $stmt = $db->prepare("
@@ -469,8 +463,6 @@ try {
     ");
     $stmt->execute([$currentUser['user_id'], $today]);
     $requestLogger->debug('当日提交统计更新成功', ['user_id' => $currentUser['user_id']]);
-    */
-    $requestLogger->info('已跳过提交次数统计更新');
 
     // 6. 开启事务
     $db->beginTransaction();

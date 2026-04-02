@@ -18,17 +18,15 @@
  *   "deadline": 1796058061,                    // 到期时间戳 (必填)
  *   "releases_number": 2,                      // 发布次数 (必填，范围 1-100)
  *   "stage1_count": 1,                         // 阶段 1 任务数量 (必填，固定为 1)
- *   "stage2_count": 1,                         // 阶段 2 任务数量 (必填)
- *   "total_price": 5.00,                       // 总价格 (必填)
- *   "recommend_marks": [                       // 推荐评论数组 (必填)
- *     {
- *       "comment": "阶段 1 上评评论",
- *       "image_url": "http://example.com/image1.jpg"
- *     },
- *     {
- *       "comment": "阶段 2 中评回复 1",
- *       "image_url": "http://example.com/image2.jpg"
- *     }
+ *   "stage2_count": 2,                         // 阶段 2 任务数量 (必填)
+ *   "total_price": 15.00,                      // 总价格 (必填)
+ *   "recommend_marks": [                       // 推荐评论数组 (必填，数量=releases_number*(stage1_count+stage2_count))
+ *     {"comment": "阶段1上评评论1", "image_url": "http://example.com/image1.jpg"},
+ *     {"comment": "阶段2中评回复1-1", "image_url": "http://example.com/image2.jpg"},
+ *     {"comment": "阶段2中评回复1-2", "image_url": "http://example.com/image3.jpg"},
+ *     {"comment": "阶段1上评评论2", "image_url": "http://example.com/image4.jpg"},
+ *     {"comment": "阶段2中评回复2-1", "image_url": "http://example.com/image5.jpg"},
+ *     {"comment": "阶段2中评回复2-2", "image_url": "http://example.com/image6.jpg"}
  *   ]
  * }
  * 
@@ -46,7 +44,9 @@
  *   "total_price": 10.00,
  *   "recommend_marks": [
  *     {"comment": "很好用，值得购买", "image_url": "http://xxx.jpg"},
- *     {"comment": "非常满意，客服态度好", "image_url": ""}
+ *     {"comment": "非常满意，客服态度好", "image_url": ""},
+ *     {"comment": "质量不错，物流很快", "image_url": "http://xxx.jpg"},
+ *     {"comment": "性价比高，推荐购买", "image_url": ""}
  *   ]
  * }
  * 
@@ -360,7 +360,9 @@ try {
     $requestLogger->debug('任务模板查询成功', [
         'template_id' => $template['id'],
         'type' => $template['type'],
-        'title' => $template['title']
+        'title' => $template['title'],
+        'stage1_price' => $template['stage1_price'],
+        'stage2_price' => $template['stage2_price']
     ]);
     
     // 验证是否为组合任务
@@ -399,7 +401,8 @@ try {
     }
     
     // 校验 recommend_marks 数量
-    $totalCount = $stage1Count + $stage2Count;
+    $totalCountPerTask = $stage1Count + $stage2Count;
+    $requiredTotalCount = $releasesNumber * $totalCountPerTask;
     if (!is_array($recommendMarks)) {
         $requestLogger->warning('参数校验失败：推荐评论格式错误', ['recommend_marks' => $recommendMarks]);
         echo json_encode([
@@ -411,14 +414,16 @@ try {
         exit;
     }
     
-    if (count($recommendMarks) !== $totalCount) {
+    if (count($recommendMarks) !== $requiredTotalCount) {
         $requestLogger->warning('参数校验失败：推荐评论数量不匹配', [
-            'expected' => $totalCount,
-            'actual' => count($recommendMarks)
+            'expected' => $requiredTotalCount,
+            'actual' => count($recommendMarks),
+            'releases_number' => $releasesNumber,
+            'total_per_task' => $totalCountPerTask
         ]);
         echo json_encode([
             'code' => 4015,
-            'message' => "推荐评论数量不匹配，应为 {$totalCount} 组（{$stage1Count}个阶段 1 + {$stage2Count}个阶段 2）",
+            'message' => "推荐评论数量不匹配，应为 {$requiredTotalCount} 组（{$releasesNumber}次发布 × 每组{$totalCountPerTask}条评论）",
             'data' => [],
             'timestamp' => time()
         ], JSON_UNESCAPED_UNICODE);
@@ -490,6 +495,18 @@ try {
     // 计算总金额
     $totalAmount = $unitTotalPrice * $releasesNumber;
     
+    $requestLogger->debug('价格计算', [
+        'stage1_price' => $stage1Price,
+        'stage1_count' => $stage1Count,
+        'stage1_subtotal' => $stage1Price * $stage1Count,
+        'stage2_price' => $stage2Price,
+        'stage2_count' => $stage2Count,
+        'stage2_subtotal' => $stage2Price * $stage2Count,
+        'unit_total_price' => $unitTotalPrice,
+        'releases_number' => $releasesNumber,
+        'total_amount' => $totalAmount
+    ]);
+    
     // 校验总价
     if (abs($totalAmount - (float)$totalPrice) > 0.01) {
         $requestLogger->warning('参数校验失败：总价计算错误', [
@@ -498,8 +515,22 @@ try {
         ]);
         echo json_encode([
             'code' => 4016,
-            'message' => '总价计算错误，应为 ' . number_format($totalAmount, 2),
-            'data' => [],
+            'message' => '总价计算错误，应为 ' . number_format($totalAmount, 2) . '（计算方式：(阶段1单价×' . $stage1Count . ' + 阶段2单价×' . $stage2Count . ') × ' . $releasesNumber . ' = ' . number_format($stage1Price, 2) . '×' . $stage1Count . ' + ' . number_format($stage2Price, 2) . '×' . $stage2Count . ') × ' . $releasesNumber . ' = ' . number_format($unitTotalPrice, 2) . ' × ' . $releasesNumber . ' = ' . number_format($totalAmount, 2) . '）',
+            'data' => [
+                'expected_total_price' => $totalAmount,
+                'provided_total_price' => $totalPrice,
+                'stage1_price' => $stage1Price,
+                'stage1_count' => $stage1Count,
+                'stage2_price' => $stage2Price,
+                'stage2_count' => $stage2Count,
+                'releases_number' => $releasesNumber,
+                'calculation' => [
+                    'stage1_subtotal' => $stage1Price * $stage1Count,
+                    'stage2_subtotal' => $stage2Price * $stage2Count,
+                    'unit_total' => $unitTotalPrice,
+                    'final_total' => $totalAmount
+                ]
+            ],
             'timestamp' => time()
         ], JSON_UNESCAPED_UNICODE);
         exit;
@@ -581,9 +612,18 @@ try {
         $comboTaskId = 'COMBO_' . time() . '_' . $currentUser['user_id'] . '_' . ($i + 1);
         $requestLogger->debug('生成 combo_task_id', ['combo_task_id' => $comboTaskId]);
         
-        // 分配评论：前 N 个给阶段 1，后 M 个给阶段 2
-        $stage1Marks = array_slice($recommendMarks, 0, $stage1Count);
-        $stage2Marks = array_slice($recommendMarks, $stage1Count, $stage2Count);
+        // 分配评论：每条任务使用不同的评论组
+        $taskCommentStart = $i * $totalCountPerTask;
+        $taskComments = array_slice($recommendMarks, $taskCommentStart, $totalCountPerTask);
+        $stage1Marks = array_slice($taskComments, 0, $stage1Count);
+        $stage2Marks = array_slice($taskComments, $stage1Count, $stage2Count);
+        $requestLogger->debug('分配评论', [
+            'task_index' => $i + 1,
+            'comment_start' => $taskCommentStart,
+            'comment_end' => $taskCommentStart + $totalCountPerTask - 1,
+            'stage1_marks_count' => count($stage1Marks),
+            'stage2_marks_count' => count($stage2Marks)
+        ]);
         
         // 1. 创建阶段 1 任务（已开放）
         $stmt = $db->prepare("INSERT INTO b_tasks (b_user_id, combo_task_id, stage, stage_status, parent_task_id, template_id, video_url, deadline, recommend_marks, task_count, task_done, task_doing, task_reviewing, unit_price, total_price, status) VALUES (?, ?, 1, 1, NULL, ?, ?, ?, ?, ?, 0, 0, 0, ?, ?, 1)");

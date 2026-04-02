@@ -290,6 +290,8 @@ try {
     }
     $requestLogger->debug('非重复接单');
 
+    // ========== 注释掉弃单次数和驳回次数的限制功能 ==========
+    /*
     $today = date('Y-m-d');
     $requestLogger->debug('查询当日统计记录', ['user_id' => $currentUser['user_id'], 'stat_date' => $today]);
     $stmt = $db->prepare("
@@ -370,6 +372,13 @@ try {
         'abandon_count' => $abandonCount,
         'abandon_count_limit' => $abandonCountLimit
     ]);
+    */
+    
+    // 设置默认值，保证后续代码正常运行
+    $dailyStatsId = null;
+    $rejectedCount = 0;
+    $abandonCount = 0;
+    $requestLogger->info('已注释弃单次数和驳回次数限制功能');
 
     $requestLogger->debug('查询任务信息', ['b_task_id' => $bTaskId, 'table' => $taskTable]);
     $stmt = $db->prepare("
@@ -569,8 +578,10 @@ try {
         WHERE id = ?
     ");
     $stmt->execute([$newTaskDoing, $bTaskId]);
-    $requestLogger->debug('B端任务更新成功');
+    $requestLogger->debug('B 端任务更新成功');
 
+    // ========== 注释掉更新当日接单统计功能 ==========
+    /*
     $requestLogger->debug('更新当日接单统计', ['daily_stats_id' => $dailyStatsId]);
     $stmt = $db->prepare("
         UPDATE c_user_daily_stats
@@ -579,6 +590,8 @@ try {
     ");
     $stmt->execute([$dailyStatsId]);
     $requestLogger->debug('接单统计更新成功');
+    */
+    $requestLogger->info('已跳过更新当日接单统计');
 
     $requestLogger->info('移除接单冷却时间限制，跳过更新用户静态记录');
 
