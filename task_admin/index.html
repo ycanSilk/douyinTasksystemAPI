@@ -2046,10 +2046,10 @@
 
             // 页面刷新时立即调用 detect.php 接口获取最新数据
             try {
-                log('INFO', '页面加载完成，立即调用 detect.php 接口', 'INIT');
+                console.log('页面加载完成，立即调用 detect.php 接口');
                 await detectNotifications();
             } catch (error) {
-                log('ERROR', '页面加载时调用 detect.php 接口失败：' + error.message, 'INIT');
+                console.error('页面加载时调用 detect.php 接口失败：' + error.message);
             }
         });
     </script>

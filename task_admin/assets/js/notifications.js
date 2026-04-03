@@ -1,5 +1,6 @@
 
 
+
 // 更新通知角标
 function updateNotificationBadge(count) {
     // 查找"提示通知列表"导航栏按钮
@@ -79,7 +80,6 @@ async function markNotificationAsRead(notificationId) {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        log('ERROR', '标记通知已读失败: ' + error.message, 'NOTIFICATION');
         showToast('标记已读失败', 'error');
     }
 }
@@ -126,7 +126,6 @@ async function markAllNotificationsAsRead(type = '') {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        log('ERROR', '批量标记已读失败: ' + error.message, 'NOTIFICATION');
         showToast('批量标记已读失败', 'error');
     }
 }
@@ -172,7 +171,6 @@ async function markAllNotificationsRead() {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        log('ERROR', '批量标记已读失败: ' + error.message, 'NOTIFICATION');
         showToast('批量标记已读失败', 'error');
     }
 }
@@ -219,7 +217,6 @@ async function clearNotificationLogs() {
                 showToast(data.message, 'error');
             }
         } catch (error) {
-            log('ERROR', '清理通知日志失败: ' + error.message, 'NOTIFICATION');
             showToast('清理日志失败', 'error');
         }
     });
@@ -228,7 +225,6 @@ async function clearNotificationLogs() {
 // 获取通知列表
 async function loadNotifications(page = 1, status = 0) {
     try {
-        log('INFO', `开始加载通知列表，状态: ${status}`, 'NOTIFICATION');
         const search = document.getElementById('notificationSearch')?.value || '';
         const filterStatus = document.getElementById('notificationStatusFilter')?.value || status;
         
@@ -270,8 +266,6 @@ async function loadNotifications(page = 1, status = 0) {
           
             renderNotificationList(data.data.list, 1, 100, data.data.total);
           
-        } else {
-            log('ERROR', `API返回错误: ${data.message}`, 'NOTIFICATION');
         }
     } catch (error) {
         console.error('加载通知列表失败:', error);
@@ -325,7 +319,7 @@ async function loadNotificationLogs(page = 1, hasNewNotification = -1) {
             updateLogPagination();
         }
     } catch (error) {
-        log('ERROR', '加载通知检测日志失败: ' + error.message, 'NOTIFICATION');
+        console.error('加载通知检测日志失败:', error);
     }
 }
 
@@ -366,7 +360,7 @@ async function loadNotificationConfigs() {
             renderNotificationConfigTable(data.data);
         }
     } catch (error) {
-        log('ERROR', '加载通知配置失败: ' + error.message, 'NOTIFICATION');
+        console.error('加载通知配置失败:', error);
     }
 }
 
@@ -413,7 +407,6 @@ async function saveNotificationConfig(config) {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        log('ERROR', '保存通知配置失败: ' + error.message, 'NOTIFICATION');
         showToast('保存配置失败', 'error');
     }
 }
@@ -459,7 +452,6 @@ async function cleanNotificationLogs(days = 2) {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        log('ERROR', '清理通知日志失败: ' + error.message, 'NOTIFICATION');
         showToast('清理日志失败', 'error');
     }
 }
@@ -590,7 +582,6 @@ async function markNotificationAsUnread(notificationId) {
             showToast(data.message, 'error');
         }
     } catch (error) {
-        log('ERROR', '标记通知未读失败: ' + error.message, 'NOTIFICATION');
         showToast('标记未读失败', 'error');
     }
 }
@@ -645,7 +636,6 @@ async function clearSelectedNotifications() {
                 showToast(data.message, 'error');
             }
         } catch (error) {
-            log('ERROR', '批量删除通知失败: ' + error.message, 'NOTIFICATION');
             showToast('批量删除失败', 'error');
         }
     });
@@ -756,11 +746,13 @@ function renderNotificationLogList(list, page, pageSize, total) {
     html += '</tbody></table></div>';
     
     // 添加分页
+    const currentPage = Math.max(1, page || 1);
+    const totalPages = Math.max(1, Math.ceil((total || 0) / (pageSize || 1)));
     html += `
         <div class="pagination" style="margin-top: 20px; text-align: center;">
-            <button class="btn-secondary btn-small" ${page === 1 ? 'disabled' : ''} onclick="loadNotificationLogs(${page - 1})"><i class="ri-arrow-left-line"></i> 上一页</button>
-            <span style="margin: 0 15px; line-height: 32px;">第 ${page} 页，共 ${Math.ceil(total / pageSize)} 页</span>
-            <button class="btn-secondary btn-small" ${page === Math.ceil(total / pageSize) ? 'disabled' : ''} onclick="loadNotificationLogs(${page + 1})"><i class="ri-arrow-right-line"></i> 下一页</button>
+            <button class="btn-secondary btn-small" ${currentPage === 1 ? 'disabled' : ''} onclick="loadNotificationLogs(${currentPage - 1})"><i class="ri-arrow-left-line"></i> 上一页</button>
+            <span style="margin: 0 15px; line-height: 32px;">第 ${currentPage} 页，共 ${totalPages} 页</span>
+            <button class="btn-secondary btn-small" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadNotificationLogs(${currentPage + 1})"><i class="ri-arrow-right-line"></i> 下一页</button>
         </div>
     `;
     
@@ -821,7 +813,6 @@ async function viewNotificationDetails(item) {
                 showToast('获取通知详情失败', 'error');
             }
         } catch (error) {
-            log('ERROR', '获取通知详情失败: ' + error.message, 'NOTIFICATION');
             showToast('获取通知详情失败', 'error');
         }
     } else {
@@ -1295,6 +1286,7 @@ function init() {
 
 
 
+
 // ==================== 通知管理 ====================
 
 // 加载通知列表
@@ -1303,12 +1295,13 @@ async function loadNotificationList(page = 1) {
     
     const params = new URLSearchParams({
         page,
-        limit: 20
+        pageSize: 20
     });
     
     if (targetType !== '') {
         params.append('target_type', targetType);
     }
+    
     
     try {
         const apiUrl = `/task_admin/api/notifications/list.php?${params}`;
@@ -1321,11 +1314,13 @@ async function loadNotificationList(page = 1) {
             headers['Authorization'] = `Bearer ${token}`;
         }
         
+        
         const response = await fetch(apiUrl, {
             method: 'GET',
             headers: headers,
             credentials: 'include'
         });
+        
         
         if (response.status === 401) {
             sessionStorage.clear();
@@ -1339,20 +1334,31 @@ async function loadNotificationList(page = 1) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        
-        if (data && data.code === 0) {
-            renderSystemNotificationList(data.data.list, data.data.pagination);
-        } else {
-            showToast('加载失败: ' + data.message, 'error');
+        // 获取响应文本，以便在解析失败时查看
+        const responseText = await response.text();
+   
+        try {
+            const data = JSON.parse(responseText);
+          
+            
+            if (data && data.code === 0 && data.data) {
+                
+                renderSystemNotificationList(data.data.list || [], data.data);
+            } else {
+                showToast('加载失败: ' + (data ? data.message : '未知错误'), 'error');
+            }
+        } catch (jsonError) {
+            showToast('加载失败: 响应格式错误', 'error');
         }
+        
+
     } catch (err) {
         showToast('加载失败: ' + err.message, 'error');
     }
 }
 
 // 渲染系统通知列表
-function renderSystemNotificationList(list, pagination) {
+function renderSystemNotificationList(list, data) {
     let html = `<div class="table-container"><table>
         <thead>
             <tr>
@@ -1360,145 +1366,146 @@ function renderSystemNotificationList(list, pagination) {
                 <th width="20%">标题</th>
                 <th width="30%">内容预览</th>
                 <th width="10%">目标类型</th>
-                <th width="8%">接收人数</th>
-                <th width="8%">已读人数</th>
-                <th width="8%">未读人数</th>
+                <th width="10%">发送者类型</th>
                 <th width="18%">发送时间</th>
             </tr>
         </thead>
         <tbody>`;
     
-    if (list.length === 0) {
-        html += `<tr><td colspan="8" style="text-align:center;padding:40px;color:#86868b;">暂无通知</td></tr>`;
+    if (!list || list.length === 0) {
+        html += `<tr><td colspan="6" style="text-align:center;padding:40px;color:#86868b;">暂无通知</td></tr>`;
     } else {
-        list.forEach(item => {
+        list.forEach((item, index) => {
+            // 生成内容预览
+            const contentPreview = item.content ? item.content.substring(0, 100) + (item.content.length > 100 ? '...' : '') : '';
             html += `
                 <tr>
                     <td>${item.id}</td>
                     <td><strong>${item.title}</strong></td>
-                    <td style="font-size:12px;color:#666;">${item.content_preview}</td>
-                    <td><span class="badge badge-info">${item.target_type_text}</span></td>
-                    <td>${item.recipient_count}</td>
-                    <td>${item.read_count}</td>
-                    <td>${item.unread_count}</td>
+                    <td>${contentPreview}</td>
+                    <td>${item.target_type_text}</td>
+                    <td>${item.sender_type_text}</td>
                     <td>${item.created_at}</td>
                 </tr>
             `;
         });
     }
     
-    html += `</tbody></table></div>
-    <div class="pagination">
-        ${pagination.page > 1 ? `<button onclick="loadNotificationList(${pagination.page - 1})">上一页</button>` : '<button disabled>上一页</button>'}
-        <span style="font-size: 13px; color: var(--text-secondary);">第 ${pagination.page} / ${pagination.total_pages} 页</span>
-        ${pagination.page < pagination.total_pages ? `<button onclick="loadNotificationList(${pagination.page + 1})">下一页</button>` : '<button disabled>下一页</button>'}
-    </div>`;
+    html += `</tbody></table></div>`;
     
-    document.getElementById('notificationTable').innerHTML = html;
+    // 添加分页
+    if (data && data.total !== undefined && data.pageSize !== undefined) {
+        // 确保页码从1开始
+        const currentPage = Math.max(1, data.page || 1);
+        const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize));
+        
+        html += `
+            <div class="pagination" style="margin-top: 20px; text-align: center;">
+                <button class="btn-secondary btn-small" ${currentPage === 1 ? 'disabled' : ''} onclick="loadNotificationList(${currentPage - 1})"><i class="ri-arrow-left-line"></i> 上一页</button>
+                <span style="margin: 0 15px; line-height: 32px;">第 ${currentPage} 页，共 ${totalPages} 页</span>
+                <button class="btn-secondary btn-small" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadNotificationList(${currentPage + 1})"><i class="ri-arrow-right-line"></i> 下一页</button>
+            </div>
+        `;
+    }
+    
+    const notificationTable = document.getElementById('notificationTable');
+    if (notificationTable) {
+      
+        notificationTable.innerHTML = html;
+    } else {
+        showToast('未找到notificationTable元素', 'error');
+    }
 }
 
-// 显示发送通知的模态框
+// 显示发送通知模态框
 function showSendNotificationModal() {
-    const html = `
-        <h3><i class="ri-send-plane-fill" style="color: var(--primary-color);"></i> 发送系统通知</h3>
-        <form id="sendNotificationForm" style="padding: 10px 0;">
+    const modalBody = document.getElementById('modalBody');
+    
+    modalBody.innerHTML = `
+        <h3><i class="ri-send-plane-fill"></i> 发送系统通知</h3>
+        <form id="sendNotificationForm">
             <div class="form-group">
-                <label>通知标题 *</label>
-                <input type="text" id="notifTitle" placeholder="请输入通知标题" required maxlength="200">
+                <label>通知标题</label>
+                <input type="text" name="title" placeholder="请输入通知标题" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
             </div>
-            
             <div class="form-group">
-                <label>通知内容 *</label>
-                <textarea id="notifContent" placeholder="请输入通知内容" required rows="6"></textarea>
+                <label>通知内容</label>
+                <textarea name="content" placeholder="请输入通知内容" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; height: 150px;"></textarea>
             </div>
-            
             <div class="form-group">
-                <label>发送对象 *</label>
-                <select id="notifTargetType" onchange="toggleUserFields()" required>
-                    <option value="0">全体用户（B端+C端）</option>
-                    <option value="1">C端全体用户</option>
-                    <option value="2">B端全体用户</option>
+                <label>目标类型</label>
+                <select name="target_type" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <option value="0">全体用户</option>
+                    <option value="1">C端全体</option>
+                    <option value="2">B端全体</option>
                     <option value="3">指定用户</option>
                 </select>
             </div>
-            
-            <div id="specificUserFields" style="display: none;">
-                <div class="form-group">
-                    <label>用户类型 *</label>
-                    <select id="notifTargetUserType">
-                        <option value="1">C端用户</option>
-                        <option value="2">B端用户</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>用户ID *</label>
-                    <input type="number" id="notifTargetUserId" placeholder="请输入用户ID">
-                </div>
+            <div class="form-group" id="targetUserFields" style="display: none;">
+                <label>目标用户ID</label>
+                <input type="number" name="target_user_id" placeholder="请输入用户ID" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
             </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn-secondary" onclick="closeModal()">取消</button>
-                <button type="submit" class="btn-primary">发送通知</button>
+            <div class="form-group" id="targetUserTypeFields" style="display: none;">
+                <label>目标用户类型</label>
+                <select name="target_user_type" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    <option value="1">C端用户</option>
+                    <option value="2">B端用户</option>
+                </select>
+            </div>
+            <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="closeModal()" style="padding: 8px 16px; border: none; border-radius: 4px; background-color: #6c757d; color: white; cursor: pointer;">取消</button>
+                <button type="submit" class="btn-primary" style="padding: 8px 16px; border: none; border-radius: 4px; background-color: #007bff; color: white; cursor: pointer;">发送</button>
             </div>
         </form>
     `;
     
-    document.getElementById('modalBody').innerHTML = html;
+    // 显示模态框
     document.getElementById('modal').classList.add('active');
     
-    document.getElementById('sendNotificationForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await sendNotification();
-    });
-}
-
-// 切换指定用户字段显示
-function toggleUserFields() {
-    const targetType = document.getElementById('notifTargetType').value;
-    const fields = document.getElementById('specificUserFields');
+    // 监听目标类型变化
+    const targetTypeSelect = document.querySelector('select[name="target_type"]');
+    const targetUserFields = document.getElementById('targetUserFields');
+    const targetUserTypeFields = document.getElementById('targetUserTypeFields');
     
-    if (targetType === '3') {
-        fields.style.display = 'block';
-        document.getElementById('notifTargetUserId').required = true;
-    } else {
-        fields.style.display = 'none';
-        document.getElementById('notifTargetUserId').required = false;
+    if (targetTypeSelect && targetUserFields && targetUserTypeFields) {
+        targetTypeSelect.addEventListener('change', function() {
+            if (this.value === '3') {
+                targetUserFields.style.display = 'block';
+                targetUserTypeFields.style.display = 'block';
+            } else {
+                targetUserFields.style.display = 'none';
+                targetUserTypeFields.style.display = 'none';
+            }
+        });
+    }
+    
+    // 监听表单提交
+    const sendForm = document.getElementById('sendNotificationForm');
+    if (sendForm) {
+        sendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await sendNotification();
+        });
     }
 }
 
 // 发送通知
 async function sendNotification() {
-    const title = document.getElementById('notifTitle').value.trim();
-    const content = document.getElementById('notifContent').value.trim();
-    const targetType = parseInt(document.getElementById('notifTargetType').value);
-    
-    if (!title || !content) {
-        showToast('请填写完整信息', 'error');
-        return;
-    }
-    
-    const payload = {
-        title,
-        content,
-        target_type: targetType
-    };
-    
-    // 如果是指定用户，添加用户ID和类型
-    if (targetType === 3) {
-        const targetUserId = parseInt(document.getElementById('notifTargetUserId').value);
-        const targetUserType = parseInt(document.getElementById('notifTargetUserType').value);
+    try {
+        const form = document.getElementById('sendNotificationForm');
+        const formData = new FormData(form);
+        const data = {};
         
-        if (!targetUserId || targetUserId <= 0) {
-            showToast('请输入有效的用户ID', 'error');
-            return;
+        for (const [key, value] of formData.entries()) {
+            if (value !== '') {
+                if (key === 'target_type' || key === 'target_user_id' || key === 'target_user_type') {
+                    data[key] = Number(value);
+                } else {
+                    data[key] = value;
+                }
+            }
         }
         
-        payload.target_user_id = targetUserId;
-        payload.target_user_type = targetUserType;
-    }
-    
-    try {
         const apiUrl = `/task_admin/api/notifications/send.php`;
         const token = sessionStorage.getItem('admin_token');
         const headers = {
@@ -1512,7 +1519,7 @@ async function sendNotification() {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(payload),
+            body: JSON.stringify(data),
             credentials: 'include'
         });
         
@@ -1528,21 +1535,16 @@ async function sendNotification() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
+        const responseData = await response.json();
         
-        if (data && data.code === 0) {
-            showToast('通知发送成功', 'success');
+        if (responseData && responseData.code === 0) {
+            showToast('发送通知成功', 'success');
             closeModal();
             loadNotificationList();
         } else {
-            showToast('发送失败: ' + data.message, 'error');
+            showToast('发送失败: ' + responseData.message, 'error');
         }
-    } catch (err) {
-        showToast('发送失败: ' + err.message, 'error');
+    } catch (error) {
+        showToast('发送失败: ' + error.message, 'error');
     }
 }
-
-
-
-
-

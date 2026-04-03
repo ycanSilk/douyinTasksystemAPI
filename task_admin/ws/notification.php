@@ -32,11 +32,38 @@ class WebSocketServer {
     private $clients = [];
     private $lastTaskCheckTime = 0;
     private $checkInterval = 60; // 检查间隔（秒）
+    private $logFile;
+    
+    private function log($message) {
+        $timestamp = date('Y-m-d H:i:s');
+        $logMessage = "[$timestamp] $message\n";
+        // 写入日志文件
+        fwrite($this->logFile, $logMessage);
+        // 同时输出到控制台
+        echo $logMessage;
+        // 刷新缓冲区
+        fflush($this->logFile);
+    }
+    
+    public function __destruct() {
+        // 关闭日志文件
+        if ($this->logFile) {
+            fclose($this->logFile);
+        }
+    }
     
     public function __construct() {
+        // 打开日志文件
+        $this->logFile = fopen('socket-log.log', 'a');
+        if (!$this->logFile) {
+            die('无法打开日志文件: socket-log.log');
+        }
+        $this->log('WebSocket服务器启动中...');
+        
         // 创建 WebSocket 服务器
         $this->server = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (!$this->server) {
+            $this->log('Could not create socket: ' . socket_strerror(socket_last_error()));
             die('Could not create socket: ' . socket_strerror(socket_last_error()));
         }
         
@@ -48,15 +75,17 @@ class WebSocketServer {
         $port = 9999;
         
         if (!socket_bind($this->server, $address, $port)) {
+            $this->log('绑定 socket 失败: ' . socket_strerror(socket_last_error()));
             die('绑定 socket 失败: ' . socket_strerror(socket_last_error()));
         }
         
         // 开始监听
         if (!socket_listen($this->server, 5)) {
+            $this->log('监听 socket 失败: ' . socket_strerror(socket_last_error()));
             die('监听 socket 失败: ' . socket_strerror(socket_last_error()));
         }
         
-        echo "WebSocket server started on ws://$address:$port\n";
+        $this->log("WebSocket server started on ws://$address:$port");
         $this->run();
     }
     
@@ -71,7 +100,7 @@ class WebSocketServer {
             $activity = socket_select($readSockets, $writeSockets, $errorSockets, 1);
             
             if ($activity === false) {
-                echo 'Select 错误: ' . socket_strerror(socket_last_error()) . "\n";
+                $this->log('Select 错误: ' . socket_strerror(socket_last_error()));
                 continue;
             }
             
@@ -82,7 +111,7 @@ class WebSocketServer {
                     // 进行 WebSocket 握手
                     $this->performHandshake($client);
                     $this->clients[] = $client;
-                    echo "New client connected\n";
+                    $this->log("New client connected");
                 }
                 // 从 readSockets 中移除服务器 socket
                 $key = array_search($this->server, $readSockets);
@@ -100,7 +129,7 @@ class WebSocketServer {
                     if ($key !== false) {
                         unset($this->clients[$key]);
                         socket_close($client);
-                        echo "连接断开\n";
+                        $this->log("连接断开");
                     }
                     continue;
                 }
@@ -108,7 +137,7 @@ class WebSocketServer {
                 // 处理 WebSocket 消息
                 $message = $this->decodeMessage($data);
                 if ($message) {
-                    echo "收到消息: $message\n";
+                    $this->log("收到消息: $message");
                 }
             }
             
@@ -142,7 +171,7 @@ class WebSocketServer {
             socket_write($client, $response, strlen($response));
         } else {
             // 无法提取 Sec-WebSocket-Key，关闭连接
-            echo "提取 Sec-WebSocket-Key 失败\n";
+            $this->log("提取 Sec-WebSocket-Key 失败");
             socket_close($client);
         }
     }
@@ -191,7 +220,7 @@ class WebSocketServer {
             // 添加WebSocket服务器标识
             $url .= '?ws_server=true';
             
-            echo "Calling detect.php at: $url\n";
+            $this->log("Calling detect.php at: $url");
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -212,50 +241,51 @@ class WebSocketServer {
             
             // 检查curl错误
             if (curl_errno($ch)) {
-                echo 'cURL error: ' . curl_error($ch) . "\n";
+                $this->log('cURL error: ' . curl_error($ch));
             }
             
             // 输出详细的调试信息
             rewind($verbose);
             $verboseLog = stream_get_contents($verbose);
-            echo "cURL verbose log: $verboseLog\n";
+            $this->log("cURL verbose log: $verboseLog");
             fclose($verbose);
             
             // 移除 curl_close() 调用，因为在 PHP 8.0+ 中它已无效果
             // curl_close($ch);
             
-            echo "从 detect.php 收到响应: $response\n";
+            $this->log("从 detect.php 收到响应: $response");
             
             if ($response) {
                 $data = json_decode($response, true);
                 
                 if (json_last_error() !== JSON_ERROR_NONE) {
-                    echo 'JSON decode error: ' . json_last_error_msg() . "\n";
+                    $this->log('JSON decode error: ' . json_last_error_msg());
                 }
                 
                 if (isset($data['code']) && $data['code'] === 0 && isset($data['data']['detection_result'])) {
                     $detectionResult = $data['data']['detection_result'];
                     
-                    echo "Detection result: " . print_r($detectionResult, true) . "\n";
+                    $this->log("Detection result: " . print_r($detectionResult, true));
                     
                     // 检查是否有审核任务（使用英文key）
                     $hasTasks = false;
                     $checkFields = ['recharge', 'withdraw', 'agent', 'magnifier', 'rental'];
                     
-                    echo "开始检查审核任务...\n";
-                    echo "检测字段列表: " . implode(', ', $checkFields) . "\n";
+                    $this->log("开始检查审核任务...");
+                    $this->log("当前检测时间: " . date('Y-m-d H:i:s'));
+                    $this->log("检测字段列表: " . implode(', ', $checkFields));
                     
                     foreach ($checkFields as $field) {
                         $fieldValue = isset($detectionResult[$field]) ? $detectionResult[$field] : 'not set';
-                        echo "检查字段: $field, 值: $fieldValue\n";
+                        $this->log("检查字段: $field, 值: $fieldValue");
                         
                         if (isset($detectionResult[$field]) && $detectionResult[$field] > 0) {
                             $hasTasks = true;
-                            echo "✅ 检测到审核任务: $field = " . $detectionResult[$field] . "\n";
+                            $this->log("✅ 检测到审核任务: $field = " . $detectionResult[$field]);
                         }
                     }
                     
-                    echo "是否有审核任务: " . ($hasTasks ? '是' : '否') . "\n";
+                    $this->log("是否有审核任务: " . ($hasTasks ? '是' : '否'));
                     
                     // 只有当有审核任务时才推送通知
                     if ($hasTasks) {
@@ -276,18 +306,18 @@ class WebSocketServer {
                             socket_write($client, $encodedMessage, strlen($encodedMessage));
                         }
                         
-                        echo "Sent audit notification: $message\n";
+                        $this->log("Sent audit notification: $message");
                     } else {
-                        echo "No audit tasks to notify\n";
+                        $this->log("No audit tasks to notify");
                     }
                 } else {
-                    echo "Invalid response from detect.php: $response\n";
+                    $this->log("Invalid response from detect.php: $response");
                 }
             } else {
-                echo "Failed to get response from detect.php\n";
+                $this->log("Failed to get response from detect.php");
             }
         } catch (Exception $e) {
-            echo 'Error checking audit tasks: ' . $e->getMessage() . "\n";
+            $this->log('Error checking audit tasks: ' . $e->getMessage());
         }
     }
 }
@@ -296,5 +326,13 @@ class WebSocketServer {
 try {
     new WebSocketServer();
 } catch (Exception $e) {
-    echo 'Error: ' . $e->getMessage() . "\n";
+    $errorMessage = 'Error: ' . $e->getMessage();
+    echo $errorMessage . "\n";
+    // 尝试写入到日志文件
+    $logFile = fopen('socket-log.log', 'a');
+    if ($logFile) {
+        $timestamp = date('Y-m-d H:i:s');
+        fwrite($logFile, "[$timestamp] $errorMessage\n");
+        fclose($logFile);
+    }
 }
