@@ -28,8 +28,6 @@
  * 1. 只能放弃状态为 1(进行中) 的任务
  * 2. 放弃后任务状态变为 5(已取消)
  * 3. 放弃后 B 端任务的 task_doing 数量减 1（释放回任务池）
- * 4. 放弃后 C 端用户的 abandon_count + 1
- * 5. 如果用户当日 abandon_count >= abandon_count 配置值，则禁止放弃
  *
  * 错误码说明：
  * 1001  - 请求方法错误
@@ -42,7 +40,6 @@
  * 4004  - 任务状态不允许放弃（只能放弃进行中的任务）
  * 5000  - 系统错误
  * 9001  - 放弃失败
- * 9002  - 您今日已弃单超过限制次数，暂时无法放弃任务
  */
 
 // 加载统一日志系统
@@ -100,10 +97,7 @@ try {
     $db = Database::connect();
     $requestLogger->debug('数据库连接成功');
     
-    // 从 app_config 表获取弃单次数限制
-    require_once __DIR__ . '/../../../../core/AppConfig.php';
-    $abandonCountLimit = AppConfig::get('abandon_count', 6); // 默认值为 6
-    $requestLogger->debug('获取弃单次数限制配置', ['abandon_count_limit' => $abandonCountLimit]);
+
 } catch (Exception $e) {
     $errorLogger->error('数据库连接失败', ['exception' => $e->getMessage()]);
 
@@ -344,59 +338,6 @@ try {
     }
     $requestLogger->debug('任务状态校验通过，允许放弃');
 
-    $today = date('Y-m-d');
-    $requestLogger->debug('查询当日统计记录', ['user_id' => $currentUser['user_id'], 'stat_date' => $today]);
-    $stmt = $db->prepare("
-        SELECT id, abandon_count
-        FROM c_user_daily_stats
-        WHERE c_user_id = ? AND stat_date = ?
-    ");
-    $stmt->execute([$currentUser['user_id'], $today]);
-    $dailyStats = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    $abandonCount = 0;
-    $dailyStatsId = null;
-
-    if ($dailyStats) {
-        $abandonCount = (int)$dailyStats['abandon_count'];
-        $dailyStatsId = $dailyStats['id'];
-        $requestLogger->debug('当日统计已存在', [
-            'daily_stats_id' => $dailyStatsId,
-            'abandon_count' => $abandonCount
-        ]);
-    } else {
-        $requestLogger->debug('当日统计记录不存在，将自动创建');
-    }
-
-    if ($abandonCount >= $abandonCountLimit) {
-        $requestLogger->warning('用户弃单次数超限', [
-            'abandon_count' => $abandonCount,
-            'abandon_count_limit' => $abandonCountLimit
-        ]);
-
-        $auditLogger->notice('C 端用户放弃任务失败：弃单次数超限', [
-            'user_id' => $currentUser['user_id'],
-            'abandon_count' => $abandonCount,
-            'abandon_count_limit' => $abandonCountLimit,
-        ]);
-
-        if (method_exists($auditLogger, 'flush')) {
-            $auditLogger->flush();
-        }
-
-        echo json_encode([
-            'code' => 9002,
-            'message' => "您今日已弃单超过{$abandonCountLimit}次，暂时无法放弃任务",
-            'data' => [],
-            'timestamp' => time()
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    $requestLogger->debug('弃单次数未超限', [
-        'abandon_count' => $abandonCount,
-        'abandon_count_limit' => $abandonCountLimit
-    ]);
-
     $requestLogger->debug('开启数据库事务');
     $db->beginTransaction();
 
@@ -441,29 +382,6 @@ try {
             'b_task_id' => $bTaskId
         ]);
 
-        if (!$dailyStatsId) {
-            $requestLogger->debug('创建当日统计记录', ['c_user_id' => $currentUser['user_id']]);
-            $stmt = $db->prepare("
-                INSERT INTO c_user_daily_stats (c_user_id, stat_date, accept_count, abandon_count, approved_count, rejected_count, submit_count)
-                VALUES (?, ?, 0, 1, 0, 0, 0)
-            ");
-            $stmt->execute([$currentUser['user_id'], $today]);
-            $dailyStatsId = $db->lastInsertId();
-            $requestLogger->info('当日统计记录创建成功', [
-                'c_user_id' => $currentUser['user_id'],
-                'daily_stats_id' => $dailyStatsId
-            ]);
-        } else {
-            $requestLogger->debug('更新当日弃单统计', ['daily_stats_id' => $dailyStatsId]);
-            $stmt = $db->prepare("
-                UPDATE c_user_daily_stats
-                SET abandon_count = abandon_count + 1
-                WHERE id = ?
-            ");
-            $stmt->execute([$dailyStatsId]);
-            $requestLogger->info('当日统计记录更新成功', ['daily_stats_id' => $dailyStatsId]);
-        }
-
         $requestLogger->debug('提交数据库事务');
         $db->commit();
         $requestLogger->debug('事务提交成功');
@@ -472,7 +390,6 @@ try {
             'user_id' => $currentUser['user_id'],
             'record_id' => $recordId,
             'b_task_id' => $bTaskId,
-            'abandon_count' => $abandonCount + 1,
         ]);
 
         if (method_exists($auditLogger, 'flush')) {
@@ -484,8 +401,7 @@ try {
 
         $requestLogger->info('放弃任务成功', [
             'record_id' => $recordId,
-            'b_task_id' => $bTaskId,
-            'new_abandon_count' => $abandonCount + 1
+            'b_task_id' => $bTaskId
         ]);
 
         echo json_encode([
