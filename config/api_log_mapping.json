@@ -6,7 +6,7 @@
     "system_type": "windows",
     "base_path": {
       "windows": "d:\\github\\douyinTasksystemAPI\\logs",
-      "linux": "/www/wwwlogs",
+      "linux": "/www/wwwroot/47.82.122.70_28806/logs",
       "auto_detect": false
     },
     "description": "日志基础路径配置，system_type 指定使用哪个系统的路径配置",

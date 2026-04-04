@@ -279,7 +279,8 @@ try {
             bt.stage_status,
             bt.combo_task_id,
             bt.parent_task_id,
-            bt.recommend_marks
+            bt.recommend_marks,
+            bt.is_republish
         FROM b_tasks bt
         INNER JOIN task_templates tt ON bt.template_id = tt.id
         WHERE {$whereClause}
@@ -378,7 +379,8 @@ try {
             'stage_status_text' => $stageStatusTexts[$stageStatus] ?? '未知',
             'combo_task_id' => $task['combo_task_id'],
             'parent_task_id' => $task['parent_task_id'] ? (int)$task['parent_task_id'] : null,
-            'recommend_marks' => $task['recommend_marks'] ? json_decode($task['recommend_marks'], true) : []  // 推荐评论JSON数组
+            'recommend_marks' => $task['recommend_marks'] ? json_decode($task['recommend_marks'], true) : [],  // 推荐评论JSON数组
+            'is_republish' => $task['is_republish']  // 是否重新发布，允许为空
         ];
         
         // 如果是组合任务，添加阶段价格信息

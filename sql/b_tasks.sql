@@ -11,7 +11,7 @@
  Target Server Version : 80406 (8.4.6)
  File Encoding         : 65001
 
- Date: 02/04/2026 15:32:08
+ Date: 04/04/2026 23:14:33
 */
 
 SET NAMES utf8mb4;
@@ -42,6 +42,7 @@ CREATE TABLE `b_tasks`  (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `completed_at` datetime NULL DEFAULT NULL COMMENT '完成时间（任务完成时记录）',
+  `is_republish` int NULL DEFAULT NULL COMMENT '是否重新发布任务了：0=不是，1=是',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_b_user_id`(`b_user_id` ASC) USING BTREE,
   INDEX `idx_combo_task_id`(`combo_task_id` ASC) USING BTREE,
@@ -53,10 +54,14 @@ CREATE TABLE `b_tasks`  (
   INDEX `idx_deadline`(`deadline` ASC) USING BTREE,
   INDEX `idx_created_at`(`created_at` ASC) USING BTREE,
   INDEX `idx_completed_at`(`completed_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 29 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'B端发布任务表-商家派单' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 217 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'B端发布任务表-商家派单' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of b_tasks
 -- ----------------------------
+INSERT INTO `b_tasks` VALUES (213, 9, 'COMBO_1775314642_9_1', 1, 2, NULL, 6, 'https://www.douyin.com/jingxuan?modal_id=7577335582393699638', 1775314000, '[{\"comment\": \"阶段1上评评论\", \"image_url\": \"http://134.122.136.221:4667/img/a9b76843e779d5727ecf6b4269287206.jpg\"}]', 1, 1, 0, 0, 3.00, 3.00, 2, '2026-04-04 22:57:22', '2026-04-04 23:03:12', '2026-04-04 22:58:48', NULL);
+INSERT INTO `b_tasks` VALUES (214, 9, 'COMBO_1775314642_9_1', 2, 1, 213, 6, 'https://啊发射点发射点发生大bbbb8', 1775314000, '[{\"comment\": \"阶段2中评回复1\", \"image_url\": \"http://134.122.136.221:4667/img/a9b76843e779d5727ecf6b4269287206.jpg\"}]', 1, 0, 0, 0, 3.00, 3.00, 0, '2026-04-04 22:57:22', '2026-04-04 23:03:14', NULL, NULL);
+INSERT INTO `b_tasks` VALUES (215, 9, 'COMBO_1775314642_9_1', 2, 1, 213, 6, 'https://啊发射点发射点发生大bbbb8', 1796008061, '[{\"comment\": \"阶段2中评回复1\", \"image_url\": \"http://134.122.136.221:4667/img/a9b76843e779d5727ecf6b4269287206.jpg\"}]', 1, 1, 0, 0, 3.00, 3.00, 0, '2026-04-04 23:04:18', '2026-04-04 23:04:48', NULL, NULL);
+INSERT INTO `b_tasks` VALUES (216, 9, 'COMBO_1775314642_9_1', 2, 1, 213, 6, 'https://啊发射点发射点发生大bbbb8', 1796008061, '[{\"comment\": \"阶段2中评回复1\", \"image_url\": \"http://134.122.136.221:4667/img/a9b76843e779d5727ecf6b4269287206.jpg\"}]', 1, 0, 0, 0, 3.00, 3.00, 1, '2026-04-04 23:04:52', '2026-04-04 23:04:52', NULL, NULL);
 
 SET FOREIGN_KEY_CHECKS = 1;
