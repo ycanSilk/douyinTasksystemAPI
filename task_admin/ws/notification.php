@@ -31,33 +31,40 @@ class WebSocketServer {
     private $server;
     private $clients = [];
     private $lastTaskCheckTime = 0;
-    private $checkInterval = 60; // 检查间隔（秒）
-    private $logFile;
+    private $checkInterval = 10; // 检查间隔（秒）
     
     private function log($message) {
+        // 获取当前日期，格式为 YYYYMMDD
+        $date = date('Ymd');
+        // 日志目录
+        $logDir = __DIR__ . '/socket-log';
+        // 确保日志目录存在
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+        // 日志文件路径
+        $logFile = $logDir . "/$date.log";
+        
         $timestamp = date('Y-m-d H:i:s');
         $logMessage = "[$timestamp] $message\n";
-        // 写入日志文件
-        fwrite($this->logFile, $logMessage);
+        
+        // 打开并写入日志文件
+        $file = fopen($logFile, 'a');
+        if ($file) {
+            fwrite($file, $logMessage);
+            fflush($file);
+            fclose($file);
+        }
+        
         // 同时输出到控制台
         echo $logMessage;
-        // 刷新缓冲区
-        fflush($this->logFile);
     }
     
     public function __destruct() {
-        // 关闭日志文件
-        if ($this->logFile) {
-            fclose($this->logFile);
-        }
+        // 不需要关闭文件，每次写入都会关闭
     }
     
     public function __construct() {
-        // 打开日志文件
-        $this->logFile = fopen('socket-log.log', 'a');
-        if (!$this->logFile) {
-            die('无法打开日志文件: socket-log.log');
-        }
         $this->log('WebSocket服务器启动中...');
         
         // 创建 WebSocket 服务器
@@ -80,7 +87,7 @@ class WebSocketServer {
         }
         
         // 开始监听
-        if (!socket_listen($this->server, 5)) {
+        if (!socket_listen($this->server, 10)) {
             $this->log('监听 socket 失败: ' . socket_strerror(socket_last_error()));
             die('监听 socket 失败: ' . socket_strerror(socket_last_error()));
         }
@@ -91,6 +98,9 @@ class WebSocketServer {
     
     private function run() {
         while (true) {
+            // 清理已关闭的客户端连接
+            $this->cleanClosedConnections();
+            
             // 准备监听的 socket
             $readSockets = array_merge([$this->server], $this->clients);
             $writeSockets = [];
@@ -111,7 +121,7 @@ class WebSocketServer {
                     // 进行 WebSocket 握手
                     $this->performHandshake($client);
                     $this->clients[] = $client;
-                    $this->log("New client connected");
+                    $this->log("New client connected. Total clients: " . count($this->clients));
                 }
                 // 从 readSockets 中移除服务器 socket
                 $key = array_search($this->server, $readSockets);
@@ -128,16 +138,21 @@ class WebSocketServer {
                     $key = array_search($client, $this->clients);
                     if ($key !== false) {
                         unset($this->clients[$key]);
-                        socket_close($client);
-                        $this->log("连接断开");
+                        @socket_close($client);
+                        $this->log("连接断开. Total clients: " . count($this->clients));
                     }
                     continue;
                 }
                 
-                // 处理 WebSocket 消息
-                $message = $this->decodeMessage($data);
-                if ($message) {
-                    $this->log("收到消息: $message");
+                try {
+                    // 处理 WebSocket 消息
+                    $message = $this->decodeMessage($data);
+                    if ($message) {
+                        $this->log("收到消息: $message");
+                    }
+                } catch (Exception $e) {
+                    $this->log('处理消息错误: ' . $e->getMessage());
+                    // 不关闭连接，继续处理
                 }
             }
             
@@ -211,107 +226,101 @@ class WebSocketServer {
         return $header . $message;
     }
     
+    private function cleanClosedConnections() {
+        // 清理已关闭的客户端连接
+        $validClients = [];
+        foreach ($this->clients as $client) {
+            // 检查连接是否有效
+            $socketInfo = @socket_getpeername($client, $address, $port);
+            if ($socketInfo !== false) {
+                $validClients[] = $client;
+            } else {
+                // 连接已关闭，清理
+                @socket_close($client);
+            }
+        }
+        
+        if (count($this->clients) !== count($validClients)) {
+            $removedCount = count($this->clients) - count($validClients);
+            $this->log("清理已关闭的客户端连接，移除了 $removedCount 个连接");
+            $this->clients = $validClients;
+        }
+    }
+    
     private function checkAuditTasks() {
         try {
             // 调用 detect.php 接口获取真实的审核任务数据
-            // 使用正确的HTTP服务器端口（8000）
             $url = 'http://localhost:28806/task_admin/api/admin_notifications/detect.php';
             
             // 添加WebSocket服务器标识
             $url .= '?ws_server=true';
             
-            $this->log("Calling detect.php at: $url");
+            $this->log("调用 detect.php 接口获取审核任务数据");
             
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 禁用 SSL 验证
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false); // 禁用 SSL 主机验证
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // 跟随重定向
-            curl_setopt($ch, CURLOPT_PROXY, ''); // 禁用代理
-            curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); // 确保使用HTTP代理类型
-            
-            // 添加详细的调试信息
-            curl_setopt($ch, CURLOPT_VERBOSE, true);
-            $verbose = fopen('php://temp', 'w+');
-            curl_setopt($ch, CURLOPT_STDERR, $verbose);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_PROXY, '');
+            curl_setopt($ch, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_NOBODY, false);
             
             $response = curl_exec($ch);
             
             // 检查curl错误
             if (curl_errno($ch)) {
                 $this->log('cURL error: ' . curl_error($ch));
+                return;
             }
             
-            // 输出详细的调试信息
-            rewind($verbose);
-            $verboseLog = stream_get_contents($verbose);
-            $this->log("cURL verbose log: $verboseLog");
-            fclose($verbose);
+            $this->log("从 detect.php 收到响应: " . var_export($response, true));
             
-            // 移除 curl_close() 调用，因为在 PHP 8.0+ 中它已无效果
-            // curl_close($ch);
-            
-            $this->log("从 detect.php 收到响应: $response");
-            
-            if ($response) {
+            if ($response !== false) {
                 $data = json_decode($response, true);
                 
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $this->log('JSON decode error: ' . json_last_error_msg());
+                    return;
                 }
                 
                 if (isset($data['code']) && $data['code'] === 0 && isset($data['data']['detection_result'])) {
                     $detectionResult = $data['data']['detection_result'];
                     
-                    $this->log("Detection result: " . print_r($detectionResult, true));
+                    $this->log("检测结果: " . json_encode($detectionResult));
                     
-                    // 检查是否有审核任务（使用英文key）
-                    $hasTasks = false;
-                    $checkFields = ['recharge', 'withdraw', 'agent', 'magnifier', 'rental'];
+                    // 推送通知给所有客户端
+                    $notification = [
+                        'type' => 'audit_notification',
+                        'data' => [
+                            'detection_result' => $detectionResult
+                        ]
+                    ];
                     
-                    $this->log("开始检查审核任务...");
-                    $this->log("当前检测时间: " . date('Y-m-d H:i:s'));
-                    $this->log("检测字段列表: " . implode(', ', $checkFields));
+                    $message = json_encode($notification);
                     
-                    foreach ($checkFields as $field) {
-                        $fieldValue = isset($detectionResult[$field]) ? $detectionResult[$field] : 'not set';
-                        $this->log("检查字段: $field, 值: $fieldValue");
-                        
-                        if (isset($detectionResult[$field]) && $detectionResult[$field] > 0) {
-                            $hasTasks = true;
-                            $this->log("✅ 检测到审核任务: $field = " . $detectionResult[$field]);
-                        }
-                    }
-                    
-                    $this->log("是否有审核任务: " . ($hasTasks ? '是' : '否'));
-                    
-                    // 只有当有审核任务时才推送通知
-                    if ($hasTasks) {
-                        // 构建通知消息
-                        $notification = [
-                            'type' => 'audit_notification',
-                            'data' => [
-                                'detection_result' => $detectionResult
-                            ]
-                        ];
-                        
-                        // 序列化消息
-                        $message = json_encode($notification);
-                        
-                        // 发送给所有客户端
-                        foreach ($this->clients as $client) {
+                    // 发送给所有客户端
+                    foreach ($this->clients as $client) {
+                        try {
                             $encodedMessage = $this->encodeMessage($message);
                             socket_write($client, $encodedMessage, strlen($encodedMessage));
+                        } catch (Exception $e) {
+                            $this->log('发送消息错误: ' . $e->getMessage());
+                            // 不中断循环，继续发送给其他客户端
                         }
-                        
-                        $this->log("Sent audit notification: $message");
-                    } else {
-                        $this->log("No audit tasks to notify");
                     }
+                    
+                    $this->log("推送通知给 " . count($this->clients) . " 个客户端");
                 } else {
-                    $this->log("Invalid response from detect.php: $response");
+                    $this->log("Invalid response from detect.php: " . json_encode($data));
+                    // 检查是否是数据库连接失败
+                    if (isset($data['code']) && $data['code'] == 1002) {
+                        $this->log("数据库连接失败，跳过本次检测");
+                    }
                 }
             } else {
                 $this->log("Failed to get response from detect.php");
